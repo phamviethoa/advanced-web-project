@@ -2,10 +2,6 @@
 
 ## Prerequisite
 
-Node version should be v14. We use nvm to mange node version, please follow `https://github.com/nvm-sh/nvm#installing-and-updating` to install
-
-> nvm use v14
-
 > npm install -g typescript
 
 > npm install --global lerna
