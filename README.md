@@ -34,6 +34,6 @@
 
 Notice that you can only add one package at a time. For example:
 
-> lerna add react-redux --scope=@ontest/frontend
+> lerna add react-redux --scope=frontend
 
-> lerna add @types/react-redux --scope=@ontest/frontend --dev
+> lerna add @types/react-redux --scope=frontend --dev
