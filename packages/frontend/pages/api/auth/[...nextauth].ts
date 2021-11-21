@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import NextAuth from 'next-auth';
 import Provider from 'next-auth/providers';
 
@@ -42,6 +43,21 @@ export default NextAuth({
           return null;
         }
       },
+=======
+import NexAuth from 'next-auth';
+import FacebookProvider from 'next-auth/providers/facebook';
+import GoogleProvider from 'next-auth/providers/google';
+
+export default NexAuth({
+  providers: [
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_ID,
+      clientSecret: process.env.FACEBOOK_SECRET,
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_ID,
+      clientSecret: process.env.GOOGLE_SECRET,
+>>>>>>> 3db4dbc983c9c278523e7a12df37c2cc7933c6d5
     }),
   ],
 });
