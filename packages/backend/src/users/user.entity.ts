@@ -1,10 +1,23 @@
-import { Module } from '@nestjs/common';
-import { UsersController } from 'src/classes/users.controller';
-import { UsersService } from 'src/classes/users.service';
+import { Classes } from 'src/classes/class.entity';
+import { BaseEntity } from 'src/common/base.entity';
+import { Column, ManyToMany } from 'typeorm';
 
-@Module({
-  imports: [],
-  controllers: [ClassesController],
-  providers: [ClassesService],
-})
-export class ClassesModule {}
+export class User extends BaseEntity {
+  @Column({ type: 'varchar' })
+  studentId: string;
+
+  @Column({ type: 'varchar' })
+  username: string;
+
+  @Column({ type: 'varchar' })
+  password: string;
+
+  @Column({ type: 'varchar' })
+  fullName: string;
+
+  @ManyToMany(() => Classes)
+  hostedClasses: Classes[];
+
+  @ManyToMany(() => Classes)
+  JoinedClasses: Classes[];
+}
