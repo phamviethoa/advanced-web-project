@@ -5,6 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClassesService } from './classes/classes.service';
 import { ClassesController } from './classes/classes.controller';
 import { ClassesModule } from 'src/classes/classes.module';
+import { UsersController } from './users/users.controller';
+import { UsersService } from './users/users.service';
+import { UsersModule } from 'src/users/users.module';
 
 require('dotenv').config();
 
@@ -21,8 +24,9 @@ require('dotenv').config();
       autoLoadEntities: true,
     }),
     ClassesModule,
+    UsersModule,
   ],
-  controllers: [AppController, ClassesController],
-  providers: [AppService, ClassesService],
+  controllers: [AppController, ClassesController, UsersController],
+  providers: [AppService, ClassesService, UsersService],
 })
 export class AppModule {}
