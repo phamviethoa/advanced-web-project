@@ -8,6 +8,10 @@
     "dev": "lerna run --no-bail --parallel dev"
   },
   "devDependencies": {
+    "@types/bootstrap": "^5.1.6",
     "lerna": "^4.0.0"
+  },
+  "dependencies": {
+    "axios": "^0.24.0"
   }
 }
