@@ -1,40 +1,34 @@
 import NextAuth from 'next-auth';
-import Provider from 'next-auth/providers';
+import FacebookProvider from 'next-auth/providers/facebook';
+import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 export default NextAuth({
   providers: [
-    Provider.Credentials({
-      id: 'login',
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_ID,
+      clientSecret: process.env.FACEBOOK_SECRET,
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_ID,
+      clientSecret: process.env.GOOGLE_SECRET,
+    }),
+    CredentialsProvider({
       name: 'Credentials',
       credentials: {
         username: {
           label: 'Username',
           type: 'text',
-          placeholder: 'Your email',
+          placeholder: 'Your Email',
         },
         password: {
           label: 'Password',
           type: 'password',
-          placeholder: 'Your password',
+          placeholder: 'Your Password',
         },
       },
-      async authorize(credentials: Record<string, string>, req) {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_GATEWAY}/api/auth/validate-candidate`,
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              token: credentials.token,
-            }),
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-
-        const user = (await res.json()) || {
-          id: 1,
-          name: 'J Smith',
-          email: 'jsmith@example.com',
-        };
+      async authorize(credentials: Record<string, string>, req: any) {
+        const user = { id: 1, name: 'J Smith', email: 'jsmith@example.com' };
 
         if (user) {
           return user;
