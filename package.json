@@ -2,13 +2,12 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "postgres": "docker run --name advanced-web-db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres",
+    "postgres": "docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres",
     "backend": "lerna run --no-bail --parallel backend",
     "frontend": "lerna run --no-bail --parallel frontend",
     "dev": "lerna run --no-bail --parallel dev"
   },
   "devDependencies": {
-    "@types/bootstrap": "^5.1.6",
     "lerna": "^4.0.0"
   },
   "dependencies": {

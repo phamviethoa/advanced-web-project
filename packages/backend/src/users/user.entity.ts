@@ -1,9 +1,10 @@
-import { Classes } from 'src/classes/class.entity';
-import { BaseEntity } from 'src/common/base.entity';
-import { Column, ManyToMany } from 'typeorm';
+import { Classes } from '../classes/class.entity';
+import { BaseEntity } from '../common/base.entity';
+import { Column, Entity, ManyToMany } from 'typeorm';
 
+@Entity()
 export class User extends BaseEntity {
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   studentId: string;
 
   @Column({ type: 'varchar' })
@@ -12,7 +13,7 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar' })
   password: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   fullName: string;
 
   @ManyToMany(() => Classes)

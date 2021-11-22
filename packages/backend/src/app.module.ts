@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ClassesService } from './classes/classes.service';
+
 import { ClassesController } from './classes/classes.controller';
-import { ClassesModule } from 'src/classes/classes.module';
+import { ClassesModule } from './classes/classes.module';
+
 import { UsersController } from './users/users.controller';
-import { UsersService } from './users/users.service';
-import { UsersModule } from 'src/users/users.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 require('dotenv').config();
 
@@ -20,13 +21,14 @@ require('dotenv').config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      synchronize: Boolean(process.env.DB_SYNC),
+      synchronize: true,
       autoLoadEntities: true,
     }),
     ClassesModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController, ClassesController, UsersController],
-  providers: [AppService, ClassesService, UsersService],
+  providers: [AppService],
 })
 export class AppModule {}
