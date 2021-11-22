@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ClassesController } from 'src/classes/classes.controller';
-import { ClassesService } from 'src/classes/classes.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ClassesController } from './classes.controller';
+import { ClassesService } from './classes.service';
+import { Classes } from './class.entity';
 
 @Module({
-  imports: [],
+  imports: [TypeOrmModule.forFeature([Classes])],
   controllers: [ClassesController],
   providers: [ClassesService],
   exports: [ClassesService],
