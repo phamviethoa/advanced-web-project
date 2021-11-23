@@ -8,7 +8,7 @@ export class UsersController {
 
   @Post('/signup')
   signin(@Body() signupUserDto: SignupUserDto) {
-    const { username, fullName, password } = signupUserDto;
-    return this.usersService.addUser(username, fullName, password);
+    const { email, fullName, password } = signupUserDto;
+    return this.usersService.addUser(email, fullName, password);
   }
 }

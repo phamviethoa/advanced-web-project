@@ -8,7 +8,7 @@ export class User extends BaseEntity {
   studentId: string;
 
   @Column({ type: 'varchar' })
-  username: string;
+  email: string;
 
   @Column({ type: 'varchar' })
   password: string;

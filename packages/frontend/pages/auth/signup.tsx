@@ -7,16 +7,17 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 
 type FormFields = {
-  username: string;
+  email: string;
   fullName: string;
   password: string;
 };
 
 const schema = yup.object().shape({
-  username: yup
+  email: yup
     .string()
-    .required('Username is required.')
-    .max(150, 'Username is max 150 characters.'),
+    .required('Email is required.')
+    .max(150, 'Email is max 150 characters.')
+    .email('Email is in correct'),
   fullName: yup
     .string()
     .required('Full Name is required.')
@@ -46,11 +47,11 @@ const Signup = () => {
   console.log('Hello');
 
   const signup = handleSubmit(
-    async ({ username, fullName, password }: FormFields) => {
+    async ({ email, fullName, password }: FormFields) => {
       try {
         await axios.post(
           `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/signup`,
-          { username, fullName, password }
+          { email, fullName, password }
         );
 
         router.push('/auth/signin');
@@ -73,13 +74,11 @@ const Signup = () => {
             <div className="col">
               <input
                 type="text"
-                className={`form-control ${
-                  errors.username ? 'is-invalid' : ''
-                }`}
-                {...register('username')}
-                placeholder="Username"
+                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                {...register('email')}
+                placeholder="Email"
               />
-              <div className="invalid-feedback">{errors.username?.message}</div>
+              <div className="invalid-feedback">{errors.email?.message}</div>
             </div>
           </div>
           <div className="mb-3 row">

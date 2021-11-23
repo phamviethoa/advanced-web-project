@@ -8,17 +8,17 @@ const bcrypt = require('bcrypt');
 export class UsersService {
   constructor(@InjectRepository(User) private usersRepo: Repository<User>) {}
 
-  async findOne(username: string): Promise<User | undefined> {
-    return this.usersRepo.findOne({ where: { username } });
+  async findOne(email: string): Promise<User | undefined> {
+    return this.usersRepo.findOne({ where: { email } });
   }
 
-  async checkUsernameIsExist(username: string): Promise<Boolean> {
-    const users = await this.usersRepo.find({ where: { username } });
+  async checkUsernameIsExist(email: string): Promise<Boolean> {
+    const users = await this.usersRepo.find({ where: { email } });
     return users.length === 0 ? true : false;
   }
 
-  async addUser(username: string, fullName: string, password: string) {
-    const isValid = await this.checkUsernameIsExist(username);
+  async addUser(email: string, fullName: string, password: string) {
+    const isValid = await this.checkUsernameIsExist(email);
 
     if (!isValid) {
       throw new BadRequestException(`Username is existed!`);
@@ -28,7 +28,7 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = this.usersRepo.create({
-      username,
+      email,
       fullName,
       password: hashedPassword,
     });
