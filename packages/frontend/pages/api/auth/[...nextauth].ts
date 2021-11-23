@@ -37,7 +37,7 @@ export default NextAuth({
         const res = await axios.post(
           `${process.env.NEXT_PUBLIC_API_GATEWAY}/auth/validate`,
           {
-            email,
+            username: email,
             password,
           }
         );
