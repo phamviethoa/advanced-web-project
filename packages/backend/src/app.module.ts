@@ -10,10 +10,15 @@ import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
-require('dotenv').config();
+import { ConfigModule } from '@nestjs/config';
+import { ClassToUserModule } from './classtouser/classes.module';
+import { ClassToUserController } from './classtouser/classtouser.controller';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -25,10 +30,16 @@ require('dotenv').config();
       autoLoadEntities: true,
     }),
     ClassesModule,
+    ClassToUserModule,
     UsersModule,
     AuthModule,
   ],
-  controllers: [AppController, ClassesController, UsersController],
+  controllers: [
+    AppController,
+    ClassesController,
+    UsersController,
+    ClassToUserController,
+  ],
   providers: [AppService],
 })
 export class AppModule {}

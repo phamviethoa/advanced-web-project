@@ -8,35 +8,35 @@ const bcrypt = require('bcrypt');
 export class UsersService {
   constructor(@InjectRepository(User) private usersRepo: Repository<User>) {}
 
-  async findOne(username: string): Promise<User | undefined> {
-    return this.usersRepo.findOne({ where: { username } });
+  async findOne(email: string): Promise<User | undefined> {
+    return this.usersRepo.findOne({ where: { email } });
   }
 
   async findOneid(id: string): Promise<User | undefined> {
     return this.usersRepo.findOne({ where: { id } });
   }
 
-  async findAll(): Promise <User[]> {
+  async findAll(): Promise<User[]> {
     return this.usersRepo.find();
   }
 
-  async checkUsernameIsExist(username: string): Promise<Boolean> {
-    const users = await this.usersRepo.find({ where: { username } });
+  async checkUsernameIsExist(email: string): Promise<Boolean> {
+    const users = await this.usersRepo.find({ where: { email } });
     return users.length === 0 ? true : false;
   }
 
-  async addUser(username: string, fullName: string, password: string) {
-    const isValid = await this.checkUsernameIsExist(username);
+  async addUser(email: string, fullName: string, password: string) {
+    const isValid = await this.checkUsernameIsExist(email);
 
     if (!isValid) {
-      throw new BadRequestException(`Username is existed!`);
+      throw new BadRequestException(`Email is existed!`);
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = this.usersRepo.create({
-      username,
+      email,
       fullName,
       password: hashedPassword,
     });

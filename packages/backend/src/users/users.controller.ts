@@ -8,8 +8,8 @@ export class UsersController {
 
   @Post('/signup')
   signin(@Body() signupUserDto: SignupUserDto) {
-    const { username, fullName, password } = signupUserDto;
-    return this.usersService.addUser(username, fullName, password);
+    const { email, fullName, password } = signupUserDto;
+    return this.usersService.addUser(email, fullName, password);
   }
 
   @Get(':id')
@@ -18,12 +18,12 @@ export class UsersController {
   }
 
   @Get()
-  findAll(){
+  findAll() {
     return this.usersService.findAll();
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() body: any) {
-  return this.usersService.update(id,body);
+    return this.usersService.update(id, body);
   }
 }

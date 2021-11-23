@@ -17,15 +17,16 @@ enum ProviderType {
 }
 
 type FormFields = {
-  username: string;
+  email: string;
   password: string;
 };
 
 const schema = yup.object().shape({
-  username: yup
+  email: yup
     .string()
-    .required('Username is required.')
-    .max(150, 'Username is max 150 characters.'),
+    .required('Email is required.')
+    .max(150, 'Email is max 150 characters.')
+    .email('Email is not correct.'),
   password: yup
     .string()
     .required('Password is required.')
@@ -56,10 +57,10 @@ const Signin = ({ providers, csrfToken }: Props) => {
     (provider: any) => provider.type === ProviderType.CREDENTIALS
   );
 
-  const signin = handleSubmit(async ({ username, password }: FormFields) => {
+  const signin = handleSubmit(async ({ email, password }: FormFields) => {
     signIn('login', {
       callbackUrl: (router.query.callbackUrl as string) || '/',
-      username,
+      email,
       password,
     });
   });
@@ -94,13 +95,11 @@ const Signin = ({ providers, csrfToken }: Props) => {
             <div className="col">
               <input
                 type="text"
-                className={`form-control ${
-                  errors.username ? 'is-invalid' : ''
-                }`}
-                {...register('username')}
-                placeholder="Username"
+                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                {...register('email')}
+                placeholder="Email"
               />
-              <div className="invalid-feedback">{errors.username?.message}</div>
+              <div className="invalid-feedback">{errors.email?.message}</div>
             </div>
           </div>
           <div className="mb-3 row">
@@ -129,7 +128,7 @@ const Signin = ({ providers, csrfToken }: Props) => {
 
         <div className="text-center text-primary">
           <Link href="/auth/signup">
-            <a>Create a account?</a>
+            <a>Create an account?</a>
           </Link>
         </div>
       </div>
