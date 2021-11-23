@@ -1,33 +1,40 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { CreateClassDTO } from './class.dto';
-import { ClassesService } from './classes.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+import { ClassToUserService } from './classtouser.service';
 
 @Controller('classes')
-export class ClassesController {
-    constructor(private classesService: ClassesService) {}
+export class ClassToUserController {
+  constructor(private classToUserService: ClassToUserService) {}
 
-    @Get()
-    findAll(){
-      return this.classesService.findAll();
-    }
+  @Get()
+  findAll() {
+    return this.classToUserService.findAll();
+  }
 
-    @Get(':id')
-    findOne(@Param('id') id: number) {
-      return this.classesService.findOne(id);
-    }
+  @Get(':id')
+  findOne(@Param('id') id: number) {
+    return this.classToUserService.findOne(id);
+  }
 
-    @Post()
-    create(@Body() body: any) {
-      return this.classesService.create(body);
-    }
+  @Post()
+  create(@Body() body: any) {
+    return this.classToUserService.create(body);
+  }
 
-    @Put(':id')
-    update(@Param('id') id: string, @Body() body: any) {
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) {
     return body;
-    }
+  }
 
-    @Delete(':id')
-    delete(@Param('id') id: string) {
-      return true;
-    }
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return true;
+  }
 }

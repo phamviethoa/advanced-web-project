@@ -18,12 +18,12 @@ export class UsersController {
   }
 
   @Get()
-  findAll(){
+  findAll() {
     return this.usersService.findAll();
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() body: any) {
-  return this.usersService.update(id,body);
+    return this.usersService.update(id, body);
   }
 }

@@ -20,8 +20,8 @@ export default NextAuth({
       id: 'login',
       name: 'Credentials',
       credentials: {
-        username: {
-          label: 'Username',
+        email: {
+          label: 'Email',
           type: 'text',
           placeholder: 'Your Email',
         },
@@ -32,12 +32,12 @@ export default NextAuth({
         },
       },
       async authorize(credentials: Record<string, string>) {
-        const { username, password } = credentials;
+        const { email, password } = credentials;
 
         const res = await axios.post(
           `${process.env.NEXT_PUBLIC_API_GATEWAY}/auth/validate`,
           {
-            username,
+            email,
             password,
           }
         );

@@ -29,7 +29,7 @@ export class UsersService {
     const isValid = await this.checkUsernameIsExist(email);
 
     if (!isValid) {
-      throw new BadRequestException(`Username is existed!`);
+      throw new BadRequestException(`Email is existed!`);
     }
 
     const salt = await bcrypt.genSalt(10);
