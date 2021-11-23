@@ -7,11 +7,15 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { ClassToUserService } from 'src/classtouser/classtouser.service';
 import { ClassesService } from './classes.service';
 
 @Controller('classes')
 export class ClassesController {
-  constructor(private classesService: ClassesService) {}
+  constructor(
+    private classesService: ClassesService,
+    private classToUserService: ClassToUserService,
+  ) {}
 
   @Get()
   findAll() {
