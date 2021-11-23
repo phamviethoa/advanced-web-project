@@ -8,8 +8,6 @@ type Props = {
 const Layout = ({ children }: Props) => {
   const [session, loading] = useSession();
 
-  console.log(session);
-
   return (
     <div
       style={{ minHeight: '100vh' }}
