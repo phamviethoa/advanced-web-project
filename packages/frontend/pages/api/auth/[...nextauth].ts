@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import FacebookProvider from 'next-auth/providers/facebook';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import axios from 'axios';
 
 export default NextAuth({
   providers: [
@@ -14,6 +15,7 @@ export default NextAuth({
       clientSecret: process.env.GOOGLE_SECRET,
     }),
     CredentialsProvider({
+      id: 'login',
       name: 'Credentials',
       credentials: {
         username: {
@@ -28,7 +30,17 @@ export default NextAuth({
         },
       },
       async authorize(credentials: Record<string, string>, req: any) {
-        const user = { id: 1, name: 'J Smith', email: 'jsmith@example.com' };
+        const { username, password } = credentials;
+
+        const res = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_GATEWAY}/auth/validate`,
+          {
+            username,
+            password,
+          }
+        );
+
+        const user = res.data;
 
         if (user) {
           return user;
@@ -38,4 +50,8 @@ export default NextAuth({
       },
     }),
   ],
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
 });
