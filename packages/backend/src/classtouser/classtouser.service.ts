@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Classes } from './class.entity';
+import { ClassToUser } from './classtouser.entity';
 
 @Injectable()
 export class ClassesService {
-    constructor(@InjectRepository(Classes) private tasksRepo: Repository<Classes>) {}
-    async findAll(): Promise <Classes[]> {
+    constructor(@InjectRepository(ClassToUser) private tasksRepo: Repository<ClassToUser>) {}
+    async findAll(): Promise <ClassToUser[]> {
         return this.tasksRepo.find();
     }
 
@@ -15,10 +15,12 @@ export class ClassesService {
       }
     
     create(body: any) {
-        const newClasses = new Classes();
-        newClasses.subject = body.subject;
-        newClasses.description = body.description;
-        return this.tasksRepo.save(newClasses);
+        const newClassToUser = new ClassToUser();
+        newClassToUser.classid = body.classid;
+        newClassToUser.userid = body.userid;
+        newClassToUser.isstudent = body.isstudent;
+        newClassToUser.participantid = body.participantid;
+        return this.tasksRepo.save(newClassToUser);
     }
     
     async update(id: string, body: any) {
