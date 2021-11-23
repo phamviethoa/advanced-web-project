@@ -12,6 +12,14 @@ export class UsersService {
     return this.usersRepo.findOne({ where: { username } });
   }
 
+  async findOneid(id: string): Promise<User | undefined> {
+    return this.usersRepo.findOne({ where: { id } });
+  }
+
+  async findAll(): Promise <User[]> {
+    return this.usersRepo.find();
+  }
+
   async checkUsernameIsExist(username: string): Promise<Boolean> {
     const users = await this.usersRepo.find({ where: { username } });
     return users.length === 0 ? true : false;
@@ -34,5 +42,11 @@ export class UsersService {
     });
 
     return this.usersRepo.save(newUser);
+  }
+
+  async update(id: string, body: any) {
+    const task = await this.usersRepo.findOne(id);
+    this.usersRepo.merge(task, body);
+    return this.usersRepo.save(task);
   }
 }

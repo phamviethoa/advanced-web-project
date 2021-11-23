@@ -41,7 +41,6 @@ async function submit(e: React.FormEvent<HTMLFormElement>){
       <Layout>
         <h1>Create Classroom</h1>
           <form onSubmit={(e)=>submit(e)}>
-          {/* <form> */}
           <div className="mb-3">
             <label htmlFor="formGroupExampleInput" className="form-label">Nhập tên lớp học</label>
             <input onChange={(e)=>handle(e)} type="text" className="form-control" id="subject" placeholder="Nhập tên lớp học" />
