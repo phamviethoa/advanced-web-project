@@ -6,8 +6,14 @@ import {
   Param,
   Post,
   Put,
+  Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
+import { Public } from 'src/auth/auth.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ClassesService } from './classes.service';
+import { CreateClassDto } from './dto/create-class.dto';
 
 @Controller('classes')
 export class ClassesController {
@@ -24,8 +30,24 @@ export class ClassesController {
   }
 
   @Post()
-  create(@Body() body: any) {
-    return this.classesService.create(body);
+  create(@Body() createClassDto: CreateClassDto) {
+    return this.classesService.create(createClassDto);
+  }
+
+  @Get('invite-student-link/:id')
+  getInviteStudentLink(@Param('id') id: string) {
+    return this.classesService.getInviteStudentLink(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/add-student')
+  addStudent(
+    @Request() req: any,
+    @Query('token') token: string,
+    @Body('identity') identity: string,
+  ) {
+    const email = req.user.email;
+    return this.classesService.addStudent(email, identity, token);
   }
 
   @Put(':id')

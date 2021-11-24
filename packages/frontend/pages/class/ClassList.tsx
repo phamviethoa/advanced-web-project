@@ -29,8 +29,8 @@ export default function ClassList(props: ClassListProps) {
         </div>
         <div className="container">
           <div className="row g-2">
-            {classes.map((classitem) => (
-              <div className="col-4">
+            {classes.map((classitem, index) => (
+              <div key={index} className="col-4">
                 <div className="p-4 bg-white rounded shadow">
                   <div className="d-flex justify-content-center">
                     <div className="btn-lg">{classitem.subject}</div>

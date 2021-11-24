@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Request } from 'express';
 
 require('dotenv').config();
 
-const cookieExtractor = function (req: Request) {
+const cookieExtractor = function (req: any) {
   let token = null;
 
   if (req && req.cookies) {
