@@ -10,6 +10,7 @@ import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
+
 import { ConfigModule } from '@nestjs/config';
 import { StudentToClassModule } from './student-to-class/student-to-class.module';
 

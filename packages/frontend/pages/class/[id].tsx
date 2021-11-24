@@ -46,9 +46,6 @@ const copyToClipboard = (text: string) => {
 function DetailClassPage({ classroom, teachers, students }: Props) {
   const classId = classroom.id;
 
-  console.log('classroom: ', classroom);
-  console.log('students:', students);
-
   const getInviteStudentLink = async () => {
     try {
       const res = await axios.get(

@@ -71,7 +71,7 @@ export class ClassesService {
 
     const studentToClass = new StudentToClass();
     studentToClass.identity = identity;
-    await this.studentToClassService.create(studentToClass);
+    await this.studentToClassService.create1(studentToClass);
 
     // Classes And Student To Class
     classroom.studentToClass = classroom.studentToClass

@@ -59,7 +59,10 @@ export default function CreateCLassPage(props: CreateCLassPageProps) {
     <div>
       <Layout>
         <div className="container p-0">
+          <div className="d-flex justify-content-center">
           <h1>Create Classroom</h1>
+          </div>
+          <div className="d-flex justify-content-center">
           <form className="col-10 col-sm-5" onSubmit={createClass} noValidate>
             <div className="mb-3">
               <label htmlFor="formGroupExampleInput" className="form-label">
@@ -87,11 +90,14 @@ export default function CreateCLassPage(props: CreateCLassPageProps) {
               <label htmlFor="floatingTextarea2">Mô tả lớp học</label>
             </div>
             <div className="col-auto mt-3">
+            <div className="d-flex justify-content-center">
               <button type="submit" className="btn btn-primary">
                 Tạo lớp học
               </button>
+              </div>
             </div>
           </form>
+          </div>
         </div>
       </Layout>
     </div>

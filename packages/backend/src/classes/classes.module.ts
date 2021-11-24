@@ -7,10 +7,12 @@ import { Classes } from './class.entity';
 import { StudentToClassModule } from 'src/student-to-class/student-to-class.module';
 import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
+import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Classes]),
+    TypeOrmModule.forFeature([Classes, StudentToClass]),
     JwtModule.register({
       secret: 'secret',
     }),
@@ -19,7 +21,7 @@ import { AuthModule } from 'src/auth/auth.module';
     AuthModule,
   ],
   controllers: [ClassesController],
-  providers: [ClassesService],
+  providers: [ClassesService, StudentToClassService],
   exports: [ClassesService],
 })
 export class ClassesModule {}
