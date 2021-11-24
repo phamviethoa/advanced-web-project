@@ -8,10 +8,11 @@ import {
   Put,
 } from '@nestjs/common';
 import { ClassesService } from './classes.service';
+import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 
 @Controller('classes')
 export class ClassesController {
-  constructor(private classesService: ClassesService) {}
+  constructor(private classesService: ClassesService,  private studentToClassService: StudentToClassService) {}
 
   @Get()
   findAll() {
@@ -36,5 +37,15 @@ export class ClassesController {
   @Delete(':id')
   delete(@Param('id') id: string) {
     return true;
+  }
+
+  @Post('/student-to-class')
+  createclasstostudent(@Body()  body: any) {
+    return this.studentToClassService.create(body);
+  }
+
+  @Get('/student-to-class/:id')
+  findAllpartici(@Param('id') id: string) {
+    return this.studentToClassService.findAllpartici(id);
   }
 }

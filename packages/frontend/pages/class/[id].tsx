@@ -14,8 +14,14 @@ type Post = {
   description: string
 }
 
+type User = {
+  fullName: string
+  studentId: string
+  email: string
+}
+
 export async function getStaticPaths() {
-  const res = await axios.get('http://localhost:5000/classes');
+  const res = await axios.get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes`);
   const classes: Post[] = await res.data;
   
   const paths=classes.map(classitem => {
@@ -32,11 +38,12 @@ export async function getStaticPaths() {
 
 export async function getStaticProps(context: { params: { id: string; }; }) {
   const id = context.params.id;
-  const res=  await axios.get('http://localhost:5000/classes/' + id);
+  const res=  await axios.get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/` + id);
   const data = await res.data;
 
   return {
-    props:{classitem:data}
+    props:{classitem:data
+    }
   }
 }
 
@@ -66,39 +73,35 @@ function DetailClassPage({ classitem }: InferGetStaticPropsType<typeof getStatic
       <table className="table">
         <thead>
         <tr>
-          <th scope="col">STT</th>
           <th scope="col">Họ và tên</th>
           <th scope="col">Mã số</th>
           <th scope="col">Email</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <th scope="row">1</th>
-          <td>Mark</td>
-          <td>Otto</td>
-          <td>@mdo</td>
-        </tr>
-      </tbody>
+              <tbody>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
       </table>
       <h4>Danh sách sinh viên</h4>
       <table className="table">
         <thead>
         <tr>
-          <th scope="col">STT</th>
           <th scope="col">Họ và tên</th>
           <th scope="col">Mã số</th>
           <th scope="col">Email</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <th scope="row">1</th>
-          <td>Mark</td>
-          <td>Otto</td>
-          <td>@mdo</td>
-        </tr>
-      </tbody>
+              <tbody>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
       </table>
       </Layout>
     </div>
