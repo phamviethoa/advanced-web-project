@@ -1,13 +1,30 @@
 import { signIn, signOut, useSession } from 'next-auth/client';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 type Props = {
   children: React.ReactNode;
 };
 
+type Session = {
+  expires: string;
+  user: {
+    email: string;
+    iat: string;
+    id: string;
+    image: any;
+    name: string;
+    sub: string;
+  };
+};
+
 const Layout = ({ children }: Props) => {
   const router = useRouter();
   const [session, loading] = useSession();
+
+  console.log(session);
+
+  const id = (session as Session)?.user?.id;
 
   const callbackUrl = router.asPath;
 
@@ -52,9 +69,11 @@ const Layout = ({ children }: Props) => {
                   aria-labelledby="dropdownMenuButton1"
                 >
                   <li>
-                    <a className="dropdown-item" href="#">
-                      Profile
-                    </a>
+                    <Link href={`/user/${id}`}>
+                      <a className="dropdown-item" href="#">
+                        Profile
+                      </a>
+                    </Link>
                   </li>
                   <li>
                     <a className="dropdown-item" href="#">
