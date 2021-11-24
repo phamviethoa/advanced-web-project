@@ -3,6 +3,11 @@ import { InferGetStaticPropsType } from 'next';
 import * as React from 'react';
 import { useState } from 'react';
 import Layout from '../../components/Layout/index'
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/router';
+import { useForm } from 'react-hook-form';
 
 export interface ProfilePageProps {
 }
@@ -11,6 +16,20 @@ type Post = {
   id: string
   fullName: string
 }
+
+interface FormFields {
+  id: string;
+  fullName: string;
+}
+
+const schema = yup.object().shape({
+  id: yup
+    .string(),
+  fullName: yup
+    .string()
+    .required('Subject is required.')
+    .max(150, 'Subject is max 150 characters.'),
+});
 
 export async function getStaticPaths() {
   const res = await axios.get('http://localhost:5000/users');
@@ -30,7 +49,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps(context: { params: { id: string; }; }) {
   const id = context.params.id;
-  const res=  await axios.get('http://localhost:5000/users/' + id);
+  const res=  await axios.get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`);
   const data = await res.data;
   return {
     props:{useritem:data}
@@ -38,33 +57,40 @@ export async function getStaticProps(context: { params: { id: string; }; }) {
 }
 
 
-//export default function ProfilePage (props: ProfilePageProps) {
 export default function ProfilePage({ useritem }: InferGetStaticPropsType<typeof getStaticProps>) {
   const classitemrender:Post=useritem;
-  const url="http://localhost:5000/users/";
+  const router = useRouter();
 
-  const [data,setData]=useState({
-    id:classitemrender.id,
-    fullName:classitemrender.fullName
-})   
+const {
+  handleSubmit,
+  register,
+  formState: { errors },
+} = useForm<FormFields>({
+  mode: 'all',
+  resolver: yupResolver(schema),
+});
 
-  function handle(e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>){
-    const newdata={...data};
-    if(e.target.id ==='fullName')
-    {
-      newdata[e.target.id]=e.target.value;
+const createClass = handleSubmit(
+  async ({ id, fullName }: FormFields) => {
+    id=classitemrender.id;
+    try {
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`,
+        {
+          id,
+          fullName,
+        }
+      );
+      router.push(`/user/${id}`);
+      toast.success('Update profile successfully.');
+    } catch {
+      toast.error('Update profile unsucessfully.');
     }
-    setData(newdata)
+    
   }
+);
 
-  async function submit(e: React.FormEvent<HTMLFormElement>){
-    e.preventDefault();
-    console.log(data);
-    await axios.put(url + `${data.id}`,{
-      id:data.id,
-      fullName:data.fullName
-    });
-  }
+
   return (
     <div>
       <Layout>
@@ -72,11 +98,15 @@ export default function ProfilePage({ useritem }: InferGetStaticPropsType<typeof
           <div className="d-flex justify-content-center">
             <img src="http://placekitten.com/g/200/200" className="rounded-circle"/>
           </div>
-          <form onSubmit={(e)=>submit(e)}>
+          <form onSubmit={createClass} noValidate>
           <div className="mb-3">
             <label htmlFor="formGroupExampleInput" className="form-label">Thông tin cá nhân</label>
             <div  className="form-label">Họ và tên</div>
-            <input onChange={(e)=>handle(e)} type="text" className="form-control" id="fullName" placeholder={data.fullName}/>
+            <input type="text" 
+            id="fullName" placeholder={classitemrender.fullName}
+            className={`form-control ${errors.fullName ? 'is-invalid' : ''}`}
+                {...register('fullName')}
+            />
           </div>
           <div className="col-auto mt-3">
             <button type="submit" className="btn btn-primary" >
