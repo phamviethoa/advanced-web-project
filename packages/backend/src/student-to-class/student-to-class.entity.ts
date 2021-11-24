@@ -5,11 +5,11 @@ import { BaseEntity } from '../common/base.entity';
 
 @Entity()
 export class StudentToClass extends BaseEntity {
-  @Column()
-  public studentId!: string;
+  @Column({ nullable: true })
+  public studentId?: string;
 
-  @Column()
-  public classId: string;
+  @Column({ nullable: true })
+  public classId?: string;
 
   @Column()
   public identity: string;
