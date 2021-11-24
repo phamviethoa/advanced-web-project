@@ -1,13 +1,10 @@
 import { Classes } from '../classes/class.entity';
 import { BaseEntity } from '../common/base.entity';
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
-import { ClassToUser } from 'src/classtouser/classtouser.entity';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
+import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 
 @Entity()
 export class User extends BaseEntity {
-  @Column({ type: 'varchar', nullable: true })
-  studentId: string;
-
   @Column({ type: 'varchar' })
   email: string;
 
@@ -17,12 +14,10 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   fullName: string;
 
-  @ManyToMany(() => Classes)
+  @ManyToMany(() => Classes, (classes) => classes.teachers)
+  @JoinTable()
   hostedClasses: Classes[];
 
-  @ManyToMany(() => Classes)
-  JoinedClasses: Classes[];
-
-  @OneToMany(() => ClassToUser, (classToUser) => classToUser.user)
-  classToUser!: Classes[];
+  @OneToMany(() => StudentToClass, (studentToClass) => studentToClass.student)
+  studentToClass: StudentToClass[];
 }

@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
-import { ClassToUser } from '../classtouser/classtouser.entity';
+import { User } from 'src/users/user.entity';
+import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 
 @Entity()
 export class Classes extends BaseEntity {
@@ -10,6 +11,9 @@ export class Classes extends BaseEntity {
   @Column({ type: 'varchar' })
   description: string;
 
-  @OneToMany(() => ClassToUser, (classToUser) => classToUser.classes)
-  public classToUser!: Classes[];
+  @ManyToMany(() => User, (user) => user.hostedClasses)
+  teachers: User[];
+
+  @OneToMany(() => StudentToClass, (studentToClass) => studentToClass.class)
+  studentToClass: StudentToClass[];
 }

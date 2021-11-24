@@ -11,8 +11,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
 import { ConfigModule } from '@nestjs/config';
-import { ClassToUserModule } from './classtouser/classes.module';
-import { ClassToUserController } from './classtouser/classtouser.controller';
+import { StudentToClassModule } from './student-to-class/student-to-class.module';
 
 @Module({
   imports: [
@@ -30,16 +29,11 @@ import { ClassToUserController } from './classtouser/classtouser.controller';
       autoLoadEntities: true,
     }),
     ClassesModule,
-    ClassToUserModule,
     UsersModule,
     AuthModule,
+    StudentToClassModule,
   ],
-  controllers: [
-    AppController,
-    ClassesController,
-    UsersController,
-    ClassToUserController,
-  ],
+  controllers: [AppController, ClassesController, UsersController],
   providers: [AppService],
 })
 export class AppModule {}
