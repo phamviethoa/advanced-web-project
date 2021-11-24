@@ -1,13 +1,25 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClassesController } from './classes.controller';
+import { JwtModule } from '@nestjs/jwt';
 import { ClassesService } from './classes.service';
 import { Classes } from './class.entity';
-import { StudentToClass } from '../student-to-class/student-to-class.entity';
+import { StudentToClassModule } from 'src/student-to-class/student-to-class.module';
+import { UsersModule } from 'src/users/users.module';
+import { AuthModule } from 'src/auth/auth.module';
+import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Classes,StudentToClass])],
+  imports: [
+    TypeOrmModule.forFeature([Classes, StudentToClass]),
+    JwtModule.register({
+      secret: 'secret',
+    }),
+    StudentToClassModule,
+    UsersModule,
+    AuthModule,
+  ],
   controllers: [ClassesController],
   providers: [ClassesService, StudentToClassService],
   exports: [ClassesService],

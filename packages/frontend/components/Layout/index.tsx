@@ -1,12 +1,19 @@
 import { signIn, signOut, useSession } from 'next-auth/client';
-import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 type Props = {
   children: React.ReactNode;
 };
 
 const Layout = ({ children }: Props) => {
+  const router = useRouter();
   const [session, loading] = useSession();
+
+  const callbackUrl = router.asPath;
+
+  if (session === null) {
+    router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+  }
 
   return (
     <div

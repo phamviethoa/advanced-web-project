@@ -111,6 +111,8 @@ export default NextAuth({
 
   pages: {
     signIn: '/auth/signin',
-    error: '/auth/error',
+    error: `/auth/error`,
   },
+  events: {},
+  debug: false,
 });

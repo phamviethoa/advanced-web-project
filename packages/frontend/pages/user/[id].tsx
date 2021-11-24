@@ -1,21 +1,19 @@
-import axios, { Axios } from 'axios';
+import axios from 'axios';
 import { InferGetStaticPropsType } from 'next';
 import * as React from 'react';
-import { useState } from 'react';
-import Layout from '../../components/Layout/index'
+import Layout from '../../components/Layout/index';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 
-export interface ProfilePageProps {
-}
+export interface ProfilePageProps {}
 
 type Post = {
-  id: string
-  fullName: string
-}
+  id: string;
+  fullName: string;
+};
 
 interface FormFields {
   id: string;
@@ -23,8 +21,7 @@ interface FormFields {
 }
 
 const schema = yup.object().shape({
-  id: yup
-    .string(),
+  id: yup.string(),
   fullName: yup
     .string()
     .required('Subject is required.')
@@ -34,45 +31,47 @@ const schema = yup.object().shape({
 export async function getStaticPaths() {
   const res = await axios.get('http://localhost:5000/users');
   const classes: Post[] = await res.data;
-  
-  const paths=classes.map(classitem => {
-  const idclass=classitem.id;
+
+  const paths = classes.map((classitem) => {
+    const idclass = classitem.id;
     return {
-      params:{id:idclass.toString()}
-    }
-  })
+      params: { id: idclass.toString() },
+    };
+  });
   return {
     paths,
-    fallback: false
-  }
+    fallback: false,
+  };
 }
 
-export async function getStaticProps(context: { params: { id: string; }; }) {
+export async function getStaticProps(context: { params: { id: string } }) {
   const id = context.params.id;
-  const res=  await axios.get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`);
+  const res = await axios.get(
+    `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`
+  );
   const data = await res.data;
   return {
-    props:{useritem:data}
-  }
+    props: { useritem: data },
+  };
 }
 
-
-export default function ProfilePage({ useritem }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const classitemrender:Post=useritem;
+export default function ProfilePage({
+  useritem,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
+  const classitemrender: Post = useritem;
   const router = useRouter();
 
-const {
-  handleSubmit,
-  register,
-  formState: { errors },
-} = useForm<FormFields>({
-  mode: 'all',
-  resolver: yupResolver(schema),
-});
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm<FormFields>({
+    mode: 'all',
+    resolver: yupResolver(schema),
+  });
 
-const createClass = handleSubmit(
-  async ({ id, fullName }: FormFields) => {
-    id=classitemrender.id;
+  const createClass = handleSubmit(async ({ id, fullName }: FormFields) => {
+    id = classitemrender.id;
     try {
       const res = await axios.put(
         `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`,
@@ -86,36 +85,39 @@ const createClass = handleSubmit(
     } catch {
       toast.error('Update profile unsucessfully.');
     }
-    
-  }
-);
-
+  });
 
   return (
     <div>
       <Layout>
         <h1>Thông tin người dùng</h1>
-          <div className="d-flex justify-content-center">
-            <img src="http://placekitten.com/g/200/200" className="rounded-circle"/>
-          </div>
-          <form onSubmit={createClass} noValidate>
+        <div className="d-flex justify-content-center">
+          <img
+            src="http://placekitten.com/g/200/200"
+            className="rounded-circle"
+          />
+        </div>
+        <form onSubmit={createClass} noValidate>
           <div className="mb-3">
-            <label htmlFor="formGroupExampleInput" className="form-label">Thông tin cá nhân</label>
-            <div  className="form-label">Họ và tên</div>
-            <input type="text" 
-            id="fullName" placeholder={classitemrender.fullName}
-            className={`form-control ${errors.fullName ? 'is-invalid' : ''}`}
-                {...register('fullName')}
+            <label htmlFor="formGroupExampleInput" className="form-label">
+              Thông tin cá nhân
+            </label>
+            <div className="form-label">Họ và tên</div>
+            <input
+              type="text"
+              id="fullName"
+              placeholder={classitemrender.fullName}
+              className={`form-control ${errors.fullName ? 'is-invalid' : ''}`}
+              {...register('fullName')}
             />
           </div>
           <div className="col-auto mt-3">
-            <button type="submit" className="btn btn-primary" >
-              Lưu thông tin</button>
+            <button type="submit" className="btn btn-primary">
+              Lưu thông tin
+            </button>
           </div>
-          </form>
+        </form>
       </Layout>
     </div>
   );
 }
-
-

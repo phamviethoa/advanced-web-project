@@ -6,13 +6,21 @@ import {
   Param,
   Post,
   Put,
+  Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ClassesService } from './classes.service';
+import { CreateClassDto } from './dto/create-class.dto';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 
 @Controller('classes')
 export class ClassesController {
-  constructor(private classesService: ClassesService,  private studentToClassService: StudentToClassService) {}
+  constructor(
+    private classesService: ClassesService,
+    private studentToClassService: StudentToClassService,
+  ) {}
 
   @Get()
   findAll() {
@@ -25,8 +33,24 @@ export class ClassesController {
   }
 
   @Post()
-  create(@Body() body: any) {
-    return this.classesService.create(body);
+  create(@Body() createClassDto: CreateClassDto) {
+    return this.classesService.create(createClassDto);
+  }
+
+  @Get('invite-student-link/:id')
+  getInviteStudentLink(@Param('id') id: string) {
+    return this.classesService.getInviteStudentLink(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/add-student')
+  addStudent(
+    @Request() req: any,
+    @Query('token') token: string,
+    @Body('identity') identity: string,
+  ) {
+    const email = req.user.email;
+    return this.classesService.addStudent(email, identity, token);
   }
 
   @Put(':id')
@@ -40,7 +64,7 @@ export class ClassesController {
   }
 
   @Post('/student-to-class')
-  createclasstostudent(@Body()  body: any) {
+  createclasstostudent(@Body() body: any) {
     return this.studentToClassService.create(body);
   }
 

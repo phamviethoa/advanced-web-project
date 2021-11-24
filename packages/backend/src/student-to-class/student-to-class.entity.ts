@@ -10,7 +10,6 @@ export class StudentToClass extends BaseEntity {
 
   @Column()
   public classId: string;
-  
 
   @Column()
   public identity: string;
