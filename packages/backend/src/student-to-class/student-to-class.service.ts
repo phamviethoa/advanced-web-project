@@ -16,8 +16,12 @@ export class StudentToClassService {
     });
   }
 
-  async create1(studentToClass: any) {
-    await this.studentToClassRepo.save(studentToClass);
+  async findByClassId(classId: string): Promise<StudentToClass> {
+    return await this.studentToClassRepo.findOne({ where: { classId } });
+  }
+
+  async save(studentToClass: any) {
+    return await this.studentToClassRepo.save(studentToClass);
   }
 
   async create(body: any) {

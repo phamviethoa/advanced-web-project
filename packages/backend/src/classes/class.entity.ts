@@ -16,7 +16,7 @@ export class Classes extends BaseEntity {
   teachers: User[];
 
   @OneToMany(() => StudentToClass, (studentToClass) => studentToClass.class)
-  studentToClass: StudentToClass[];
+  studentToClass!: StudentToClass[];
 
   @OneToMany(() => Assignment, (assignment) => assignment.class)
   assignments: Assignment[];

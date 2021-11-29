@@ -9,7 +9,7 @@ export class UsersService {
   constructor(@InjectRepository(User) private usersRepo: Repository<User>) {}
 
   async findOne(email: string): Promise<User | undefined> {
-    return this.usersRepo.findOne({ where: { email } });
+    return await this.usersRepo.findOne({ where: { email } });
   }
 
   async findOneid(id: string): Promise<User | undefined> {
@@ -47,6 +47,6 @@ export class UsersService {
   async update(id: string, body: any) {
     const task = await this.usersRepo.findOne(id);
     this.usersRepo.merge(task, body);
-    return this.usersRepo.save(task);
+    return await this.usersRepo.save(task);
   }
 }

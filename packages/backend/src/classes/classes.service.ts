@@ -54,13 +54,8 @@ export class ClassesService {
   }
 
   async addStudent(email: string, identity: string, token: string) {
-    console.log('Token: ', token);
-
     const payload = this.jwtService.verify(token);
     const classId = payload.classId;
-
-    console.log('payload: ', payload);
-    console.log('classId: ', classId);
 
     const classroom = await this.classesRepo.findOne(classId);
     const student = await this.usersService.findOne(email);
@@ -71,20 +66,9 @@ export class ClassesService {
 
     const studentToClass = new StudentToClass();
     studentToClass.identity = identity;
-    await this.studentToClassService.create1(studentToClass);
+    studentToClass.classId = classId;
+    studentToClass.studentId = student.id;
 
-    // Classes And Student To Class
-    classroom.studentToClass = classroom.studentToClass
-      ? [...classroom.studentToClass, studentToClass]
-      : [studentToClass];
-    await this.classesRepo.save(classroom);
-
-    // Student And Student To Class
-    student.studentToClass = student.studentToClass
-      ? [...student.studentToClass, studentToClass]
-      : [studentToClass];
-    await this.usersService.update(student.id, student);
-
-    return 'Add student successfully.';
+    return await this.studentToClassService.save(studentToClass);
   }
 }
