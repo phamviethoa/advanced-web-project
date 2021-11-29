@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Classes } from 'src/classes/class.entity';
 import { Repository } from 'typeorm';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
@@ -13,11 +14,31 @@ export class AssignmentsService {
   ) {}
 
   create(createAssignmentDto: CreateAssignmentDto) {
-    return 'This action adds a new assignment';
+    const newwassignment=new Assignment();
+    newwassignment.name=createAssignmentDto.name;
+    newwassignment.point=createAssignmentDto.point;
+    newwassignment.order=createAssignmentDto.order;
+    
+    const newclass = new Classes();
+    newclass.id=createAssignmentDto.classid;
+    newwassignment.class=newclass;
+    console.log(newwassignment);
+    //return 'This action adds a new assignment';
+    return this.assignmentsRepo.save(newwassignment);
   }
 
   findAll() {
-    return `This action returns all assignments`;
+    return this.assignmentsRepo.find({ relations: ["class"] });
+  }
+
+  async findAllInClass(idclass: string):Promise<Assignment[]> {
+    const assignmentinclass= this.assignmentsRepo.find({ 
+      relations: ["class"],
+      where:{
+        class:{
+          id:idclass
+    }}});
+    return assignmentinclass;
   }
 
   findOne(id: number) {

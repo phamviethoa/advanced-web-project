@@ -17,6 +17,11 @@ export class AssignmentsController {
     return this.assignmentsService.findAll();
   }
 
+  @Get('/class/:classid')
+  findAllInClass(@Param('classid') classid: string) {
+    return this.assignmentsService.findAllInClass(classid);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.assignmentsService.findOne(+id);
@@ -31,4 +36,6 @@ export class AssignmentsController {
   remove(@Param('id') id: string) {
     return this.assignmentsService.remove(+id);
   }
+
+
 }

@@ -5,12 +5,38 @@ import { toast } from 'react-toastify';
 import { ClassDto } from 'types/class.dto';
 import { UserDto } from 'types/user.dto';
 import Layout from '../../components/Layout/index';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+import { useRouter } from 'next/router';
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import {AssignemtDto} from 'types/assignment.dto';
 
 type Props = {
   classroom: ClassDto;
   teachers: UserDto[];
   students: UserDto[];
+  assignments: AssignemtDto[];
 };
+
+interface FormFields {
+  classid:string;
+  name: string;
+  point: number;
+  order: number;
+}
+
+const schema = yup.object().shape({
+  classid: yup.string(),
+  order: yup.number(),
+  name: yup
+    .string()
+    .required('Subject is required.')
+    .max(150, 'Subject is max 150 characters.'),
+  point: yup
+    .number()
+    .required('Subject is required.'),
+});
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const id = params?.id;
@@ -34,8 +60,13 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     students.push(student);
   }
 
+  const resassignments = await axios.get(
+    `${process.env.NEXT_PUBLIC_API_GATEWAY}/assignments/class/${id}`
+  );
+  const assignments: AssignemtDto = await resassignments.data;
+
   return {
-    props: { classroom, students, teachers: [] },
+    props: { classroom, students, teachers: [], assignments },
   };
 };
 
@@ -43,8 +74,9 @@ const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
 };
 
-function DetailClassPage({ classroom, teachers, students }: Props) {
+function DetailClassPage({ classroom, teachers, students, assignments }: Props) {
   const classId = classroom.id;
+  const [assignmentlist, setassignmentlist]=useState(assignments);
 
   const getInviteStudentLink = async () => {
     try {
@@ -60,6 +92,34 @@ function DetailClassPage({ classroom, teachers, students }: Props) {
     }
   };
 
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = useForm<FormFields>({
+    mode: 'all',
+    resolver: yupResolver(schema),
+  });
+
+  const createClass = handleSubmit(async ({ classid, name, point, order }: FormFields) => {
+    classid=classId;
+    order=1;
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_GATEWAY}/assignments/`,
+        {
+          classid,
+          name,
+          point,
+          order
+        }
+      );
+      toast.success('Update assignment grade successfully.');
+    } catch {
+      toast.error('Update assignment grade unsucessfully.');
+    }
+  });
+
   return (
     <div>
       <Layout>
@@ -70,9 +130,7 @@ function DetailClassPage({ classroom, teachers, students }: Props) {
         <div className="d-flex justify-content-center">
           <div className="fs-4">Mô tả môn học: {classroom.description}</div>
         </div>
-        <div className="d-flex justify-content-between">
-          <h3>Bài đăng</h3>
-          <div>
+        <div className="d-flex justify-content-center">
             <button type="button" className="btn btn-success mx-3">
               Thêm bài đăng
             </button>
@@ -86,10 +144,43 @@ function DetailClassPage({ classroom, teachers, students }: Props) {
               Get Invite Teacher Link
             </button>
           </div>
-        </div>
-
-        <div className="d-flex justify-content-center">
-          <div className="fs-4">Chưa có bài đăng</div>
+        <div className="d-flex bd-highlight" >
+          <div className="p-2 bd-highlight"> 
+            <h3>Assignments</h3>
+            <form onSubmit={createClass} noValidate>
+              <div className="container ">
+                <div className="border border-dark ">
+                  <label className="fs-5">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    placeholder="Name Grade"
+                    className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                    {...register('name')}
+                  />
+                  <label className="fs-5">Grade</label>
+                  <input
+                    type="text"
+                    id="Point"
+                    placeholder="Point"
+                    className={`form-control ${errors.point ? 'is-invalid' : ''}`}
+                    {...register('point')}
+                  />
+                  <div className="d-flex justify-content-around g-md-2">
+                    <button type="submit" className="btn btn-primary rounded-pill">Add</button>
+                  </div>
+                </div>
+               </div>
+            </form>
+          </div>
+          <div className="p-2 flex-grow-1 bd-highlight">
+          <div className="d-flex justify-content-center">
+            <h3>Bài đăng</h3>
+          </div>
+          <div className="d-flex justify-content-center">
+            <div className="fs-4">Chưa có bài đăng</div>
+          </div>
+          </div>
         </div>
         <h3>Danh sách lớp</h3>
         <h4>Danh sách giáo viên</h4>

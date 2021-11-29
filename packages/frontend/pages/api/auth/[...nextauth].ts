@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import { JWT } from 'next-auth/jwt';
+//import FacebookProvider from 'next-auth/providers/facebook';
 import FacebookProvider from 'next-auth/providers/facebook';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';

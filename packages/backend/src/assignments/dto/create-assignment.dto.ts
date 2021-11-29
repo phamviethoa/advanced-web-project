@@ -1,1 +1,6 @@
-export class CreateAssignmentDto {}
+export class CreateAssignmentDto {
+    name: string;
+    point:number;
+    order:number;
+    classid: string;
+}
