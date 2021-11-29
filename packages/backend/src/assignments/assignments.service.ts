@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
@@ -24,8 +24,16 @@ export class AssignmentsService {
     return `This action returns a #${id} assignment`;
   }
 
-  update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
-    return `This action updates a #${id} assignment`;
+  async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
+    const assignment = await this.assignmentsRepo.findOneOrFail(id);
+
+    if (!assignment) {
+      throw new NotFoundException();
+    }
+
+    const updated = this.assignmentsRepo.merge(assignment, updateAssignmentDto);
+
+    return this.assignmentsRepo.save(updated);
   }
 
   remove(id: number) {

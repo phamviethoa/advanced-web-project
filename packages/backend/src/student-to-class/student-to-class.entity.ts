@@ -5,18 +5,18 @@ import { BaseEntity } from '../common/base.entity';
 
 @Entity()
 export class StudentToClass extends BaseEntity {
-  @Column({ nullable: true })
-  public studentId?: string;
-
-  @Column({ nullable: true })
-  public classId?: string;
+  @Column()
+  public studentId!: string;
 
   @Column()
-  public identity: string;
+  public classId!: string;
 
-  @ManyToOne(() => User)
-  public student: User;
+  @Column()
+  public identity!: string;
 
-  @ManyToOne(() => Classes)
-  public class: Classes;
+  @ManyToOne(() => User, (user) => user.studentToClass)
+  public student!: User;
+
+  @ManyToOne(() => Classes, (user) => user.studentToClass)
+  public class!: Classes;
 }
