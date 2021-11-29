@@ -2,6 +2,7 @@ import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { User } from 'src/users/user.entity';
 import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
+import { Assignment } from 'src/assignments/entities/assignment.entity';
 
 @Entity()
 export class Classes extends BaseEntity {
@@ -16,4 +17,7 @@ export class Classes extends BaseEntity {
 
   @OneToMany(() => StudentToClass, (studentToClass) => studentToClass.class)
   studentToClass: StudentToClass[];
+
+  @OneToMany(() => Assignment, (assignment) => assignment.class)
+  assignments: Assignment[];
 }
