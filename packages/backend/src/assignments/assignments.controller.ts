@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AssignmentsService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { UpdateAllAssignmentDto } from './dto/update-allassignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 
 @Controller('assignments')
@@ -32,7 +33,7 @@ export class AssignmentsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.assignmentsService.findOne(+id);
+    return this.assignmentsService.findOne(id);
   }
 
   @Patch(':id')
@@ -40,13 +41,18 @@ export class AssignmentsController {
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
-    return this.assignmentsService.update(+id, updateAssignmentDto);
+    return this.assignmentsService.update(id, updateAssignmentDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.assignmentsService.remove(+id);
+    return this.assignmentsService.remove(id);
   }
 
 
+  @Post('/updateallassignments')
+  updateallassignments(@Body() updateAssignmentDto: UpdateAllAssignmentDto[],) {
+    //console.log(updateAssignmentDto);
+    return this.assignmentsService.updateallassignments(updateAssignmentDto);
+  }
 }
