@@ -1,6 +1,6 @@
-import { Classes } from 'src/classes/class.entity';
-import { BaseEntity } from 'src/common/base.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
+import { Classes } from './class.entity';
 
 @Entity()
 export class Assignment extends BaseEntity {
@@ -9,9 +9,6 @@ export class Assignment extends BaseEntity {
 
   @Column()
   point: number;
-
-  @Column()
-  order: number;
 
   @ManyToOne(() => Classes, (classes) => classes.assignments)
   class: Classes;

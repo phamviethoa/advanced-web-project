@@ -7,7 +7,7 @@ import { UserDto } from 'types/user.dto';
 import Layout from '../../components/Layout/index';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { AssignemtDto } from 'types/assignment.dto';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -36,10 +36,7 @@ const schema = yup.object().shape({
 });
 
 type FormFields = {
-  assignments: {
-    name: string;
-    point: string;
-  }[];
+  assignments: AssignemtDto[];
 };
 
 const copyToClipboard = (text: string) => {
@@ -52,16 +49,9 @@ function DetailClassPage({
   students,
 }: //assignments,
 Props) {
-  const [assignments, setAssignments] = useState([
-    {
-      name: 'Giua ky',
-      point: '30',
-    },
-    {
-      name: 'Cuoi ky',
-      point: '70',
-    },
-  ]);
+  const [assignments, setAssignments] = useState<AssignemtDto[]>(
+    classroom.assignments || []
+  );
 
   const {
     register,
@@ -110,11 +100,23 @@ Props) {
   };
 
   const updateAssignment = handleSubmit(async ({ assignments }) => {
-    setAssignments(assignments);
-    closeUpdateAssignmentModal();
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/update-assignments/${classId}`,
+        {
+          assignments,
+        }
+      );
+
+      setAssignments(assignments);
+      closeUpdateAssignmentModal();
+      toast.success('Modify assignments successfully.');
+    } catch (e) {
+      toast.error('Modify assignments unsuccessfully.');
+    }
   });
 
-  const handleOnDragEnd = (result: any) => {
+  const handleOnDragEnd = async (result: any) => {
     if (!result.destination) {
       return;
     }
@@ -122,10 +124,22 @@ Props) {
     const items = Array.from(assignments);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    setAssignments(items);
-  };
 
-  console.log(assignments);
+    setAssignments(items);
+
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/update-assignments/${classId}`,
+        {
+          assignments: items,
+        }
+      );
+
+      setAssignments(items);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <div>
@@ -207,7 +221,7 @@ Props) {
             <DragDropContext onDragEnd={handleOnDragEnd}>
               <Droppable droppableId="assignments">
                 {(provided) => (
-                  <ul
+                  <div
                     className="assignments"
                     {...provided.droppableProps}
                     ref={provided.innerRef}
@@ -223,7 +237,7 @@ Props) {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             ref={provided.innerRef}
-                            className="row"
+                            className="row p-2 border my-2 rounded bg-white"
                           >
                             <div className="col">{assignment.name}</div>
                             <div className="col">{`${assignment.point} points`}</div>
@@ -232,7 +246,7 @@ Props) {
                       </Draggable>
                     ))}
                     {provided.placeholder}
-                  </ul>
+                  </div>
                 )}
               </Droppable>
             </DragDropContext>
@@ -342,13 +356,8 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     students.push(student);
   }
 
-  const resassignments = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_GATEWAY}/assignments/class/${id}`
-  );
-  const assignments: AssignemtDto = await resassignments.data;
-
   return {
-    props: { classroom, students, teachers: [], assignments },
+    props: { classroom, students, teachers: [] },
   };
 };
 

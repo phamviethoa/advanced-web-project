@@ -9,10 +9,11 @@ import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
+import { Assignment } from './assignment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Classes, StudentToClass]),
+    TypeOrmModule.forFeature([Classes, StudentToClass, Assignment]),
     JwtModule.register({
       secret: 'secret',
     }),

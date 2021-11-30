@@ -2,7 +2,7 @@ import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { User } from 'src/users/user.entity';
 import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
-import { Assignment } from 'src/assignments/entities/assignment.entity';
+import { Assignment } from 'src/classes/assignment.entity';
 
 @Entity()
 export class Classes extends BaseEntity {
