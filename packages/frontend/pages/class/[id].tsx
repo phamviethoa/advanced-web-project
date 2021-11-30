@@ -7,8 +7,8 @@ import { UserDto } from 'types/user.dto';
 import Layout from '../../components/Layout/index';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
-import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { AssignemtDto } from 'types/assignment.dto';
 import Modal from 'components/Modal';
 
@@ -19,53 +19,26 @@ type Props = {
   assignments: AssignemtDto[];
 };
 
-interface FormFields {
-  classid: string;
-  name: string;
-  point: number;
-  order: number;
-}
-
-const schema = yup.object().shape({
-  classid: yup.string(),
-  order: yup.number(),
+const assignmentsSchema = yup.object().shape({
   name: yup
     .string()
-    .required('Subject is required.')
-    .max(150, 'Subject is max 150 characters.'),
-  point: yup.number().required('Subject is required.'),
+    .required('Name is required.')
+    .max(150, 'Name is max 100 characters.'),
+  point: yup
+    .number()
+    .typeError('Point must be a number')
+    .required('Point is required.'),
 });
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const id = params?.id;
-  const res = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`
-  );
-  const classroom: ClassDto = await res.data;
+const schema = yup.object().shape({
+  assignments: yup.array().of(assignmentsSchema),
+});
 
-  const studentToClasses = classroom.studentToClass;
-  const students: UserDto[] = [];
-
-  for (const studentToClass of studentToClasses || []) {
-    const identity = studentToClass.identity;
-    const studentToClassId = studentToClass.id;
-
-    const res2 = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY}/student-to-class/${studentToClassId}`
-    );
-
-    const student = { ...res2.data.student, identity };
-    students.push(student);
-  }
-
-  const resassignments = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_GATEWAY}/assignments/class/${id}`
-  );
-  const assignments: AssignemtDto = await resassignments.data;
-
-  return {
-    props: { classroom, students, teachers: [], assignments },
-  };
+type FormFields = {
+  assignments: {
+    name: string;
+    point: string;
+  }[];
 };
 
 const copyToClipboard = (text: string) => {
@@ -78,21 +51,37 @@ function DetailClassPage({
   students,
 }: //assignments,
 Props) {
-  const classId = classroom.id;
-  const [assignments, setAssignments] = useState<AssignemtDto[]>([
+  const [assignments, setAssignments] = useState([
     {
-      id: '1',
       name: 'Giua ky',
       point: '30',
-      order: 1,
     },
     {
-      id: '2',
       name: 'Cuoi ky',
       point: '70',
-      order: 2,
     },
   ]);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormFields>({
+    mode: 'all',
+    resolver: yupResolver(schema),
+    defaultValues: {
+      assignments,
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray<FormFields>({
+    control,
+    name: 'assignments',
+  });
+
+  const classId = classroom.id;
 
   const [isOpenUpdateAssignmentModal, setIsOpenUpdateAssignmentModal] =
     useState<boolean>(false);
@@ -100,6 +89,10 @@ Props) {
   const openUpdateAssignmentModal = () => setIsOpenUpdateAssignmentModal(true);
   const closeUpdateAssignmentModal = () =>
     setIsOpenUpdateAssignmentModal(false);
+
+  useEffect(() => {
+    reset({ assignments });
+  }, [assignments]);
 
   const getInviteStudentLink = async () => {
     try {
@@ -115,77 +108,18 @@ Props) {
     }
   };
 
-  const {
-    handleSubmit,
-    register,
-    formState: { errors },
-  } = useForm<FormFields>({
-    mode: 'all',
-    resolver: yupResolver(schema),
+  const items = useWatch({
+    control,
+    name: 'assignments',
   });
 
-  const createClass = handleSubmit(
-    async ({ classid, name, point, order }: FormFields) => {
-      classid = classId;
-      order = 1;
-      try {
-        const res = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_GATEWAY}/assignments/`,
-          {
-            classid,
-            name,
-            point,
-            order,
-          }
-        );
-        toast.success('Update assignment grade successfully.');
-      } catch {
-        toast.error('Update assignment grade unsucessfully.');
-      }
-    }
-  );
+  console.log('Items: ', items);
+  console.log('Error: ', errors);
 
-  const addNewAssignment = (order: number) => () => {
-    const newAssignment: AssignemtDto = {
-      id: 'new',
-      name: '',
-      point: '',
-      order: order + 1,
-    };
-
-    const newAssignments = assignments.map((assignment: AssignemtDto) => {
-      if (assignment.order > order) {
-        assignment.order = assignment.order + 1;
-        return assignment;
-      }
-
-      return assignment;
-    });
-
-    newAssignments.push(newAssignment);
-    newAssignments.sort(
-      (a: AssignemtDto, b: AssignemtDto) => a.order - b.order
-    );
-
-    setAssignments(newAssignments);
-  };
-
-  const deleteAssignment = (order: number) => () => {
-    const newAssignments = assignments
-      .filter((assignment) => assignment.order !== order)
-      .map((assignment) => {
-        if (assignment.order > order) {
-          assignment.order = assignment.order - 1;
-          return assignment;
-        }
-
-        return assignment;
-      });
-
-    setAssignments(newAssignments);
-  };
-
-  console.log(assignments);
+  const updateAssignment = handleSubmit(async ({ assignments }) => {
+    setAssignments(assignments);
+    closeUpdateAssignmentModal();
+  });
 
   return (
     <div>
@@ -194,40 +128,66 @@ Props) {
         isOpen={isOpenUpdateAssignmentModal}
         handleCloseModal={closeUpdateAssignmentModal}
       >
-        <div className="">
-          {assignments
-            .sort((a: AssignemtDto, b: AssignemtDto) => a.order - b.order)
-            .map((assignment, index) => (
-              <div className="rounded shadow-sm p-2 my-3 border" key={index}>
+        <form noValidate onSubmit={updateAssignment}>
+          {fields.map(({ id }, index) => {
+            return (
+              <div className="rounded shadow-sm p-2 my-3 border" key={id}>
                 <div className="row p-3">
                   <div className="col">
                     <input
                       type="text"
-                      className="form-control"
-                      placeholder={assignment.name}
+                      className={`form-control ${
+                        (errors.assignments || [])[index]?.name
+                          ? 'is-invalid'
+                          : ''
+                      }`}
+                      {...register(`assignments.${index}.name` as const)}
                     />
+                    <div className="invalid-feedback">
+                      {(errors.assignments || [])[index]?.name?.message}
+                    </div>
                   </div>
                   <div className="col">
                     <input
                       type="text"
-                      className="form-control"
-                      placeholder={assignment.point}
+                      className={`form-control ${
+                        (errors.assignments || [])[index]?.point
+                          ? 'is-invalid'
+                          : ''
+                      }`}
+                      {...register(`assignments.${index}.point` as const)}
                     />
+                    <div className="invalid-feedback">
+                      {(errors.assignments || [])[index]?.point?.message}
+                    </div>
                   </div>
-                  <div className="col-1">
-                    <a onClick={addNewAssignment(assignment.order)}>
-                      <i className="fas fa-plus d-inline-block ms-3 icon-md text-primary"></i>
-                    </a>
-                  </div>
-                  <div className="col-1">
-                    <a onClick={deleteAssignment(assignment.order)}>
-                      <i className="fas fa-trash d-inline-block ms-3 icon-md text-danger"></i>
+                  <div className="col-1 text-center">
+                    <a onClick={() => remove(index)}>
+                      <i className="fas fa-trash icon-md text-danger"></i>
                     </a>
                   </div>
                 </div>
               </div>
-            ))}
-        </div>
+            );
+          })}
+
+          <a onClick={() => append({})} className="btn btn-primary">
+            Add Assignment
+          </a>
+
+          <div className="border-top mt-4 pt-3 d-flex flex-row-reverse">
+            <button type="submit" className="btn btn-primary ms-3">
+              Submit
+            </button>
+            <button
+              onClick={closeUpdateAssignmentModal}
+              type="button"
+              className="btn btn-light"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </Modal>
       <Layout>
         <div className="row mt-5">
@@ -238,13 +198,11 @@ Props) {
                 <i className="fas fa-pencil-alt d-inline-block ms-3 icon-sm"></i>
               </a>
             </h2>
-            {assignments
-              .sort((a: AssignemtDto, b: AssignemtDto) => a.order - b.order)
-              .map((assignment, index) => (
-                <div
-                  key={index}
-                >{`${assignment.name} - ${assignment.point}`}</div>
-              ))}
+            {assignments.map((assignment, index) => (
+              <div
+                key={index}
+              >{`${assignment.name} - ${assignment.point}`}</div>
+            ))}
           </div>
           <div className="col rounded shadow bg-white p-4">
             <h1>Detail Classroom</h1>
@@ -272,44 +230,6 @@ Props) {
               </button>
             </div>
             <div className="d-flex bd-highlight">
-              <div className="p-2 bd-highlight">
-                <h3>Assignments</h3>
-                <form onSubmit={createClass} noValidate>
-                  <div className="container ">
-                    <div className="border border-dark ">
-                      <label className="fs-5">Name</label>
-                      <input
-                        type="text"
-                        id="name"
-                        placeholder="Name Grade"
-                        readOnly={true}
-                        className={`form-control-plaintext ${
-                          errors.name ? 'is-invalid' : ''
-                        }`}
-                        {...register('name')}
-                      />
-                      <label className="fs-5">Grade</label>
-                      <input
-                        type="text"
-                        id="Point"
-                        placeholder="Point"
-                        className={`form-control ${
-                          errors.point ? 'is-invalid' : ''
-                        }`}
-                        {...register('point')}
-                      />
-                      <div className="d-flex justify-content-around g-md-2">
-                        <button
-                          type="submit"
-                          className="btn btn-primary rounded-pill"
-                        >
-                          Add
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              </div>
               <div className="p-2 flex-grow-1 bd-highlight">
                 <div className="d-flex justify-content-center">
                   <h3>Bài đăng</h3>
@@ -366,5 +286,37 @@ Props) {
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const id = params?.id;
+  const res = await axios.get(
+    `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`
+  );
+  const classroom: ClassDto = await res.data;
+
+  const studentToClasses = classroom.studentToClass;
+  const students: UserDto[] = [];
+
+  for (const studentToClass of studentToClasses || []) {
+    const identity = studentToClass.identity;
+    const studentToClassId = studentToClass.id;
+
+    const res2 = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_GATEWAY}/student-to-class/${studentToClassId}`
+    );
+
+    const student = { ...res2.data.student, identity };
+    students.push(student);
+  }
+
+  const resassignments = await axios.get(
+    `${process.env.NEXT_PUBLIC_API_GATEWAY}/assignments/class/${id}`
+  );
+  const assignments: AssignemtDto = await resassignments.data;
+
+  return {
+    props: { classroom, students, teachers: [], assignments },
+  };
+};
 
 export default DetailClassPage;
