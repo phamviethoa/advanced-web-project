@@ -10,6 +10,7 @@ import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { AssignemtDto } from 'types/assignment.dto';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Modal from 'components/Modal';
 
 type Props = {
@@ -108,18 +109,23 @@ Props) {
     }
   };
 
-  const items = useWatch({
-    control,
-    name: 'assignments',
-  });
-
-  console.log('Items: ', items);
-  console.log('Error: ', errors);
-
   const updateAssignment = handleSubmit(async ({ assignments }) => {
     setAssignments(assignments);
     closeUpdateAssignmentModal();
   });
+
+  const handleOnDragEnd = (result: any) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const items = Array.from(assignments);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setAssignments(items);
+  };
+
+  console.log(assignments);
 
   return (
     <div>
@@ -198,11 +204,38 @@ Props) {
                 <i className="fas fa-pencil-alt d-inline-block ms-3 icon-sm"></i>
               </a>
             </h2>
-            {assignments.map((assignment, index) => (
-              <div
-                key={index}
-              >{`${assignment.name} - ${assignment.point}`}</div>
-            ))}
+            <DragDropContext onDragEnd={handleOnDragEnd}>
+              <Droppable droppableId="assignments">
+                {(provided) => (
+                  <ul
+                    className="assignments"
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                  >
+                    {assignments.map((assignment, index) => (
+                      <Draggable
+                        key={index}
+                        draggableId={`${assignment.name + index}`}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <div
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                            className="row"
+                          >
+                            <div className="col">{assignment.name}</div>
+                            <div className="col">{`${assignment.point} points`}</div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </ul>
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
           <div className="col rounded shadow bg-white p-4">
             <h1>Detail Classroom</h1>
