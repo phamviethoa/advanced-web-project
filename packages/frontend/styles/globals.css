@@ -14,3 +14,13 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.icon-sm {
+  font-size: 0.7em;
+  opacity: 0.8;
+}
+
+.icon-md {
+  font-size: 0.9em;
+  opacity: 0.8;
+}

@@ -1,7 +1,7 @@
-
 export type AssignemtDto = {
-    classid:string;
-    name: string;
-    point: number;
-    order: number;
+  id: string;
+  classid?: string;
+  name: string;
+  point: string;
+  order: number;
 };
