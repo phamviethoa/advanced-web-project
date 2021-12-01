@@ -14,6 +14,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
+import { UpdateAssignmentDto } from 'src/classes/dto/update-assignments.dto';
 
 @Controller('classes')
 export class ClassesController {
@@ -71,5 +72,13 @@ export class ClassesController {
   @Get('/student-to-class/:id')
   findAllpartici(@Param('id') id: string) {
     return this.studentToClassService.findAllpartici(id);
+  }
+
+  @Post('/update-assignments/:id')
+  updateAssignments(
+    @Param('id') id: string,
+    @Body() updateAssignmentDto: UpdateAssignmentDto,
+  ) {
+    return this.classesService.updateAssignments(id, updateAssignmentDto);
   }
 }

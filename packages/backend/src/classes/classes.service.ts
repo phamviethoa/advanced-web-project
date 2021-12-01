@@ -6,11 +6,15 @@ import { Classes } from './class.entity';
 import { UsersService } from 'src/users/users.service';
 import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
+import { Assignment } from './assignment.entity';
+import { UpdateAssignmentDto } from './dto/update-assignments.dto';
 
 @Injectable()
 export class ClassesService {
   constructor(
     @InjectRepository(Classes) private classesRepo: Repository<Classes>,
+    @InjectRepository(Assignment)
+    private assignmentsRepo: Repository<Assignment>,
     private jwtService: JwtService,
     private usersService: UsersService,
     private studentToClassService: StudentToClassService,
@@ -21,7 +25,7 @@ export class ClassesService {
 
   findOne(id: number) {
     return this.classesRepo.findOne(id, {
-      relations: ['teachers', 'studentToClass'],
+      relations: ['teachers', 'studentToClass', 'assignments'],
     });
   }
 
@@ -70,5 +74,30 @@ export class ClassesService {
     studentToClass.studentId = student.id;
 
     return await this.studentToClassService.save(studentToClass);
+  }
+
+  async updateAssignments(
+    id: string,
+    updateAssignmentDto: UpdateAssignmentDto,
+  ) {
+    const classes = await this.classesRepo.findOneOrFail(id);
+
+    const newAssignments: Assignment[] = [];
+
+    const removedAssignments = await this.assignmentsRepo.find({
+      class: classes,
+    });
+
+    this.assignmentsRepo.remove(removedAssignments);
+
+    for (const assignment of updateAssignmentDto.assignments) {
+      const newAssignment = this.assignmentsRepo.create(assignment);
+      await this.assignmentsRepo.save(newAssignment);
+
+      newAssignments.push(newAssignment);
+    }
+
+    classes.assignments = [...newAssignments];
+    return this.classesRepo.save(classes);
   }
 }
