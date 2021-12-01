@@ -5,6 +5,7 @@
     "postgres": "docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres",
     "backend": "lerna run --no-bail --parallel backend",
     "frontend": "lerna run --no-bail --parallel frontend",
+    "deploy:backend": "docker build . -f docker/Dockerfile.backend -t advanced-web:backend",
     "dev": "lerna run --no-bail --parallel dev"
   },
   "devDependencies": {

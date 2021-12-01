@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
+    environment:
+      - PORT=5000
+      - DB_HOST=ec2-3-211-228-251.compute-1.amazonaws.com
+      - DB_PORT=5432
+      - DB_USERNAME=wkywguaffmugcr
+      - DB_PASSWORD=274436b80133ba86b1fb89147ac164e638a9137134c51f24621683b75e534eae
+    ports:
+      - 5000:5000
+    depends_on:
+      - postgres
+    links:
+      - postgres:postgres
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
