@@ -90,7 +90,7 @@ const Layout = ({ children }: Props) => {
         </div>
       </nav>
 
-      <main className="container flex-grow-1 mb-5">{children}</main>
+      <main className="container flex-grow-1 mb-5 pt-5">{children}</main>
 
       <footer className="container-fluid text-center bg-dark text-white p-3">
         This is footer
