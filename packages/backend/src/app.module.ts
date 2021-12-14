@@ -25,6 +25,9 @@ import { StudentToClassModule } from './student-to-class/student-to-class.module
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
+      ssl: {
+        rejectUnauthorized: false,
+      },
       synchronize: true,
       autoLoadEntities: true,
     }),
