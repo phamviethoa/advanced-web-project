@@ -37,7 +37,7 @@ const schema = yup.object().shape({
     ),
 });
 
-const Signin = ({ providers, csrfToken }: Props) => {
+const Signin = ({ providers }: Props) => {
   const router = useRouter();
 
   const {

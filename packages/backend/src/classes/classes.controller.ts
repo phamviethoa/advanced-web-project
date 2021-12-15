@@ -33,9 +33,11 @@ export class ClassesController {
     return this.classesService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createClassDto: CreateClassDto) {
-    return this.classesService.create(createClassDto);
+  create(@Request() req: any, @Body() createClassDto: CreateClassDto) {
+    const teacherId = req.user.id;
+    return this.classesService.create(createClassDto, teacherId);
   }
 
   @Get('invite-student-link/:id')
