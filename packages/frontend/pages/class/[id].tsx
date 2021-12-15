@@ -4,18 +4,20 @@ import * as React from 'react';
 import { toast } from 'react-toastify';
 import { ClassDto } from 'types/class.dto';
 import { UserDto } from 'types/user.dto';
-import Layout from '../../components/Layout/index';
+import Layout, { LayoutOptions } from '../../components/Layout/index';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { AssignemtDto } from 'types/assignment.dto';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Modal from 'components/Modal';
+import ClassroomExercise from 'components/Class/ClassroomExercise';
+import ClassroomNews from 'components/Class/ClassroomNews';
+import ClassroomPeople from 'components/Class/ClassroomPeople';
+import ClassroomGrade from 'components/Class/ClassroomGrade';
 
 type Props = {
   classroom: ClassDto;
-  teachers: UserDto[];
   students: UserDto[];
   assignments: AssignemtDto[];
 };
@@ -43,12 +45,35 @@ const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
 };
 
-function DetailClassPage({
-  classroom,
-  teachers,
-  students,
-}: //assignments,
-Props) {
+enum ClassroomTab {
+  NEWS = 'NEWS',
+  EXERCISE = 'EXERCISE',
+  PEOPLE = 'PEOPLE',
+  GRADE = 'GRADE',
+}
+
+function DetailClassPage({ classroom, students }: Props) {
+  const [currentTab, setCurrentTab] = useState<ClassroomTab>(ClassroomTab.NEWS);
+
+  const navbarOptions: LayoutOptions[] = [
+    {
+      name: 'News',
+      onClick: () => setCurrentTab(ClassroomTab.NEWS),
+    },
+    {
+      name: 'Exercise',
+      onClick: () => setCurrentTab(ClassroomTab.EXERCISE),
+    },
+    {
+      name: 'People',
+      onClick: () => setCurrentTab(ClassroomTab.PEOPLE),
+    },
+    {
+      name: 'Grade',
+      onClick: () => setCurrentTab(ClassroomTab.GRADE),
+    },
+  ];
+
   const [assignments, setAssignments] = useState<AssignemtDto[]>(
     classroom.assignments || []
   );
@@ -141,8 +166,26 @@ Props) {
     }
   };
 
+  const renderTab = {
+    [ClassroomTab.NEWS]: (
+      <ClassroomNews
+        classroom={classroom}
+        assignments={assignments}
+        onOpenUpdateAssginmentModal={openUpdateAssignmentModal}
+        onHandleOnDragEnd={handleOnDragEnd}
+        onGetInviteStudentLink={getInviteStudentLink}
+      />
+    ),
+    [ClassroomTab.EXERCISE]: <ClassroomExercise />,
+    [ClassroomTab.PEOPLE]: (
+      <ClassroomPeople classroom={classroom} students={students} />
+    ),
+    [ClassroomTab.GRADE]: <ClassroomGrade />,
+  };
+
   return (
     <div>
+      <Layout options={navbarOptions}>{renderTab[currentTab]}</Layout>
       <Modal
         title="Update Assignments"
         isOpen={isOpenUpdateAssignmentModal}
@@ -151,7 +194,7 @@ Props) {
         <form noValidate onSubmit={updateAssignment}>
           {fields.map(({ id }, index) => {
             return (
-              <div className="rounded shadow-sm p-2 my-3 border" key={id}>
+              <div className="rounded p-2 my-3 border" key={id}>
                 <div className="row p-3">
                   <div className="col">
                     <input
@@ -209,136 +252,17 @@ Props) {
           </div>
         </form>
       </Modal>
-      <Layout>
-        <div className="row mt-5">
-          <div className="col-3 rounded shadow bg-white p-4 me-3">
-            <h2 className="h5 mb-4">
-              Assignments
-              <a onClick={openUpdateAssignmentModal}>
-                <i className="fas fa-pencil-alt d-inline-block ms-3 icon-sm"></i>
-              </a>
-            </h2>
-            <DragDropContext onDragEnd={handleOnDragEnd}>
-              <Droppable droppableId="assignments">
-                {(provided) => (
-                  <div
-                    className="assignments"
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {assignments.map((assignment, index) => (
-                      <Draggable
-                        key={index}
-                        draggableId={`${assignment.name + index}`}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            ref={provided.innerRef}
-                            className="row p-2 border my-2 rounded bg-white"
-                          >
-                            <div className="col">{assignment.name}</div>
-                            <div className="col">{`${assignment.point} points`}</div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </div>
-          <div className="col rounded shadow bg-white p-4">
-            <h1>Detail Classroom</h1>
-            <div className="d-flex justify-content-center">
-              <div className="fs-2">Tên môn học: {classroom.subject}</div>
-            </div>
-            <div className="d-flex justify-content-center">
-              <div className="fs-4">Mô tả môn học: {classroom.description}</div>
-            </div>
-            <div className="d-flex justify-content-center">
-              <button type="button" className="btn btn-success mx-3">
-                Thêm bài đăng
-              </button>
-              <button
-                onClick={getInviteStudentLink}
-                className="btn btn-primary mx-3"
-              >
-                Get Invite Student Link
-              </button>
-              <button
-                onClick={getInviteStudentLink}
-                className="btn btn-primary"
-              >
-                Get Invite Teacher Link
-              </button>
-            </div>
-            <div className="d-flex bd-highlight">
-              <div className="p-2 flex-grow-1 bd-highlight">
-                <div className="d-flex justify-content-center">
-                  <h3>Bài đăng</h3>
-                </div>
-                <div className="d-flex justify-content-center">
-                  <div className="fs-4">Chưa có bài đăng</div>
-                </div>
-              </div>
-            </div>
-            <h3>Danh sách lớp</h3>
-            <h4>Danh sách giáo viên</h4>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th scope="col">STT</th>
-                  <th scope="col">Họ và tên</th>
-                  <th scope="col">Mã số</th>
-                  <th scope="col">Email</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Mark</td>
-                  <td>Otto</td>
-                  <td>@mdo</td>
-                </tr>
-              </tbody>
-            </table>
-            <h4>Danh sách sinh viên</h4>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th scope="col">STT</th>
-                  <th scope="col">Họ và tên</th>
-                  <th scope="col">Mã số</th>
-                  <th scope="col">Email</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, index) => (
-                  <tr key={index}>
-                    <th scope="row">{index + 1}</th>
-                    <td>{student.fullName}</td>
-                    <td>{student.identity}</td>
-                    <td>{student.email}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </Layout>
     </div>
   );
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const id = params?.id;
+
   const res = await axios.get(
     `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`
   );
+
   const classroom: ClassDto = await res.data;
 
   const studentToClasses = classroom.studentToClass;
@@ -357,7 +281,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   }
 
   return {
-    props: { classroom, students, teachers: [] },
+    props: { classroom, students },
   };
 };
 

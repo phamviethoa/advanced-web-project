@@ -2,8 +2,14 @@ import { signIn, signOut, useSession } from 'next-auth/client';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
+export type LayoutOptions = {
+  name: string;
+  onClick: () => void;
+};
+
 type Props = {
   children: React.ReactNode;
+  options?: LayoutOptions[];
 };
 
 type Session = {
@@ -18,7 +24,7 @@ type Session = {
   };
 };
 
-const Layout = ({ children }: Props) => {
+const Layout = ({ children, options }: Props) => {
   const router = useRouter();
   const [session, loading] = useSession();
 
@@ -35,27 +41,40 @@ const Layout = ({ children }: Props) => {
       style={{ minHeight: '100vh' }}
       className="d-flex flex-column justify-content-between container-fluid bg-light p-0"
     >
-      <nav className="navbar navbar-light bg-primary">
+      <nav className="navbar navbar-light shadow">
         <div className="container">
           <div>
-            <a className="navbar-brand text-white" href="#">
+            <a className="navbar-brand fw-bold text-primary" href="#">
               Navbar
             </a>
           </div>
+          {options && (
+            <ul className="d-flex list-unstyled m-0 p-0">
+              {options.map(({ name, onClick }) => (
+                <li
+                  key={name}
+                  onClick={onClick}
+                  className="d-inline-block mx-5"
+                >
+                  <a href="#">{name}</a>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="text-light">
             {!session && (
-              <button className="btn text-white" onClick={() => signIn()}>
+              <button className="btn text-dark" onClick={() => signIn()}>
                 Login&nbsp;
                 <i className="fas fa-sign-in-alt"></i>
               </button>
             )}
             {session && (
               <div className="dropdown">
-                <span className="p-0 m-0">
+                <span className="p-0 m-0 text-dark">
                   {`Hi! ${session.user?.name}`}&nbsp;&nbsp;
                 </span>
                 <a
-                  className="text-white"
+                  className="text-dark"
                   id="dropdownMenuButton1"
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
@@ -90,7 +109,7 @@ const Layout = ({ children }: Props) => {
         </div>
       </nav>
 
-      <main className="container flex-grow-1 mb-5">{children}</main>
+      <main className="container flex-grow-1 mb-5 pt-5">{children}</main>
 
       <footer className="container-fluid text-center bg-dark text-white p-3">
         This is footer

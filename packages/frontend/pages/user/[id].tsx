@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { InferGetStaticPropsType } from 'next';
+import { GetServerSideProps } from 'next';
 import * as React from 'react';
 import Layout from '../../components/Layout/index';
 import * as yup from 'yup';
@@ -28,24 +28,8 @@ const schema = yup.object().shape({
     .max(150, 'Subject is max 150 characters.'),
 });
 
-export async function getStaticPaths() {
-  const res = await axios.get('http://localhost:5000/users');
-  const classes: Post[] = await res.data;
-
-  const paths = classes.map((classitem) => {
-    const idclass = classitem.id;
-    return {
-      params: { id: idclass.toString() },
-    };
-  });
-  return {
-    paths,
-    fallback: false,
-  };
-}
-
-export async function getStaticProps(context: { params: { id: string } }) {
-  const id = context.params.id;
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const id = params?.id;
   const res = await axios.get(
     `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`
   );
@@ -53,11 +37,9 @@ export async function getStaticProps(context: { params: { id: string } }) {
   return {
     props: { useritem: data },
   };
-}
+};
 
-export default function ProfilePage({
-  useritem,
-}: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function ProfilePage({ useritem }: any) {
   const classitemrender: Post = useritem;
   const router = useRouter();
 

@@ -8,11 +8,14 @@ import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 import { Assignment } from './assignment.entity';
 import { UpdateAssignmentDto } from './dto/update-assignments.dto';
+import { CreateClassDto } from './dto/create-class.dto';
+import { User } from 'src/users/user.entity';
 
 @Injectable()
 export class ClassesService {
   constructor(
     @InjectRepository(Classes) private classesRepo: Repository<Classes>,
+    @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Assignment)
     private assignmentsRepo: Repository<Assignment>,
     private jwtService: JwtService,
@@ -29,10 +32,11 @@ export class ClassesService {
     });
   }
 
-  create(body: any) {
-    const newClasses = new Classes();
-    newClasses.subject = body.subject;
-    newClasses.description = body.description;
+  async create(createClassDto: CreateClassDto, teacherId: any) {
+    const newClasses = this.classesRepo.create(createClassDto);
+    const teacher = await this.usersRepo.findOneOrFail(teacherId);
+    newClasses.teachers = [teacher];
+
     return this.classesRepo.save(newClasses);
   }
 
