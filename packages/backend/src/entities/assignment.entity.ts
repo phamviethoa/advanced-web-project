@@ -5,7 +5,7 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Assignment extends BaseEntity {
-  @Column()
+  @Column('varchar')
   name: string;
 
   @Column()
