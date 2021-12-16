@@ -12,6 +12,8 @@ import { AuthModule } from './auth/auth.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { StudentToClassModule } from './student-to-class/student-to-class.module';
+import { RolesGuard } from './auth/author/role.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -37,6 +39,9 @@ import { StudentToClassModule } from './student-to-class/student-to-class.module
     StudentToClassModule,
   ],
   controllers: [AppController, ClassesController, UsersController],
-  providers: [AppService],
+  providers: [AppService,{
+    provide: APP_GUARD,
+    useClass: RolesGuard,
+  },],
 })
 export class AppModule {}

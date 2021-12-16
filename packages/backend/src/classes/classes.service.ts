@@ -18,6 +18,8 @@ export class ClassesService {
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Assignment)
     private assignmentsRepo: Repository<Assignment>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
     private jwtService: JwtService,
     private usersService: UsersService,
     private studentToClassService: StudentToClassService,
@@ -103,5 +105,20 @@ export class ClassesService {
 
     classes.assignments = [...newAssignments];
     return this.classesRepo.save(classes);
+  }
+
+  async  findAllwithteacher(teacherid: string): Promise<Classes[]> {
+    const classteacher= await this.userRepo.find({relations:["hostedClasses"],where:{id:teacherid}});
+    return classteacher[0].hostedClasses;
+  }
+
+  async  findAllwithstudent(studentid: string): Promise<Classes[]> {
+    let classstudent:Classes[]=[];
+    const studenttoclasslist =await this.studentToClassService.findAllClasspartici(studentid);
+    for(const studenttoclass of studenttoclasslist)
+    {
+      classstudent.push(studenttoclass.class);
+    }
+    return classstudent;
   }
 }

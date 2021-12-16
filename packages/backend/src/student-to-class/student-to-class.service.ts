@@ -35,4 +35,9 @@ export class StudentToClassService {
     const partics = await this.studentToClassRepo.find({ where: { classid } });
     return partics;
   }
+
+  async findAllClasspartici(particiid: string): Promise<StudentToClass[]> {
+    const partics = await this.studentToClassRepo.find({ relations:["class"],where: { studentId: particiid } });
+    return partics;
+  }
 }

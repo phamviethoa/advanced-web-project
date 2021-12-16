@@ -15,6 +15,9 @@ import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 import { UpdateAssignmentDto } from 'src/classes/dto/update-assignments.dto';
+import { Roles } from 'src/auth/author/role.decorator';
+import { Role } from 'src/auth/author/entities/role.enum';
+import { RolesGuard } from 'src/auth/author/role.guard';
 
 @Controller('classes')
 export class ClassesController {
@@ -38,6 +41,23 @@ export class ClassesController {
   create(@Request() req: any, @Body() createClassDto: CreateClassDto) {
     const teacherId = req.user.id;
     return this.classesService.create(createClassDto, teacherId);
+  }
+
+  @Get('/user/:id')
+  async findAllwithstudentteacher(@Param('id') id: string) {
+    const classesstudent= await this.classesService.findAllwithstudent(id);
+    const classesteacher =await this.classesService.findAllwithteacher(id);
+    let classuser=[];
+    for(const classstudent of classesstudent)
+    {
+      classuser.push(classstudent);
+    }
+
+    for(const classteacher of classesteacher)
+    {
+      classuser.push(classteacher);
+    }
+    return classuser;
   }
 
   @Get('invite-student-link/:id')
@@ -77,6 +97,8 @@ export class ClassesController {
   }
 
   @Post('/update-assignments/:id')
+  @Roles(Role.TEACHER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   updateAssignments(
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
