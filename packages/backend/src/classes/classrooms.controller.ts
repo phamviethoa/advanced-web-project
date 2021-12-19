@@ -11,58 +11,41 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
-import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
 import { UpdateAssignmentDto } from 'src/classes/dto/update-assignments.dto';
 import { Roles } from 'src/auth/author/role.decorator';
 import { Role } from 'src/auth/author/entities/role.enum';
 import { RolesGuard } from 'src/auth/author/role.guard';
+import { ClassroomsService } from './classrooms.service';
+import { StudentsService } from 'src/students/students.service';
 
 @Controller('classes')
-export class ClassesController {
+export class ClassroomsController {
   constructor(
-    private classesService: ClassesService,
-    private studentToClassService: StudentToClassService,
+    private classroomsService: ClassroomsService,
+    private studentsService: StudentsService,
   ) {}
 
   @Get()
   findAll() {
-    return this.classesService.findAll();
+    return this.classroomsService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: number) {
-    return this.classesService.findOne(id);
+    return this.classroomsService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Request() req: any, @Body() createClassDto: CreateClassDto) {
     const teacherId = req.user.id;
-    return this.classesService.create(createClassDto, teacherId);
-  }
-
-  @Get('/user/:id')
-  async findAllwithstudentteacher(@Param('id') id: string) {
-    const classesstudent= await this.classesService.findAllwithstudent(id);
-    const classesteacher =await this.classesService.findAllwithteacher(id);
-    let classuser=[];
-    for(const classstudent of classesstudent)
-    {
-      classuser.push(classstudent);
-    }
-
-    for(const classteacher of classesteacher)
-    {
-      classuser.push(classteacher);
-    }
-    return classuser;
+    return this.classroomsService.create(createClassDto, teacherId);
   }
 
   @Get('invite-student-link/:id')
   getInviteStudentLink(@Param('id') id: string) {
-    return this.classesService.getInviteStudentLink(id);
+    return this.classroomsService.getInviteStudentLink(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -73,7 +56,7 @@ export class ClassesController {
     @Body('identity') identity: string,
   ) {
     const email = req.user.email;
-    return this.classesService.addStudent(email, identity, token);
+    return this.classroomsService.addStudent(email, identity, token);
   }
 
   @Put(':id')
@@ -88,12 +71,12 @@ export class ClassesController {
 
   @Post('/student-to-class')
   createclasstostudent(@Body() body: any) {
-    return this.studentToClassService.create(body);
+    return this.studentsService.create(body);
   }
 
   @Get('/student-to-class/:id')
   findAllpartici(@Param('id') id: string) {
-    return this.studentToClassService.findAllpartici(id);
+    return this.studentsService.findAllpartici(id);
   }
 
   @Post('/update-assignments/:id')
@@ -103,6 +86,6 @@ export class ClassesController {
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
-    return this.classesService.updateAssignments(id, updateAssignmentDto);
+    return this.classroomsService.updateAssignments(id, updateAssignmentDto);
   }
 }

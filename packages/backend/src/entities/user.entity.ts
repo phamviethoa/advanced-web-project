@@ -6,7 +6,7 @@ import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 @Entity()
 export class User extends BaseEntity {
   @Column()
-  username: string;
+  email: string;
 
   @Column()
   fullName: string;
@@ -19,6 +19,6 @@ export class User extends BaseEntity {
   })
   classrooms: Classroom[];
 
-  @OneToMany(() => Student, (student) => student.user, { eager: true })
+  @OneToMany(() => Student, (student) => student.user)
   students: Student[];
 }

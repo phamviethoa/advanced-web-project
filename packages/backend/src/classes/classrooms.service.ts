@@ -2,29 +2,24 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Classes } from './class.entity';
-import { UsersService } from 'src/users/users.service';
-import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
-import { StudentToClassService } from 'src/student-to-class/student-to-class.service';
-import { Assignment } from './assignment.entity';
 import { UpdateAssignmentDto } from './dto/update-assignments.dto';
 import { CreateClassDto } from './dto/create-class.dto';
-import { User } from 'src/users/user.entity';
+import { Classroom } from 'src/entities/classroom.entity';
+import { User } from 'src/entities/user.entity';
+import { Assignment } from 'src/entities/assignment.entity';
+import { Student } from 'src/entities/student.entity';
 
 @Injectable()
-export class ClassesService {
+export class ClassroomsService {
   constructor(
-    @InjectRepository(Classes) private classesRepo: Repository<Classes>,
+    @InjectRepository(Classroom) private classesRepo: Repository<Classroom>,
     @InjectRepository(User) private usersRepo: Repository<User>,
+    @InjectRepository(Student) private studentsRepo: Repository<Student>,
     @InjectRepository(Assignment)
     private assignmentsRepo: Repository<Assignment>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
     private jwtService: JwtService,
-    private usersService: UsersService,
-    private studentToClassService: StudentToClassService,
   ) {}
-  async findAll(): Promise<Classes[]> {
+  async findAll(): Promise<Classroom[]> {
     return this.classesRepo.find();
   }
 
@@ -68,18 +63,15 @@ export class ClassesService {
     const classId = payload.classId;
 
     const classroom = await this.classesRepo.findOne(classId);
-    const student = await this.usersService.findOne(email);
+    const student = await this.studentsRepo.findOne({ identity });
 
     if (!classroom || !student) {
       throw new BadRequestException();
     }
 
-    const studentToClass = new StudentToClass();
-    studentToClass.identity = identity;
-    studentToClass.classId = classId;
-    studentToClass.studentId = student.id;
+    classroom.students = [student];
 
-    return await this.studentToClassService.save(studentToClass);
+    return await this.classesRepo.save(classroom);
   }
 
   async updateAssignments(
@@ -91,7 +83,7 @@ export class ClassesService {
     const newAssignments: Assignment[] = [];
 
     const removedAssignments = await this.assignmentsRepo.find({
-      class: classes,
+      classroom: classes,
     });
 
     this.assignmentsRepo.remove(removedAssignments);
@@ -107,18 +99,11 @@ export class ClassesService {
     return this.classesRepo.save(classes);
   }
 
-  async  findAllwithteacher(teacherid: string): Promise<Classes[]> {
-    const classteacher= await this.userRepo.find({relations:["hostedClasses"],where:{id:teacherid}});
-    return classteacher[0].hostedClasses;
-  }
-
-  async  findAllwithstudent(studentid: string): Promise<Classes[]> {
-    let classstudent:Classes[]=[];
-    const studenttoclasslist =await this.studentToClassService.findAllClasspartici(studentid);
-    for(const studenttoclass of studenttoclasslist)
-    {
-      classstudent.push(studenttoclass.class);
-    }
-    return classstudent;
+  async findAllwithteacher(teacherid: string): Promise<Classroom[]> {
+    const classteacher = await this.usersRepo.find({
+      relations: ['hostedClasses'],
+      where: { id: teacherid },
+    });
+    return classteacher[0].classrooms;
   }
 }
