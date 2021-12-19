@@ -3,7 +3,6 @@ import { GetServerSideProps } from 'next';
 import * as React from 'react';
 import { toast } from 'react-toastify';
 import { ClassDto } from 'types/class.dto';
-import { UserDto } from 'types/user.dto';
 import Layout, { LayoutOptions } from '../../components/Layout/index';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
@@ -15,11 +14,10 @@ import ClassroomExercise from 'components/Class/ClassroomExercise';
 import ClassroomNews from 'components/Class/ClassroomNews';
 import ClassroomPeople from 'components/Class/ClassroomPeople';
 import ClassroomGrade from 'components/Class/ClassroomGrade';
+import { ClassroomDto } from 'types/classroom.dto';
 
 type Props = {
-  classroom: ClassDto;
-  students: UserDto[];
-  assignments: AssignemtDto[];
+  classroom: ClassroomDto;
 };
 
 const assignmentsSchema = yup.object().shape({
@@ -52,7 +50,7 @@ enum ClassroomTab {
   GRADE = 'GRADE',
 }
 
-function DetailClassPage({ classroom, students }: Props) {
+function DetailClassPage({ classroom }: Props) {
   const [currentTab, setCurrentTab] = useState<ClassroomTab>(ClassroomTab.NEWS);
 
   const navbarOptions: LayoutOptions[] = [
@@ -178,7 +176,7 @@ function DetailClassPage({ classroom, students }: Props) {
     ),
     [ClassroomTab.EXERCISE]: <ClassroomExercise />,
     [ClassroomTab.PEOPLE]: (
-      <ClassroomPeople classroom={classroom} students={students} />
+      <ClassroomPeople classroom={classroom} students={classroom.students} />
     ),
     [ClassroomTab.GRADE]: <ClassroomGrade />,
   };
@@ -265,23 +263,8 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 
   const classroom: ClassDto = await res.data;
 
-  const studentToClasses = classroom.studentToClass;
-  const students: UserDto[] = [];
-
-  for (const studentToClass of studentToClasses || []) {
-    const identity = studentToClass.identity;
-    const studentToClassId = studentToClass.id;
-
-    const res2 = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY}/student-to-class/${studentToClassId}`
-    );
-
-    const student = { ...res2.data.student, identity };
-    students.push(student);
-  }
-
   return {
-    props: { classroom, students },
+    props: { classroom },
   };
 };
 

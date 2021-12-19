@@ -8,7 +8,11 @@ import {
   Put,
   Query,
   Request,
+  Response,
+  Res,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateClassDto } from './dto/create-class.dto';
@@ -18,6 +22,8 @@ import { Role } from 'src/auth/author/entities/role.enum';
 import { RolesGuard } from 'src/auth/author/role.guard';
 import { ClassroomsService } from './classrooms.service';
 import { StudentsService } from 'src/students/students.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { read } from 'xlsx';
 
 @Controller('classes')
 export class ClassroomsController {
@@ -32,7 +38,7 @@ export class ClassroomsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
+  findOne(@Param('id') id: string) {
     return this.classroomsService.findOne(id);
   }
 
@@ -87,5 +93,23 @@ export class ClassroomsController {
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
+  }
+
+  @Post('/assignments/:assignmentId/mark-finalized')
+  isFullAssignment(@Param('assignmentId') assignmentId) {
+    return this.classroomsService.markFinalized(assignmentId);
+  }
+
+  @Get('/download-student-list-template')
+  download(@Res() res: any) {
+    return this.classroomsService.downloadStudentListTemplate(res);
+  }
+
+  @Post('uploadliststudent')
+  @UseInterceptors(FileInterceptor('file'))
+  uploatFile(@UploadedFile() file: any, @Body() body: any) {
+    const workBook = read(file.buffer);
+    const workSheet = workBook.Sheets[workBook.SheetNames[0]];
+    return this.classroomsService.savestudentlist(workSheet, body);
   }
 }

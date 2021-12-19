@@ -17,6 +17,7 @@ export class Classroom extends BaseEntity {
   teachers: User[];
 
   @ManyToMany(() => Student, (student) => student.classrooms)
+  @JoinTable()
   students: Student[];
 
   @OneToMany(() => Assignment, (assignment) => assignment.classroom)

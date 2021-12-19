@@ -1,9 +1,9 @@
-import { ClassDto } from 'types/class.dto';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { AssignemtDto } from 'types/assignment.dto';
+import { ClassroomDto } from 'types/classroom.dto';
 
 type Props = {
-  classroom: ClassDto;
+  classroom: ClassroomDto;
   assignments: AssignemtDto[];
   onOpenUpdateAssginmentModal: () => void;
   onHandleOnDragEnd: (result: any) => Promise<void>;

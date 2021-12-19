@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Response } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,9 +23,9 @@ export class ClassroomsService {
     return this.classesRepo.find();
   }
 
-  findOne(id: number) {
-    return this.classesRepo.findOne(id, {
-      relations: ['teachers', 'studentToClass', 'assignments'],
+  findOne(id: string) {
+    return this.classesRepo.findOneOrFail(id, {
+      relations: ['teachers', 'students', 'assignments'],
     });
   }
 
@@ -59,17 +59,30 @@ export class ClassroomsService {
   }
 
   async addStudent(email: string, identity: string, token: string) {
+    console.log('Email: ', email);
+    console.log('identity: ', identity);
+    console.log('token: ', token);
+
     const payload = this.jwtService.verify(token);
     const classId = payload.classId;
 
     const classroom = await this.classesRepo.findOne(classId);
-    const student = await this.studentsRepo.findOne({ identity });
+    const user = await this.usersRepo.findOneOrFail({ email });
 
-    if (!classroom || !student) {
+    if (!classroom || !user) {
       throw new BadRequestException();
     }
 
-    classroom.students = [student];
+    const newStudent = this.studentsRepo.create({
+      identity,
+      fullName: user.fullName,
+    });
+
+    classroom.students = [newStudent];
+    user.students = [newStudent];
+
+    this.studentsRepo.save(newStudent);
+    this.usersRepo.save(user);
 
     return await this.classesRepo.save(classroom);
   }
@@ -105,5 +118,12 @@ export class ClassroomsService {
       where: { id: teacherid },
     });
     return classteacher[0].classrooms;
+  }
+
+  markFinalized() {}
+
+  downloadStudentListTemplate(res: any) {
+    const filename = 'templatestudentlist.xlsx';
+    return res.download('./src/classrooms/filetemplatestudentlist/' + filename);
   }
 }
