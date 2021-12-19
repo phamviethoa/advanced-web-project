@@ -11,6 +11,9 @@ export class Assignment extends BaseEntity {
   @Column()
   maxPoint: number;
 
+  @Column()
+  isFull: boolean;
+
   @ManyToOne(() => Classroom, (classroom) => classroom.assignments)
   classroom: Classroom;
 

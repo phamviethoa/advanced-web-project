@@ -12,7 +12,7 @@ export class Classroom extends BaseEntity {
   @Column({ type: 'varchar' })
   description: string;
 
-  @ManyToMany(() => User, (teacher) => teacher.classrooms, { eager: true })
+  @ManyToMany(() => User, (teacher) => teacher.classrooms)
   @JoinTable()
   teachers: User[];
 
