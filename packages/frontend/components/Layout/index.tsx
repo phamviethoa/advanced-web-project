@@ -44,8 +44,8 @@ const Layout = ({ children, options }: Props) => {
       <nav className="navbar navbar-light shadow">
         <div className="container">
           <div>
-            <a className="navbar-brand fw-bold text-primary" href="#">
-              Navbar
+            <a className="navbar-brand fw-bold text-primary" href="/">
+              Classroom
             </a>
           </div>
           {options && (

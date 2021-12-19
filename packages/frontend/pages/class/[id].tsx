@@ -214,14 +214,14 @@ function DetailClassPage({ classroom, students }: Props) {
                     <input
                       type="text"
                       className={`form-control ${
-                        (errors.assignments || [])[index]?.point
+                        (errors.assignments || [])[index]?.maxPoint
                           ? 'is-invalid'
                           : ''
                       }`}
-                      {...register(`assignments.${index}.point` as const)}
+                      {...register(`assignments.${index}.maxPoint` as const)}
                     />
                     <div className="invalid-feedback">
-                      {(errors.assignments || [])[index]?.point?.message}
+                      {(errors.assignments || [])[index]?.maxPoint?.message}
                     </div>
                   </div>
                   <div className="col-1 text-center">

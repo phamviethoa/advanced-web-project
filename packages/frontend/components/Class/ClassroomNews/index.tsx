@@ -55,7 +55,7 @@ const ClassroomNews = ({
                           className="row p-2 border my-2 rounded bg-white"
                         >
                           <div className="col">{assignment.name}</div>
-                          <div className="col">{`${assignment.point} points`}</div>
+                          <div className="col">{`${assignment.maxPoint} points`}</div>
                         </div>
                       )}
                     </Draggable>

@@ -1,12 +1,11 @@
-import { ClassDto } from 'types/class.dto';
-import { StudentToClassDto } from 'types/student-to-class.dto';
+import { ClassroomDto } from './classroom.dto';
+import { StudentDto } from './student.dto';
 
 export type UserDto = {
-  id: string;
+  id?: string;
   email: string;
-  password: string;
   fullName: string;
-  hostedClasses?: ClassDto[];
-  studentToClass?: StudentToClassDto[];
-  identity?: string;
+  password: string;
+  classrooms: ClassroomDto[];
+  students: StudentDto[];
 };

@@ -1,4 +1,8 @@
+import { GradeDto } from './grade.dto';
+
 export type AssignemtDto = {
+  id?: string;
   name: string;
-  point: number;
+  maxPoint: number;
+  grades: GradeDto[];
 };
