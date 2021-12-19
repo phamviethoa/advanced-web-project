@@ -32,6 +32,43 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
+  @Get(':classroomId/show-students-list-grades')
+  showstudents(@Param('classroomId') classroomId){
+    return this.classroomsService.showstudentsgrades(classroomId)
+  }
+
+  @Post('/assignments/:assignmentId/mark-finalized')
+  isFullAssignment(@Param('assignmentId') assignmentId) {
+    return this.classroomsService.markFinalized(assignmentId);
+  }
+
+  @Get('download-student-list-template')
+  downloadstudentlist(@Res() res: any) {
+    return this.classroomsService.downloadStudentListTemplate(res);
+  }
+
+  @Post(':classroomId/upload-list-student')
+  @UseInterceptors(FileInterceptor('file'))
+  uploatFilestudentlist(@UploadedFile() file: any, @Param('classroomId') classroomId: string) {
+    const workBook = read(file.buffer);
+    const workSheet = workBook.Sheets[workBook.SheetNames[0]];
+    return this.classroomsService.savestudentlist(workSheet, classroomId);
+  }
+
+  @Get('/download-tempalte-grade')
+  download(@Res() res){
+    const filename = "templategrade.xlsx";
+    return res.download('./src/classes/template/' + filename);
+  }
+
+  @Post('/upload-assasignment-grade/:assignmentId')
+  @UseInterceptors(FileInterceptor('file'))
+  uploatFile(@UploadedFile() file, @Param('assignmentId') assignmentId: string){
+    const workBook= read(file.buffer);
+    const workSheet=workBook.Sheets[workBook.SheetNames[0]];
+    return this.classroomsService.saveAssignmentGrade(workSheet, assignmentId)
+  }
+
   @Get()
   findAll() {
     return this.classroomsService.findAll();
@@ -86,30 +123,12 @@ export class ClassroomsController {
   }
 
   @Post('/update-assignments/:id')
-  @Roles(Role.TEACHER)
+  //@Roles(Role.TEACHER)
   @UseGuards(JwtAuthGuard, RolesGuard)
   updateAssignments(
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
-  }
-
-  @Post('/assignments/:assignmentId/mark-finalized')
-  isFullAssignment(@Param('assignmentId') assignmentId) {
-    return this.classroomsService.markFinalized(assignmentId);
-  }
-
-  @Get('/download-student-list-template')
-  download(@Res() res: any) {
-    return this.classroomsService.downloadStudentListTemplate(res);
-  }
-
-  @Post('uploadliststudent')
-  @UseInterceptors(FileInterceptor('file'))
-  uploatFile(@UploadedFile() file: any, @Body() body: any) {
-    const workBook = read(file.buffer);
-    const workSheet = workBook.Sheets[workBook.SheetNames[0]];
-    return this.classroomsService.savestudentlist(workSheet, body);
   }
 }

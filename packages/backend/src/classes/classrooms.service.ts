@@ -8,6 +8,7 @@ import { Classroom } from 'src/entities/classroom.entity';
 import { User } from 'src/entities/user.entity';
 import { Assignment } from 'src/entities/assignment.entity';
 import { Student } from 'src/entities/student.entity';
+import { Grade } from 'src/entities/grade.entity';
 
 @Injectable()
 export class ClassroomsService {
@@ -17,6 +18,7 @@ export class ClassroomsService {
     @InjectRepository(Student) private studentsRepo: Repository<Student>,
     @InjectRepository(Assignment)
     private assignmentsRepo: Repository<Assignment>,
+    @InjectRepository(Grade) private gradetsRepo: Repository<Grade>,
     private jwtService: JwtService,
   ) {}
   async findAll(): Promise<Classroom[]> {
@@ -120,10 +122,80 @@ export class ClassroomsService {
     return classteacher[0].classrooms;
   }
 
-  markFinalized() {}
+  async markFinalized(assignmentId: string) {
+    const assignment =await this.assignmentsRepo.findOneOrFail({id: assignmentId});
+    assignment.isFinalized =true;
+    return this.assignmentsRepo.save(assignment);
+  }
 
   downloadStudentListTemplate(res: any) {
     const filename = 'templatestudentlist.xlsx';
-    return res.download('./src/classrooms/filetemplatestudentlist/' + filename);
+    return res.download('./src/classes/template/' + filename);
+  }
+
+  async savestudentlist(workSheet: any, classroomId:string){
+    const ref =workSheet['!ref'];
+    const array = ref.split(':');
+    array[0]=array[0].replace('A','');
+    array[1]=array[1].replace('B','');
+
+    const classroom= await this.classesRepo.findOneOrFail({relations: ["students"],where:{id:classroomId}});
+    const students = classroom.students;
+    for(let i= parseInt(array[0]) + 1 ;i<=parseInt(array[1]);i++)
+    {
+      const studentId = workSheet[`A${i}`].v;
+      const fullName = workSheet[`B${i}`].v;
+
+      // ktra studentId trong classId co ton tai hay chua neu chua thi tao moi neu da ton tai thi bo qua
+      var index = students.findIndex(x => x.identity == studentId); 
+      console.log(index);
+      if ( index === -1) {
+        let newstudent = new Student()
+        newstudent.classrooms=[classroom];
+        newstudent.fullName=fullName;
+        newstudent.identity=studentId;
+        this.studentsRepo.save(newstudent);
+      } else {
+        console.log("object already exists")
+      } 
+    }
+  }
+
+  async saveAssignmentGrade(workSheet: any, assignmentid:string){
+    const ref =workSheet['!ref'];
+    const array = ref.split(':');
+    array[0]=array[0].replace('A','');
+    array[1]=array[1].replace('B','');
+
+    const assignment= await this.assignmentsRepo.findOneOrFail({relations: ["classroom"],where:{id:assignmentid}})
+    const students = assignment.classroom.students; // danh sach hoc sinh
+    const grades = await this.gradetsRepo.find({assignment: assignment}) // danh sach diem
+
+    for(let i= parseInt(array[0]) + 1 ;i<=parseInt(array[1]);i++) // duyet tung dòng excel
+    {
+      const studentId = workSheet[`A${i}`].v;
+      const grade = workSheet[`B${i}`].v;
+
+      var index = students.findIndex(x => x.identity == studentId); // vi tri neu co identity
+      var index_grade = grades.findIndex(x=>x.student.identity== studentId)// vi tri neu co identity
+      if ( index === -1) {
+        console.log("khong ton tai sinh vien")
+      } else {
+        if (index_grade===-1) { //khong ton tai diem thi tao moi
+          let newGrade = new Grade();
+          newGrade.student=students[index];
+          newGrade.assignment=assignment;
+          newGrade.point=grade;
+          this.gradetsRepo.save(newGrade);
+        } else { // da ton tai diem thi chinh sua diem
+          grades[index_grade].point=grade;
+          this.gradetsRepo.save(grades[index_grade]);
+        }
+      } 
+    }
+  }
+
+  async showstudentsgrades(classroomId: string){
+    return await this.assignmentsRepo.find({relations:["grades", "grades.student", "classroom"],where:{classroom:{id:classroomId}}})
   }
 }
