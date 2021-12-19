@@ -19,6 +19,6 @@ export class User extends BaseEntity {
   })
   classrooms: Classroom[];
 
-  @OneToMany(() => Student, (student) => student.user, { eager: true })
+  @OneToMany(() => Student, (student) => student.user)
   students: Student[];
 }

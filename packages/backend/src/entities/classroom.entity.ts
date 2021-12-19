@@ -12,15 +12,13 @@ export class Classroom extends BaseEntity {
   @Column({ type: 'varchar' })
   description: string;
 
-  @ManyToMany(() => User, (teacher) => teacher.classrooms, { eager: true })
+  @ManyToMany(() => User, (teacher) => teacher.classrooms)
   @JoinTable()
   teachers: User[];
 
-  @ManyToMany(() => Student, (student) => student.classrooms, { eager: true })
+  @ManyToMany(() => Student, (student) => student.classrooms)
   students: Student[];
 
-  @OneToMany(() => Assignment, (assignment) => assignment.classroom, {
-    eager: true,
-  })
+  @OneToMany(() => Assignment, (assignment) => assignment.classroom)
   assignments: Assignment[];
 }

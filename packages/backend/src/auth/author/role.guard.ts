@@ -1,6 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { StudentToClass } from 'src/student-to-class/student-to-class.entity';
 import { Role } from './entities/role.enum';
 import { ROLES_KEY } from './role.decorator';
 
@@ -21,10 +20,11 @@ export class RolesGuard implements CanActivate {
     //const user = request.user;
     console.log(request.user);
 
-    const user ={
-      roles:'teacher',
+    const user = {
+      roles: 'teacher',
     };
 
     return requiredRoles.some((role) => user.roles?.includes(role));
   }
 }
+
