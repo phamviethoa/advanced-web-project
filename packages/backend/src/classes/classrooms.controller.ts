@@ -24,6 +24,7 @@ import { ClassroomsService } from './classrooms.service';
 import { StudentsService } from 'src/students/students.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { read } from 'xlsx';
+import { UpdateGradeDTO } from './dto/update-grade-dto';
 
 @Controller('classes')
 export class ClassroomsController {
@@ -31,6 +32,16 @@ export class ClassroomsController {
     private classroomsService: ClassroomsService,
     private studentsService: StudentsService,
   ) {}
+
+  @Get(":classroomId/exprot-grade-board")
+  exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any){
+    return this.classroomsService.exprotgradeboard(classroomId, res)
+  }
+
+  @Post("/input-grade-student-assignment")
+  inputGradeStudentAssignment( @Body() body: UpdateGradeDTO){
+    return this.classroomsService.inputGradeStudentAssignment(body);
+  }
 
   @Get(':classroomId/show-students-list-grades')
   showstudents(@Param('classroomId') classroomId){
@@ -68,6 +79,8 @@ export class ClassroomsController {
     const workSheet=workBook.Sheets[workBook.SheetNames[0]];
     return this.classroomsService.saveAssignmentGrade(workSheet, assignmentId)
   }
+
+
 
   @Get()
   findAll() {
@@ -124,7 +137,7 @@ export class ClassroomsController {
 
   @Post('/update-assignments/:id')
   //@Roles(Role.TEACHER)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  //@UseGuards(JwtAuthGuard, RolesGuard)
   updateAssignments(
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,

@@ -9,6 +9,9 @@ import { User } from 'src/entities/user.entity';
 import { Assignment } from 'src/entities/assignment.entity';
 import { Student } from 'src/entities/student.entity';
 import { Grade } from 'src/entities/grade.entity';
+import { UpdateGradeDTO } from './dto/update-grade-dto';
+import { stream, utils, write, writeFile } from 'xlsx';
+import { unlink } from 'fs';
 
 @Injectable()
 export class ClassroomsService {
@@ -93,6 +96,7 @@ export class ClassroomsService {
     id: string,
     updateAssignmentDto: UpdateAssignmentDto,
   ) {
+
     const classes = await this.classesRepo.findOneOrFail(id);
 
     const newAssignments: Assignment[] = [];
@@ -123,9 +127,15 @@ export class ClassroomsService {
   }
 
   async markFinalized(assignmentId: string) {
-    const assignment =await this.assignmentsRepo.findOneOrFail({id: assignmentId});
-    assignment.isFinalized =true;
-    return this.assignmentsRepo.save(assignment);
+    const assignment =await this.assignmentsRepo.findOneOrFail({where:{id: assignmentId},relations:["classroom","classroom.students"]});
+    const gradesofassignement = await this.gradetsRepo.findAndCount({assignment: assignment});
+    const countstudentinclassroom = assignment.classroom.students.length;
+    if (gradesofassignement[1] === countstudentinclassroom) {
+      assignment.isFinalized =true;
+      return this.assignmentsRepo.save(assignment);
+    } 
+    return console.log("Grades in assignement is not finalized")
+    
   }
 
   downloadStudentListTemplate(res: any) {
@@ -159,6 +169,7 @@ export class ClassroomsService {
         console.log("object already exists")
       } 
     }
+    return await this.classesRepo.findOneOrFail({relations: ["students"],where:{id:classroomId}})
   }
 
   async saveAssignmentGrade(workSheet: any, assignmentid:string){
@@ -167,17 +178,19 @@ export class ClassroomsService {
     array[0]=array[0].replace('A','');
     array[1]=array[1].replace('B','');
 
-    const assignment= await this.assignmentsRepo.findOneOrFail({relations: ["classroom"],where:{id:assignmentid}})
+    const assignment= await this.assignmentsRepo.findOneOrFail({relations: ["classroom", "classroom.students"],where:{id:assignmentid}})
     const students = assignment.classroom.students; // danh sach hoc sinh
-    const grades = await this.gradetsRepo.find({assignment: assignment}) // danh sach diem
-
+    const grades = await this.gradetsRepo.find({where:{assignment: assignment},relations:["student"]}) // danh sach diem
+    console.log(grades);
     for(let i= parseInt(array[0]) + 1 ;i<=parseInt(array[1]);i++) // duyet tung dòng excel
     {
       const studentId = workSheet[`A${i}`].v;
       const grade = workSheet[`B${i}`].v;
 
       var index = students.findIndex(x => x.identity == studentId); // vi tri neu co identity
+      console.log("index: ",index);
       var index_grade = grades.findIndex(x=>x.student.identity== studentId)// vi tri neu co identity
+      console.log("index_grade: ",index_grade);
       if ( index === -1) {
         console.log("khong ton tai sinh vien")
       } else {
@@ -186,16 +199,70 @@ export class ClassroomsService {
           newGrade.student=students[index];
           newGrade.assignment=assignment;
           newGrade.point=grade;
-          this.gradetsRepo.save(newGrade);
+          await this.gradetsRepo.save(newGrade);
         } else { // da ton tai diem thi chinh sua diem
           grades[index_grade].point=grade;
-          this.gradetsRepo.save(grades[index_grade]);
+          await this.gradetsRepo.save(grades[index_grade]);
         }
       } 
     }
+    return await this.assignmentsRepo.findOneOrFail({relations: ["grades"],where:{id:assignmentid}})
   }
 
   async showstudentsgrades(classroomId: string){
     return await this.assignmentsRepo.find({relations:["grades", "grades.student", "classroom"],where:{classroom:{id:classroomId}}})
+  }
+
+  async inputGradeStudentAssignment(body: UpdateGradeDTO){
+    const grade= await this.gradetsRepo.findOneOrFail({relations:["assignment", "student"],
+    where:{assignment:{id:body.assignmentId},student:{id: body.studentId}}});   
+    if (!grade) {
+      let newGrade = new Grade();
+      newGrade.student= await this.studentsRepo.findOneOrFail({id:body.studentId});
+      newGrade.assignment= await this.assignmentsRepo.findOneOrFail({id:body.assignmentId});
+      newGrade.point=body.point;
+      return await this.gradetsRepo.save(newGrade);
+    } else {
+      grade.point=body.point;
+      return await this.gradetsRepo.save(grade);
+    }
+  }
+
+  async exprotgradeboard(classroomId: string, res: any){
+    const assignmentsgradesofstudent= await this.showstudentsgrades(classroomId);
+    const data=[];
+    const row1=[''];
+    for (const assignment of assignmentsgradesofstudent) {
+      if(assignment.isFinalized === false)
+      {
+        return console.log("A assignment is not finalized");
+      }
+      row1.push(assignment.name)
+    }
+    row1.push('Total');
+    data.push(row1)
+    const classroom = await this.classesRepo.findOneOrFail({where:{id: classroomId},relations:["students", "students.grades"]})
+
+    for (const student of classroom.students) {
+
+      const grades=[student.fullName];
+      let totalgradestudent = 0;
+
+      for (const grade of student.grades) {
+
+        totalgradestudent+=grade.point; // cal totalgradeofstudent
+
+        grades.push(grade.point.toString())
+      }
+      grades.push(totalgradestudent.toString());
+      data.push(grades);
+    }
+
+    const filepath="./src/classes/template/gradeboard.xlsx";
+
+    const wb= utils.book_new();
+    utils.book_append_sheet(wb,utils.aoa_to_sheet(data),"SheetName 1");
+    await writeFile(wb,filepath);
+    return await res.download(filepath);
   }
 }
