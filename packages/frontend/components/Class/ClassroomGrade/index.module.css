@@ -1,0 +1,13 @@
+.gradeInput {
+  text-align: right;
+  border: none;
+}
+
+.gradeInput:focus {
+  outline: none;
+}
+
+.dropdown {
+  background-color: red;
+  z-index: 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+}

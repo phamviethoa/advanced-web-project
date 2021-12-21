@@ -3,17 +3,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ClassesController } from './classes/classes.controller';
-import { ClassesModule } from './classes/classes.module';
+import { StudentsModule } from './students/students.module';
 
 import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
 import { ConfigModule } from '@nestjs/config';
-import { StudentToClassModule } from './student-to-class/student-to-class.module';
 import { RolesGuard } from './auth/author/role.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { ClassroomsModule } from './classes/classrooms.module';
+import { ClassroomsController } from './classes/classrooms.controller';
 
 @Module({
   imports: [
@@ -28,20 +28,23 @@ import { APP_GUARD } from '@nestjs/core';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       //ssl: {
-        //rejectUnauthorized: false,
+      //rejectUnauthorized: false,
       //},
       synchronize: true,
       autoLoadEntities: true,
     }),
-    ClassesModule,
+    ClassroomsModule,
     UsersModule,
     AuthModule,
-    StudentToClassModule,
+    StudentsModule,
   ],
-  controllers: [AppController, ClassesController, UsersController],
-  providers: [AppService,{
-    provide: APP_GUARD,
-    useClass: RolesGuard,
-  },],
+  controllers: [AppController, ClassroomsController, UsersController],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -12,12 +12,10 @@ export class Student extends BaseEntity {
   @Column()
   fullName: string;
 
-  @ManyToMany(() => Classroom, (classroom) => classroom.students, {
-    eager: true,
-  })
+  @ManyToMany(() => Classroom, (classroom) => classroom.students)
   classrooms: Classroom[];
 
-  @OneToMany(() => Grade, (grade) => grade.student, { eager: true })
+  @OneToMany(() => Grade, (grade) => grade.student)
   grades: Grade[];
 
   @ManyToOne(() => User, (user) => user.students)

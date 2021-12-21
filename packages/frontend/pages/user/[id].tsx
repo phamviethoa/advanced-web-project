@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { GetServerSideProps } from 'next';
 import * as React from 'react';
 import Layout from '../../components/Layout/index';
@@ -7,66 +6,63 @@ import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
+import {
+  dehydrate,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from 'react-query';
+import userService from 'api/user';
+import { UserDto } from 'types/user.dto';
 
 export interface ProfilePageProps {}
 
-type Post = {
-  id: string;
-  fullName: string;
-};
-
 interface FormFields {
-  id: string;
   fullName: string;
 }
 
 const schema = yup.object().shape({
-  id: yup.string(),
   fullName: yup
     .string()
     .required('Subject is required.')
     .max(150, 'Subject is max 150 characters.'),
 });
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const id = params?.id;
-  const res = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`
-  );
-  const data = await res.data;
-  return {
-    props: { useritem: data },
-  };
-};
-
-export default function ProfilePage({ useritem }: any) {
-  const classitemrender: Post = useritem;
+export default function ProfilePage() {
   const router = useRouter();
+  const id = router.query.id;
+
+  const { data: user } = useQuery<UserDto>(['user', id], () =>
+    userService.getUser(id as string)
+  );
+
+  const queryClient = useQueryClient();
 
   const {
     handleSubmit,
     register,
+    reset,
     formState: { errors },
   } = useForm<FormFields>({
     mode: 'all',
     resolver: yupResolver(schema),
   });
 
-  const createClass = handleSubmit(async ({ id, fullName }: FormFields) => {
-    id = classitemrender.id;
-    try {
-      const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`,
-        {
-          id,
-          fullName,
-        }
-      );
-      router.push(`/user/${id}`);
-      toast.success('Update profile successfully.');
-    } catch {
-      toast.error('Update profile unsucessfully.');
-    }
+  const { mutateAsync } = useMutation(userService.updateUser, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user', id]);
+      reset();
+      toast.success('Update user successfully.');
+    },
+    onError: () => {
+      toast.error('Update user unsuccessfully.');
+    },
+  });
+
+  const createClass = handleSubmit(async ({ fullName }: FormFields) => {
+    const id = user?.id as string;
+    mutateAsync({ id, fullName });
   });
 
   return (
@@ -88,7 +84,7 @@ export default function ProfilePage({ useritem }: any) {
             <input
               type="text"
               id="fullName"
-              placeholder={classitemrender.fullName}
+              placeholder={user?.fullName}
               className={`form-control ${errors.fullName ? 'is-invalid' : ''}`}
               {...register('fullName')}
             />
@@ -103,3 +99,18 @@ export default function ProfilePage({ useritem }: any) {
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const id = params?.id;
+
+  const queryClient = new QueryClient();
+  await queryClient.prefetchQuery(['user', id], () =>
+    userService.getUser(id as string)
+  );
+
+  return {
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
+  };
+};

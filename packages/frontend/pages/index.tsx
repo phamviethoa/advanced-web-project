@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as React from 'react';
 import ClassList from 'pages/class/ClassList';
-import { InferGetStaticPropsType } from 'next';
+import { GetServerSideProps } from 'next';
 import Layout from 'components/Layout';
 import Modal from 'components/Modal';
 import { useState } from 'react';
@@ -11,12 +11,9 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import Input, { InputType, InputCategory } from 'components/Form/Input';
-
-type Classroom = {
-  id: string;
-  subject: string;
-  description: string;
-};
+import { dehydrate, QueryClient, useQuery } from 'react-query';
+import classApi from 'api/class';
+import { ClassDto } from 'types/class.dto';
 
 interface FormFields {
   subject: string;
@@ -34,8 +31,10 @@ const schema = yup.object().shape({
     .max(250, 'Description is max 250 characters.'),
 });
 
-function Classes({ classes }: InferGetStaticPropsType<typeof getStaticProps>) {
+function Classes() {
   const router = useRouter();
+
+  const { data: classes } = useQuery('classes', { enabled: false });
 
   const [isOpenCreateClassModal, setIsOpenCreateClassModal] =
     useState<boolean>(false);
@@ -82,7 +81,7 @@ function Classes({ classes }: InferGetStaticPropsType<typeof getStaticProps>) {
           </a>
         </div>
       </div>
-      <ClassList classes={classes}></ClassList>
+      <ClassList classes={classes as unknown as ClassDto[]}></ClassList>
       <Modal
         title="Create classroom"
         isOpen={isOpenCreateClassModal}
@@ -113,12 +112,13 @@ function Classes({ classes }: InferGetStaticPropsType<typeof getStaticProps>) {
   );
 }
 
-export const getStaticProps = async () => {
-  const res = await axios.get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes`);
-  const classes: Classroom[] = await res.data;
+export const getServerSideProps: GetServerSideProps = async () => {
+  const queryClient = new QueryClient();
+  await queryClient.prefetchQuery('classes', classApi.getAll);
+
   return {
     props: {
-      classes: classes,
+      dehydratedState: dehydrate(queryClient),
     },
   };
 };

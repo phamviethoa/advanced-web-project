@@ -2,8 +2,6 @@ import axios from 'axios';
 import { GetServerSideProps } from 'next';
 import * as React from 'react';
 import { toast } from 'react-toastify';
-import { ClassDto } from 'types/class.dto';
-import { UserDto } from 'types/user.dto';
 import Layout, { LayoutOptions } from '../../components/Layout/index';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
@@ -15,19 +13,18 @@ import ClassroomExercise from 'components/Class/ClassroomExercise';
 import ClassroomNews from 'components/Class/ClassroomNews';
 import ClassroomPeople from 'components/Class/ClassroomPeople';
 import ClassroomGrade from 'components/Class/ClassroomGrade';
-
-type Props = {
-  classroom: ClassDto;
-  students: UserDto[];
-  assignments: AssignemtDto[];
-};
+import { ClassroomDto } from 'types/classroom.dto';
+import { StudentDto, StudentInSystemDto } from 'types/student.dto';
+import { dehydrate, QueryClient, useQuery } from 'react-query';
+import classApi from 'api/class';
+import { useRouter } from 'next/router';
 
 const assignmentsSchema = yup.object().shape({
   name: yup
     .string()
     .required('Name is required.')
     .max(150, 'Name is max 100 characters.'),
-  point: yup
+  maxPoint: yup
     .number()
     .typeError('Point must be a number')
     .required('Point is required.'),
@@ -37,8 +34,13 @@ const schema = yup.object().shape({
   assignments: yup.array().of(assignmentsSchema),
 });
 
+type UpdateAssignment = {
+  name: string;
+  maxPoint: number;
+};
+
 type FormFields = {
-  assignments: AssignemtDto[];
+  assignments: UpdateAssignment[];
 };
 
 const copyToClipboard = (text: string) => {
@@ -52,8 +54,15 @@ enum ClassroomTab {
   GRADE = 'GRADE',
 }
 
-function DetailClassPage({ classroom, students }: Props) {
+function DetailClassPage() {
   const [currentTab, setCurrentTab] = useState<ClassroomTab>(ClassroomTab.NEWS);
+
+  const router = useRouter();
+  const id = router.query.id;
+
+  const { data: classroom } = useQuery<ClassroomDto>(['class', id], () =>
+    classApi.getClass(id as string)
+  );
 
   const navbarOptions: LayoutOptions[] = [
     {
@@ -74,9 +83,9 @@ function DetailClassPage({ classroom, students }: Props) {
     },
   ];
 
-  const [assignments, setAssignments] = useState<AssignemtDto[]>(
-    classroom.assignments || []
-  );
+  const [assignments, setAssignments] = useState<
+    UpdateAssignment[] | AssignemtDto[]
+  >(classroom?.assignments || []);
 
   const {
     register,
@@ -97,7 +106,7 @@ function DetailClassPage({ classroom, students }: Props) {
     name: 'assignments',
   });
 
-  const classId = classroom.id;
+  const classId = classroom?.id;
 
   const [isOpenUpdateAssignmentModal, setIsOpenUpdateAssignmentModal] =
     useState<boolean>(false);
@@ -169,8 +178,8 @@ function DetailClassPage({ classroom, students }: Props) {
   const renderTab = {
     [ClassroomTab.NEWS]: (
       <ClassroomNews
-        classroom={classroom}
-        assignments={assignments}
+        classroom={classroom as ClassroomDto}
+        assignments={assignments as AssignemtDto[]}
         onOpenUpdateAssginmentModal={openUpdateAssignmentModal}
         onHandleOnDragEnd={handleOnDragEnd}
         onGetInviteStudentLink={getInviteStudentLink}
@@ -178,9 +187,14 @@ function DetailClassPage({ classroom, students }: Props) {
     ),
     [ClassroomTab.EXERCISE]: <ClassroomExercise />,
     [ClassroomTab.PEOPLE]: (
-      <ClassroomPeople classroom={classroom} students={students} />
+      <ClassroomPeople
+        classroom={classroom as ClassroomDto}
+        students={classroom?.students as StudentDto[]}
+      />
     ),
-    [ClassroomTab.GRADE]: <ClassroomGrade />,
+    [ClassroomTab.GRADE]: (
+      <ClassroomGrade classroom={classroom as ClassroomDto} />
+    ),
   };
 
   return (
@@ -214,14 +228,14 @@ function DetailClassPage({ classroom, students }: Props) {
                     <input
                       type="text"
                       className={`form-control ${
-                        (errors.assignments || [])[index]?.point
+                        (errors.assignments || [])[index]?.maxPoint
                           ? 'is-invalid'
                           : ''
                       }`}
-                      {...register(`assignments.${index}.point` as const)}
+                      {...register(`assignments.${index}.maxPoint` as const)}
                     />
                     <div className="invalid-feedback">
-                      {(errors.assignments || [])[index]?.point?.message}
+                      {(errors.assignments || [])[index]?.maxPoint?.message}
                     </div>
                   </div>
                   <div className="col-1 text-center">
@@ -239,7 +253,11 @@ function DetailClassPage({ classroom, students }: Props) {
           </a>
 
           <div className="border-top mt-4 pt-3 d-flex flex-row-reverse">
-            <button type="submit" className="btn btn-primary ms-3">
+            <button
+              onClick={() => console.log('Clicked!')}
+              type="submit"
+              className="btn btn-primary ms-3"
+            >
               Submit
             </button>
             <button
@@ -257,31 +275,17 @@ function DetailClassPage({ classroom, students }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const id = params?.id;
+  const id = params?.id as string;
+  const queryClient = new QueryClient();
 
-  const res = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`
-  );
-
-  const classroom: ClassDto = await res.data;
-
-  const studentToClasses = classroom.studentToClass;
-  const students: UserDto[] = [];
-
-  for (const studentToClass of studentToClasses || []) {
-    const identity = studentToClass.identity;
-    const studentToClassId = studentToClass.id;
-
-    const res2 = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY}/student-to-class/${studentToClassId}`
-    );
-
-    const student = { ...res2.data.student, identity };
-    students.push(student);
-  }
+  await Promise.all([
+    queryClient.prefetchQuery(['class', id], () => classApi.getClass(id)),
+  ]);
 
   return {
-    props: { classroom, students },
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
   };
 };
 

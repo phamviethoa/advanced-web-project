@@ -1,13 +1,13 @@
-import { ClassDto } from 'types/class.dto';
 import Modal from 'components/Modal';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { UserDto } from 'types/user.dto';
+import { ClassroomDto } from 'types/classroom.dto';
+import { StudentDto } from 'types/student.dto';
 
 type Props = {
-  classroom: ClassDto;
-  students: UserDto[];
+  classroom: ClassroomDto;
+  students: StudentDto[];
 };
 
 const ClassroomPeople = ({ classroom, students }: Props) => {

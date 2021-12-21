@@ -14,6 +14,9 @@ export class Assignment extends BaseEntity {
   @ManyToOne(() => Classroom, (classroom) => classroom.assignments)
   classroom: Classroom;
 
-  @OneToMany(() => Grade, (grade) => grade.assignment, { eager: true })
+  @OneToMany(() => Grade, (grade) => grade.assignment)
   grades: Grade[];
+
+  @Column({ default: false })
+  isFinalized: boolean;
 }
