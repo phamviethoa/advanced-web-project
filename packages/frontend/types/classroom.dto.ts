@@ -1,5 +1,5 @@
 import { AssignemtDto } from './assignment.dto';
-import { StudentDto } from './student.dto';
+import { StudentDto, StudentInSystemDto } from './student.dto';
 import { UserDto } from './user.dto';
 
 export type ClassroomDto = {

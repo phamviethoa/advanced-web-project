@@ -34,7 +34,7 @@ const schema = yup.object().shape({
 function Classes() {
   const router = useRouter();
 
-  const { data: classes } = useQuery('classes', classApi.getAll);
+  const { data: classes } = useQuery('classes', { enabled: false });
 
   const [isOpenCreateClassModal, setIsOpenCreateClassModal] =
     useState<boolean>(false);

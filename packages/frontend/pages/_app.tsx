@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import axios from 'axios';
 import { Hydrate, QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
 
 axios.defaults.withCredentials = true;
 
@@ -29,6 +30,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <Hydrate state={pageProps.dehydratedState}>
           <NextAuthProvider session={pageProps.session}>
             <Component {...pageProps} />
+            <ReactQueryDevtools />
           </NextAuthProvider>
         </Hydrate>
       </QueryClientProvider>

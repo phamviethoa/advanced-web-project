@@ -30,7 +30,15 @@ export class ClassroomsService {
 
   findOne(id: string) {
     return this.classesRepo.findOneOrFail(id, {
-      relations: ['teachers', 'students', 'assignments'],
+      relations: [
+        'teachers',
+        'students',
+        'students.grades',
+        'students.user',
+        'assignments',
+        'assignments.grades',
+        'assignments.grades.student',
+      ],
     });
   }
 
@@ -64,10 +72,6 @@ export class ClassroomsService {
   }
 
   async addStudent(email: string, identity: string, token: string) {
-    console.log('Email: ', email);
-    console.log('identity: ', identity);
-    console.log('token: ', token);
-
     const payload = this.jwtService.verify(token);
     const classId = payload.classId;
 
@@ -83,8 +87,8 @@ export class ClassroomsService {
       fullName: user.fullName,
     });
 
-    classroom.students = [newStudent];
-    user.students = [newStudent];
+    newStudent.classrooms = [classroom];
+    newStudent.user = user;
 
     this.studentsRepo.save(newStudent);
     this.usersRepo.save(user);
@@ -96,7 +100,6 @@ export class ClassroomsService {
     id: string,
     updateAssignmentDto: UpdateAssignmentDto,
   ) {
-
     const classes = await this.classesRepo.findOneOrFail(id);
 
     const newAssignments: Assignment[] = [];
@@ -127,15 +130,19 @@ export class ClassroomsService {
   }
 
   async markFinalized(assignmentId: string) {
-    const assignment =await this.assignmentsRepo.findOneOrFail({where:{id: assignmentId},relations:["classroom","classroom.students"]});
-    const gradesofassignement = await this.gradetsRepo.findAndCount({assignment: assignment});
+    const assignment = await this.assignmentsRepo.findOneOrFail({
+      where: { id: assignmentId },
+      relations: ['classroom', 'classroom.students'],
+    });
+    const gradesofassignement = await this.gradetsRepo.findAndCount({
+      assignment: assignment,
+    });
     const countstudentinclassroom = assignment.classroom.students.length;
     if (gradesofassignement[1] === countstudentinclassroom) {
-      assignment.isFinalized =true;
+      assignment.isFinalized = true;
       return this.assignmentsRepo.save(assignment);
-    } 
-    return console.log("Grades in assignement is not finalized")
-    
+    }
+    return console.log('Grades in assignement is not finalized');
   }
 
   downloadStudentListTemplate(res: any) {
@@ -143,126 +150,172 @@ export class ClassroomsService {
     return res.download('./src/classes/template/' + filename);
   }
 
-  async savestudentlist(workSheet: any, classroomId:string){
-    const ref =workSheet['!ref'];
+  async savestudentlist(workSheet: any, classroomId: string) {
+    const ref = workSheet['!ref'];
     const array = ref.split(':');
-    array[0]=array[0].replace('A','');
-    array[1]=array[1].replace('B','');
+    array[0] = array[0].replace('A', '');
+    array[1] = array[1].replace('B', '');
 
-    const classroom= await this.classesRepo.findOneOrFail({relations: ["students"],where:{id:classroomId}});
+    const classroom = await this.classesRepo.findOneOrFail({
+      relations: ['students'],
+      where: { id: classroomId },
+    });
+
     const students = classroom.students;
-    for(let i= parseInt(array[0]) + 1 ;i<=parseInt(array[1]);i++)
-    {
+    for (let i = parseInt(array[0]) + 1; i <= parseInt(array[1]); i++) {
       const studentId = workSheet[`A${i}`].v;
       const fullName = workSheet[`B${i}`].v;
 
       // ktra studentId trong classId co ton tai hay chua neu chua thi tao moi neu da ton tai thi bo qua
-      var index = students.findIndex(x => x.identity == studentId); 
+      var index = students.findIndex((x) => x.identity == studentId);
       console.log(index);
-      if ( index === -1) {
-        let newstudent = new Student()
-        newstudent.classrooms=[classroom];
-        newstudent.fullName=fullName;
-        newstudent.identity=studentId;
-        this.studentsRepo.save(newstudent);
+      if (index === -1) {
+        let newstudent = new Student();
+        newstudent.classrooms = [classroom];
+        newstudent.fullName = fullName;
+        newstudent.identity = studentId;
+        await this.studentsRepo.save(newstudent);
       } else {
-        console.log("object already exists")
-      } 
+        console.log('object already exists');
+      }
     }
-    return await this.classesRepo.findOneOrFail({relations: ["students"],where:{id:classroomId}})
+
+    return await this.classesRepo.findOneOrFail({
+      relations: ['students'],
+      where: { id: classroomId },
+    });
   }
 
-  async saveAssignmentGrade(workSheet: any, assignmentid:string){
-    const ref =workSheet['!ref'];
+  async saveAssignmentGrade(workSheet: any, assignmentid: string) {
+    const ref = workSheet['!ref'];
     const array = ref.split(':');
-    array[0]=array[0].replace('A','');
-    array[1]=array[1].replace('B','');
+    array[0] = array[0].replace('A', '');
+    array[1] = array[1].replace('B', '');
 
-    const assignment= await this.assignmentsRepo.findOneOrFail({relations: ["classroom", "classroom.students"],where:{id:assignmentid}})
+    const assignment = await this.assignmentsRepo.findOneOrFail({
+      relations: ['classroom', 'classroom.students'],
+      where: { id: assignmentid },
+    });
+
     const students = assignment.classroom.students; // danh sach hoc sinh
-    const grades = await this.gradetsRepo.find({where:{assignment: assignment},relations:["student"]}) // danh sach diem
+    const grades = await this.gradetsRepo.find({
+      where: { assignment: assignment },
+      relations: ['student'],
+    }); // danh sach diem
     console.log(grades);
-    for(let i= parseInt(array[0]) + 1 ;i<=parseInt(array[1]);i++) // duyet tung dòng excel
-    {
+    for (
+      let i = parseInt(array[0]) + 1;
+      i <= parseInt(array[1]);
+      i++ // duyet tung dòng excel
+    ) {
       const studentId = workSheet[`A${i}`].v;
       const grade = workSheet[`B${i}`].v;
 
-      var index = students.findIndex(x => x.identity == studentId); // vi tri neu co identity
-      console.log("index: ",index);
-      var index_grade = grades.findIndex(x=>x.student.identity== studentId)// vi tri neu co identity
-      console.log("index_grade: ",index_grade);
-      if ( index === -1) {
-        console.log("khong ton tai sinh vien")
+      var index = students.findIndex((x) => x.identity == studentId); // vi tri neu co identity
+      console.log('index: ', index);
+      var index_grade = grades.findIndex(
+        (x) => x.student.identity == studentId,
+      ); // vi tri neu co identity
+      console.log('index_grade: ', index_grade);
+      if (index === -1) {
+        console.log('khong ton tai sinh vien');
       } else {
-        if (index_grade===-1) { //khong ton tai diem thi tao moi
+        if (index_grade === -1) {
+          //khong ton tai diem thi tao moi
           let newGrade = new Grade();
-          newGrade.student=students[index];
-          newGrade.assignment=assignment;
-          newGrade.point=grade;
+          newGrade.student = students[index];
+          newGrade.assignment = assignment;
+          newGrade.point = grade;
           await this.gradetsRepo.save(newGrade);
-        } else { // da ton tai diem thi chinh sua diem
-          grades[index_grade].point=grade;
+        } else {
+          // da ton tai diem thi chinh sua diem
+          grades[index_grade].point = grade;
           await this.gradetsRepo.save(grades[index_grade]);
         }
-      } 
+      }
     }
-    return await this.assignmentsRepo.findOneOrFail({relations: ["grades"],where:{id:assignmentid}})
+    return await this.assignmentsRepo.findOneOrFail({
+      relations: ['grades'],
+      where: { id: assignmentid },
+    });
   }
 
-  async showstudentsgrades(classroomId: string){
-    return await this.assignmentsRepo.find({relations:["grades", "grades.student", "classroom"],where:{classroom:{id:classroomId}}})
+  async showstudentsgrades(classroomId: string) {
+    return await this.assignmentsRepo.find({
+      relations: ['grades', 'grades.student', 'classroom'],
+      where: { classroom: { id: classroomId } },
+    });
   }
 
-  async inputGradeStudentAssignment(body: UpdateGradeDTO){
-    const grade= await this.gradetsRepo.findOneOrFail({relations:["assignment", "student"],
-    where:{assignment:{id:body.assignmentId},student:{id: body.studentId}}});   
+  async inputGradeStudentAssignment(body: UpdateGradeDTO) {
+    const assignment = await this.assignmentsRepo.findOne(body.assignmentId);
+    const student = await this.studentsRepo.findOne(body.studentId);
+
+    if (!assignment || !student) {
+      return new BadRequestException();
+    }
+
+    const grade = await this.gradetsRepo.findOne({
+      relations: ['assignment', 'student'],
+      where: {
+        assignment: { id: body.assignmentId },
+        student: { id: body.studentId },
+      },
+    });
+
     if (!grade) {
       let newGrade = new Grade();
-      newGrade.student= await this.studentsRepo.findOneOrFail({id:body.studentId});
-      newGrade.assignment= await this.assignmentsRepo.findOneOrFail({id:body.assignmentId});
-      newGrade.point=body.point;
+      newGrade.student = await this.studentsRepo.findOneOrFail({
+        id: body.studentId,
+      });
+      newGrade.assignment = await this.assignmentsRepo.findOneOrFail({
+        id: body.assignmentId,
+      });
+      newGrade.point = body.point;
       return await this.gradetsRepo.save(newGrade);
     } else {
-      grade.point=body.point;
+      grade.point = body.point;
       return await this.gradetsRepo.save(grade);
     }
   }
 
-  async exprotgradeboard(classroomId: string, res: any){
-    const assignmentsgradesofstudent= await this.showstudentsgrades(classroomId);
-    const data=[];
-    const row1=[''];
+  async exprotgradeboard(classroomId: string, res: any) {
+    const assignmentsgradesofstudent = await this.showstudentsgrades(
+      classroomId,
+    );
+    const data = [];
+    const row1 = [''];
     for (const assignment of assignmentsgradesofstudent) {
-      if(assignment.isFinalized === false)
-      {
-        return console.log("A assignment is not finalized");
+      if (assignment.isFinalized === false) {
+        return new BadRequestException();
       }
-      row1.push(assignment.name)
+      row1.push(assignment.name);
     }
     row1.push('Total');
-    data.push(row1)
-    const classroom = await this.classesRepo.findOneOrFail({where:{id: classroomId},relations:["students", "students.grades"]})
+    data.push(row1);
+    const classroom = await this.classesRepo.findOneOrFail({
+      where: { id: classroomId },
+      relations: ['students', 'students.grades'],
+    });
 
     for (const student of classroom.students) {
-
-      const grades=[student.fullName];
+      const grades = [student.fullName];
       let totalgradestudent = 0;
 
       for (const grade of student.grades) {
+        totalgradestudent += grade.point; // cal totalgradeofstudent
 
-        totalgradestudent+=grade.point; // cal totalgradeofstudent
-
-        grades.push(grade.point.toString())
+        grades.push(grade.point.toString());
       }
       grades.push(totalgradestudent.toString());
       data.push(grades);
     }
 
-    const filepath="./src/classes/template/gradeboard.xlsx";
+    const filepath = './src/classes/template/gradeboard.xlsx';
 
-    const wb= utils.book_new();
-    utils.book_append_sheet(wb,utils.aoa_to_sheet(data),"SheetName 1");
-    await writeFile(wb,filepath);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, utils.aoa_to_sheet(data), 'SheetName 1');
+    await writeFile(wb, filepath);
     return await res.download(filepath);
   }
 }

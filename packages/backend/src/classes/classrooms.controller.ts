@@ -33,19 +33,19 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
-  @Get(":classroomId/exprot-grade-board")
-  exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any){
-    return this.classroomsService.exprotgradeboard(classroomId, res)
+  @Get(':classroomId/export-grade-board')
+  exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any) {
+    return this.classroomsService.exprotgradeboard(classroomId, res);
   }
 
-  @Post("/input-grade-student-assignment")
-  inputGradeStudentAssignment( @Body() body: UpdateGradeDTO){
+  @Post('/input-grade-student-assignment')
+  inputGradeStudentAssignment(@Body() body: UpdateGradeDTO) {
     return this.classroomsService.inputGradeStudentAssignment(body);
   }
 
   @Get(':classroomId/show-students-list-grades')
-  showstudents(@Param('classroomId') classroomId){
-    return this.classroomsService.showstudentsgrades(classroomId)
+  showstudents(@Param('classroomId') classroomId) {
+    return this.classroomsService.showstudentsgrades(classroomId);
   }
 
   @Post('/assignments/:assignmentId/mark-finalized')
@@ -60,27 +60,32 @@ export class ClassroomsController {
 
   @Post(':classroomId/upload-list-student')
   @UseInterceptors(FileInterceptor('file'))
-  uploatFilestudentlist(@UploadedFile() file: any, @Param('classroomId') classroomId: string) {
+  uploatFilestudentlist(
+    @UploadedFile() file: any,
+    @Param('classroomId') classroomId: string,
+  ) {
     const workBook = read(file.buffer);
     const workSheet = workBook.Sheets[workBook.SheetNames[0]];
     return this.classroomsService.savestudentlist(workSheet, classroomId);
   }
 
-  @Get('/download-tempalte-grade')
-  download(@Res() res){
-    const filename = "templategrade.xlsx";
+  @Get('/download-template-grade')
+  download(@Res() res) {
+    const filename = 'templategrade.xlsx';
     return res.download('./src/classes/template/' + filename);
   }
 
-  @Post('/upload-assasignment-grade/:assignmentId')
+  @Post('/upload-assignment-grades/:assignmentId')
   @UseInterceptors(FileInterceptor('file'))
-  uploatFile(@UploadedFile() file, @Param('assignmentId') assignmentId: string){
-    const workBook= read(file.buffer);
-    const workSheet=workBook.Sheets[workBook.SheetNames[0]];
-    return this.classroomsService.saveAssignmentGrade(workSheet, assignmentId)
+  uploatFile(
+    @UploadedFile() file: any,
+    @Param('assignmentId') assignmentId: string,
+  ) {
+    console.log('ID: ', assignmentId);
+    const workBook = read(file.buffer);
+    const workSheet = workBook.Sheets[workBook.SheetNames[0]];
+    return this.classroomsService.saveAssignmentGrade(workSheet, assignmentId);
   }
-
-
 
   @Get()
   findAll() {

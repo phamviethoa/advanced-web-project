@@ -44,9 +44,9 @@ const Layout = ({ children, options }: Props) => {
       <nav className="navbar navbar-light shadow">
         <div className="container">
           <div>
-            <a className="navbar-brand fw-bold text-primary" href="/">
-              Classroom
-            </a>
+            <Link href="/">
+              <a className="navbar-brand fw-bold text-primary">Classroom</a>
+            </Link>
           </div>
           {options && (
             <ul className="d-flex list-unstyled m-0 p-0">
