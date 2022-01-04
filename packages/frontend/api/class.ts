@@ -2,8 +2,9 @@ import axiosClient from 'api/axiosClient';
 import axios from 'axios';
 import FileDownload from 'js-file-download';
 import { ClassDto } from 'types/class.dto';
-import { ClassroomDto } from 'types/classroom.dto';
+import { ClassroomDto, CreateClassroomDto } from 'types/classroom.dto';
 import { UpdateGradeDto } from 'types/grade.dto';
+import queryString from 'query-string';
 
 const classApi = {
   getAll: () => {
@@ -14,6 +15,19 @@ const classApi = {
   getClass: async (id: string) => {
     const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`;
     const { data } = await axios.get<ClassroomDto>(url);
+    return data;
+  },
+
+  createClass: async (body: CreateClassroomDto) => {
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes`;
+    const { data } = await axios.post(url, body);
+    return data;
+  },
+
+  addTeacher: async (token: string) => {
+    const query = queryString.stringify({ token });
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/add-teacher?${query}`;
+    const { data } = await axios.post(url);
     return data;
   },
 

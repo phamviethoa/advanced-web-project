@@ -37,8 +37,6 @@ const schema = yup.object().shape({
 const AddStudentByLink = ({ token, classId }: Props) => {
   const router = useRouter();
 
-  console.log(classId);
-
   const {
     handleSubmit,
     register,

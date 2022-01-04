@@ -11,7 +11,13 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import Input, { InputType, InputCategory } from 'components/Form/Input';
-import { dehydrate, QueryClient, useQuery } from 'react-query';
+import {
+  dehydrate,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from 'react-query';
 import classApi from 'api/class';
 import { ClassDto } from 'types/class.dto';
 
@@ -32,9 +38,7 @@ const schema = yup.object().shape({
 });
 
 function Classes() {
-  const router = useRouter();
-
-  const { data: classes } = useQuery('classes', { enabled: false });
+  const { data: classes } = useQuery('classes', classApi.getAll);
 
   const [isOpenCreateClassModal, setIsOpenCreateClassModal] =
     useState<boolean>(false);
@@ -47,26 +51,25 @@ function Classes() {
     resolver: yupResolver(schema),
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, reset } = methods;
+
+  const queryClient = useQueryClient();
+
+  const { mutateAsync } = useMutation(classApi.createClass, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('classes');
+      toast.success('Create class successfully.');
+    },
+    onError: () => {
+      toast.error('Create class unsucessfully.');
+    },
+  });
 
   const createClass = handleSubmit(
     async ({ subject, description }: FormFields) => {
-      try {
-        const res = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes`,
-          {
-            subject,
-            description,
-          }
-        );
-
-        router.push('/');
-        toast.success('Create class successfully.');
-      } catch {
-        toast.error('Create class unsucessfully.');
-      }
-
+      mutateAsync({ subject, description });
       closeCreateClassModal();
+      reset();
     }
   );
 

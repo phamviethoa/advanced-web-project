@@ -13,11 +13,16 @@ type Props = {
 const ClassroomPeople = ({ classroom, students }: Props) => {
   const [isOpenInviteStudentModal, setIsOpenInviteStudentModal] =
     useState<boolean>(false);
+  const [isOpenInviteTeacherModal, setIsOpenInviteTeacherModal] =
+    useState<boolean>(false);
 
   const inviteStudentLinkRef = useRef<string>('');
+  const inviteTeacherLinkRef = useRef<string>('');
 
   const openInviteStudentModal = () => setIsOpenInviteStudentModal(true);
   const closeInviteStudentModal = () => setIsOpenInviteStudentModal(false);
+  const openInviteTeacherModal = () => setIsOpenInviteTeacherModal(true);
+  const closeInviteTeacherModal = () => setIsOpenInviteTeacherModal(false);
 
   useEffect(() => {
     const getInviteStudentLink = async () => {
@@ -33,11 +38,17 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
       }
     };
 
+    const getInviteTeacherLink = async () => {
+      // call api to get invite teacher link
+      inviteTeacherLinkRef.current = 'this is invite teacher link';
+    };
+
     getInviteStudentLink();
+    getInviteTeacherLink();
   }, []);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(inviteStudentLinkRef.current);
+  const copyToClipboard = (link: string) => () => {
+    navigator.clipboard.writeText(link);
     toast.success('Copy to clipboard successfully.');
   };
 
@@ -46,7 +57,7 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
       <div className="row">
         <div className="border-bottom border-primary d-flex justify-content-between text-primary">
           <h2 className="h3">Teachers</h2>
-          <i className="fas fa-user-plus"></i>
+          <i onClick={openInviteTeacherModal} className="fas fa-user-plus"></i>
         </div>
         {classroom.teachers?.map((teacher) => (
           <div key={teacher.id} className="my-3 d-flex align-items-center">
@@ -98,7 +109,33 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
                 readOnly
               />
               <i
-                onClick={copyToClipboard}
+                onClick={copyToClipboard(inviteStudentLinkRef.current)}
+                className="fas fa-copy text-primary ms-3"
+              ></i>
+            </div>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={isOpenInviteTeacherModal}
+        title={`Invite Teacher`}
+        handleCloseModal={closeInviteTeacherModal}
+      >
+        <div style={{ width: '400px' }} className="mb-3">
+          <div className="row mb-3">
+            <label htmlFor="exampleFormControlInput1" className="form-label">
+              Invite Link
+            </label>
+            <div className="d-flex align-items-center">
+              <input
+                type="text"
+                className="form-control"
+                id="exampleFormControlInput1"
+                placeholder={inviteTeacherLinkRef.current}
+                readOnly
+              />
+              <i
+                onClick={copyToClipboard(inviteTeacherLinkRef.current)}
                 className="fas fa-copy text-primary ms-3"
               ></i>
             </div>
