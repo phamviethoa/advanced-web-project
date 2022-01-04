@@ -1,9 +1,10 @@
 import Modal from 'components/Modal';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 import { ClassroomDto } from 'types/classroom.dto';
 import { StudentDto } from 'types/student.dto';
+import { useMutation } from 'react-query';
+import classApi from 'api/class';
 
 type Props = {
   classroom: ClassroomDto;
@@ -24,23 +25,38 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
   const openInviteTeacherModal = () => setIsOpenInviteTeacherModal(true);
   const closeInviteTeacherModal = () => setIsOpenInviteTeacherModal(false);
 
+  const { mutateAsync: mutateInviteStudentLink } = useMutation(
+    classApi.getInviteStudentLink,
+    {
+      onSuccess: (link) => {
+        inviteStudentLinkRef.current = link;
+      },
+      onError: () => {
+        toast.error('Error when get invite student link.');
+      },
+    }
+  );
+
+  const { mutateAsync: mutateInviteTeacherLink } = useMutation(
+    classApi.getInviteTeacherLink,
+    {
+      onSuccess: (link) => {
+        inviteTeacherLinkRef.current = link;
+      },
+      onError: () => {
+        toast.error('Error when get invite teacher link.');
+      },
+    }
+  );
+
   useEffect(() => {
     const getInviteStudentLink = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-student-link/${classroom.id}`
-        );
-
-        const inviteLink = res.data;
-        inviteStudentLinkRef.current = inviteLink;
-      } catch (e) {
-        toast.error('Error when get invite student link.');
-      }
+      mutateInviteStudentLink(classroom.id);
     };
 
     const getInviteTeacherLink = async () => {
-      // call api to get invite teacher link
-      inviteTeacherLinkRef.current = 'this is invite teacher link';
+      //mutateInviteTeacherLink(classroom.id);
+      inviteTeacherLinkRef.current = 'dummy link';
     };
 
     getInviteStudentLink();

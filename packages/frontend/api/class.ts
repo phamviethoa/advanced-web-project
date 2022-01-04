@@ -24,6 +24,18 @@ const classApi = {
     return data;
   },
 
+  getInviteStudentLink: async (classroomId?: string) => {
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-student-link/${classroomId}`;
+    const { data } = await axios.get(url);
+    return data;
+  },
+
+  getInviteTeacherLink: async (classroomId?: string) => {
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-teacher-link/${classroomId}`;
+    const { data } = await axios.get(url);
+    return data;
+  },
+
   addStudent: async (params: { identity: string; token: string }) => {
     const { identity, token } = params;
     const query = queryString.stringify({ token });
