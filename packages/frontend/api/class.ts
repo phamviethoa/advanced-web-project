@@ -24,6 +24,14 @@ const classApi = {
     return data;
   },
 
+  addStudent: async (params: { identity: string; token: string }) => {
+    const { identity, token } = params;
+    const query = queryString.stringify({ token });
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/add-student?${query}`;
+    const { data } = await axios.post(url, { identity });
+    return data;
+  },
+
   addTeacher: async (token: string) => {
     const query = queryString.stringify({ token });
     const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/add-teacher?${query}`;
