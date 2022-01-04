@@ -39,7 +39,7 @@ const Input = ({
           <input
             type={type}
             className={`form-control ${errors[name] ? 'is-invalid' : ''}`}
-            {...register('subject')}
+            {...register(name)}
           />
           <div className="invalid-feedback">{errors[name]?.message}</div>
         </>
@@ -47,7 +47,7 @@ const Input = ({
         <>
           <textarea
             className={`form-control ${errors[name] ? 'is-invalid' : ''}`}
-            {...register('description')}
+            {...register(name)}
           ></textarea>
           <div className="invalid-feedback">{errors[name]?.message}</div>
         </>

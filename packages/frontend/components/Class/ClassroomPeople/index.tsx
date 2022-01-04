@@ -5,13 +5,41 @@ import { ClassroomDto } from 'types/classroom.dto';
 import { StudentDto } from 'types/student.dto';
 import { useMutation } from 'react-query';
 import classApi from 'api/class';
+import Input, { InputCategory, InputType } from 'components/Form/Input';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+import { useForm, FormProvider } from 'react-hook-form';
 
 type Props = {
   classroom: ClassroomDto;
   students: StudentDto[];
 };
 
+type FormFields = {
+  email: string;
+};
+
+enum Role {
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER',
+}
+
+const schema = yup.object().shape({
+  email: yup
+    .string()
+    .required('Email is required.')
+    .max(150, 'Email is max 150 characters.')
+    .email('Email is in correct'),
+});
+
 const ClassroomPeople = ({ classroom, students }: Props) => {
+  const methods = useForm<FormFields>({
+    mode: 'all',
+    resolver: yupResolver(schema),
+  });
+
+  const { handleSubmit, reset } = methods;
+
   const [isOpenInviteStudentModal, setIsOpenInviteStudentModal] =
     useState<boolean>(false);
   const [isOpenInviteTeacherModal, setIsOpenInviteTeacherModal] =
@@ -32,7 +60,7 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
         inviteStudentLinkRef.current = link;
       },
       onError: () => {
-        toast.error('Error when get invite student link.');
+        toast.error('Get invite student link unsuccessfully.');
       },
     }
   );
@@ -44,7 +72,31 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
         inviteTeacherLinkRef.current = link;
       },
       onError: () => {
-        toast.error('Error when get invite teacher link.');
+        toast.error('Get invite teacher link unsuccessfully.');
+      },
+    }
+  );
+
+  const { mutateAsync: inviteStudentByEmail } = useMutation(
+    classApi.inviteStudentByEmail,
+    {
+      onSuccess: () => {
+        toast.success('Invite student by email successfully.');
+      },
+      onError: () => {
+        toast.error('Invite student by email unsuccessfully.');
+      },
+    }
+  );
+
+  const { mutateAsync: inviteTeacherByEmail } = useMutation(
+    classApi.inviteTeacherByEmail,
+    {
+      onSuccess: () => {
+        toast.success('Invite teacher by email successfully.');
+      },
+      onError: () => {
+        toast.error('Invite teacher by email unsuccessfully.');
       },
     }
   );
@@ -67,6 +119,23 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
     navigator.clipboard.writeText(link);
     toast.success('Copy to clipboard successfully.');
   };
+
+  const inviteByEmail = (role: Role) =>
+    handleSubmit(({ email }: FormFields) => {
+      if (role === Role.STUDENT) {
+        console.log('send invitation email for student.');
+        //inviteStudentByEmail({ classroomId: classroom.id, email });
+        closeInviteStudentModal();
+      }
+
+      if (role === Role.TEACHER) {
+        console.log('send invitation email for teacher.');
+        //inviteTeacherByEmail({ classroomId: classroom.id, email });
+        closeInviteTeacherModal();
+      }
+
+      reset();
+    });
 
   return (
     <div>
@@ -130,6 +199,19 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
               ></i>
             </div>
           </div>
+          <FormProvider {...methods}>
+            <form onSubmit={inviteByEmail(Role.STUDENT)} noValidate>
+              <Input
+                type={InputType.TEXT}
+                category={InputCategory.INPUT}
+                name={'email'}
+                label="Student Email"
+              />
+              <button type="submit" className="btn btn-primary">
+                Invite
+              </button>
+            </form>
+          </FormProvider>
         </div>
       </Modal>
       <Modal
@@ -156,6 +238,19 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
               ></i>
             </div>
           </div>
+          <FormProvider {...methods}>
+            <form onSubmit={inviteByEmail(Role.TEACHER)} noValidate>
+              <Input
+                type={InputType.TEXT}
+                category={InputCategory.INPUT}
+                name={'email'}
+                label="Teacher Email"
+              />
+              <button type="submit" className="btn btn-primary">
+                Invite
+              </button>
+            </form>
+          </FormProvider>
         </div>
       </Modal>
     </div>

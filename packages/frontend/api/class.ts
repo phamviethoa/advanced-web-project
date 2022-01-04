@@ -36,6 +36,26 @@ const classApi = {
     return data;
   },
 
+  inviteStudentByEmail: async (params: {
+    classroomId?: string;
+    email: string;
+  }) => {
+    const { classroomId, email } = params;
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-student-by-email/${classroomId}`;
+    const { data } = await axios.post(url, { email });
+    return data;
+  },
+
+  inviteTeacherByEmail: async (params: {
+    classroomId?: string;
+    email: string;
+  }) => {
+    const { classroomId, email } = params;
+    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-teacher-by-email/${classroomId}`;
+    const { data } = await axios.post(url, { email });
+    return data;
+  },
+
   addStudent: async (params: { identity: string; token: string }) => {
     const { identity, token } = params;
     const query = queryString.stringify({ token });

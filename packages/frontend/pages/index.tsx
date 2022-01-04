@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as React from 'react';
 import ClassList from 'pages/class/ClassList';
 import { GetServerSideProps } from 'next';
@@ -8,7 +7,6 @@ import { useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import * as yup from 'yup';
 import { useForm, FormProvider } from 'react-hook-form';
-import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import Input, { InputType, InputCategory } from 'components/Form/Input';
 import {
