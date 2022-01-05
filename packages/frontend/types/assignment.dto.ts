@@ -7,3 +7,8 @@ export type AssignemtDto = {
   grades: GradeDto[];
   isFinalized: boolean;
 };
+
+export type UpdateAssignmentDto = {
+  name: string;
+  maxPoint: number;
+}[];

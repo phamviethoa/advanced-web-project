@@ -293,8 +293,6 @@ const ClassroomGrade = ({ classroom }: Props) => {
     removeAll();
   };
 
-  console.log('assignments: ', assignments);
-
   return (
     <div>
       <Modal
@@ -356,6 +354,11 @@ const ClassroomGrade = ({ classroom }: Props) => {
       <div className="d-flex justify-content-between">
         <h2 className="text-primary">Grade</h2>
         <div>
+          <span className="text-muted me-4">
+            <Link href={`/class/${classroom.id}/grade-structure`}>
+              <a className="fw-normal">Grade Structure</a>
+            </Link>
+          </span>
           <span className="text-muted me-4">
             <Link
               href={`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/download-student-list-template`}
