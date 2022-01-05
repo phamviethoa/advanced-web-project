@@ -1,5 +1,4 @@
 import Layout from 'components/Layout';
-import { Table, Column, HeaderCell, Cell } from 'rsuite-table';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
@@ -57,13 +56,12 @@ const GradeStructure = () => {
     classApi.getClass(id)
   );
 
-  const assignments = classroom?.assignments as AssignemtDto[];
+  const assignments = classroom?.assignments;
 
   const {
     register,
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<FormFields>({
     mode: 'all',
@@ -91,14 +89,9 @@ const GradeStructure = () => {
   });
 
   const updateAssignment = handleSubmit(async ({ assignments }) => {
-    const data: UpdateAssignmentDto = assignments.map((assignment) => ({
-      name: assignment.name,
-      maxPoint: assignment.maxPoint,
-    }));
-
     mutateAssignments({
       classroomId: classroom?.id,
-      updateAssignmentDto: data,
+      updateAssignmentDto: assignments,
     });
 
     toggleViewMode();
@@ -109,13 +102,14 @@ const GradeStructure = () => {
       return;
     }
 
-    console.log(result);
-
-    const assignments = watch('assignments');
-
-    const items: UpdateAssignmentDto = Array.from(assignments);
+    const items = Array.from(assignments as AssignemtDto[]);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
+
+    mutateAssignments({
+      classroomId: classroom?.id,
+      updateAssignmentDto: items,
+    });
   };
 
   return (
@@ -134,114 +128,99 @@ const GradeStructure = () => {
           </h2>
         </div>
         {isViewMode ? (
-          <div>
-            <Table
-              data={assignments as AssignemtDto[]}
-              autoHeight={true}
-              bordered={true}
-            >
-              <Column width={300} align="center">
-                <HeaderCell>Name</HeaderCell>
-                <Cell dataKey="name" />
-              </Column>
-              <Column width={100} align="center">
-                <HeaderCell>Scale</HeaderCell>
-                <Cell dataKey="maxPoint" />
-              </Column>
-            </Table>
-          </div>
-        ) : (
           <DragDropContext onDragEnd={handleOnDragEnd}>
-            <div className="assignments col rounded shadow-sm p-5 w-50 m-auto">
-              <form noValidate onSubmit={updateAssignment}>
-                <Droppable droppableId="assignments">
-                  {(provided) => (
-                    <div
-                      className="assignments"
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
+            <Droppable droppableId="assignments">
+              {(provided) => (
+                <div
+                  className="assignments"
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  {assignments?.map((assignment, index) => (
+                    <Draggable
+                      key={index}
+                      draggableId={`${assignment.name + index}`}
+                      index={index}
                     >
-                      {fields.map(({ id, name }, index) => {
-                        return (
-                          <Draggable
-                            key={index}
-                            draggableId={`${name + index}`}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <div
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                ref={provided.innerRef}
-                                className="rounded p-2 my-3 border"
-                                key={id}
-                              >
-                                <div className="row p-3">
-                                  <div className="col">
-                                    <input
-                                      type="text"
-                                      className={`form-control ${
-                                        (errors.assignments || [])[index]?.name
-                                          ? 'is-invalid'
-                                          : ''
-                                      }`}
-                                      {...register(
-                                        `assignments.${index}.name` as const
-                                      )}
-                                    />
-                                    <div className="invalid-feedback">
-                                      {
-                                        (errors.assignments || [])[index]?.name
-                                          ?.message
-                                      }
-                                    </div>
-                                  </div>
-                                  <div className="col">
-                                    <input
-                                      type="text"
-                                      className={`form-control ${
-                                        (errors.assignments || [])[index]
-                                          ?.maxPoint
-                                          ? 'is-invalid'
-                                          : ''
-                                      }`}
-                                      {...register(
-                                        `assignments.${index}.maxPoint` as const
-                                      )}
-                                    />
-                                    <div className="invalid-feedback">
-                                      {
-                                        (errors.assignments || [])[index]
-                                          ?.maxPoint?.message
-                                      }
-                                    </div>
-                                  </div>
-                                  <div className="col-1 text-right">
-                                    <a onClick={() => remove(index)}>
-                                      <i className="fas fa-trash icon-md text-danger"></i>
-                                    </a>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                      <div className="float-end border p-2 rounded">
-                        <a onClick={() => append({})}>
-                          <i className="fas fa-plus text-muted"></i>
-                        </a>
-                      </div>
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-                <button type="submit" className="btn btn-primary">
-                  Submit
-                </button>
-              </form>
-            </div>
+                      {(provided) => (
+                        <div
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          ref={provided.innerRef}
+                          className="row p-2 border my-2 rounded bg-white"
+                        >
+                          <div className="col">{assignment.name}</div>
+                          <div className="col">{`${assignment.maxPoint} points`}</div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
           </DragDropContext>
+        ) : (
+          <div className="assignments col rounded shadow-sm p-5 w-50 m-auto">
+            <form noValidate onSubmit={updateAssignment}>
+              <div className="assignments">
+                {fields.map(({ id }, index) => {
+                  return (
+                    <div className="rounded p-2 my-3 border" key={id}>
+                      <div className="row p-3">
+                        <div className="col">
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              (errors.assignments || [])[index]?.name
+                                ? 'is-invalid'
+                                : ''
+                            }`}
+                            {...register(`assignments.${index}.name` as const)}
+                          />
+                          <div className="invalid-feedback">
+                            {(errors.assignments || [])[index]?.name?.message}
+                          </div>
+                        </div>
+                        <div className="col">
+                          <input
+                            type="text"
+                            className={`form-control ${
+                              (errors.assignments || [])[index]?.maxPoint
+                                ? 'is-invalid'
+                                : ''
+                            }`}
+                            {...register(
+                              `assignments.${index}.maxPoint` as const
+                            )}
+                          />
+                          <div className="invalid-feedback">
+                            {
+                              (errors.assignments || [])[index]?.maxPoint
+                                ?.message
+                            }
+                          </div>
+                        </div>
+                        <div className="col-1 text-right">
+                          <a onClick={() => remove(index)}>
+                            <i className="fas fa-trash icon-md text-danger"></i>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="float-end border p-2 rounded">
+                  <a onClick={() => append({})}>
+                    <i className="fas fa-plus text-muted"></i>
+                  </a>
+                </div>
+              </div>
+              <button type="submit" className="btn btn-primary">
+                Submit
+              </button>
+            </form>
+          </div>
         )}
       </div>
     </Layout>

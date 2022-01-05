@@ -33,38 +33,6 @@ const ClassroomNews = ({
               <i className="fas fa-pencil-alt d-inline-block ms-3 icon-sm"></i>
             </a>
           </h2>
-          <DragDropContext onDragEnd={handleOnDragEnd}>
-            <Droppable droppableId="assignments">
-              {(provided) => (
-                <div
-                  className="assignments"
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                >
-                  {assignments.map((assignment, index) => (
-                    <Draggable
-                      key={index}
-                      draggableId={`${assignment.name + index}`}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
-                          className="row p-2 border my-2 rounded bg-white"
-                        >
-                          <div className="col">{assignment.name}</div>
-                          <div className="col">{`${assignment.maxPoint} points`}</div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
         </div>
         <div className="col rounded shadow-sm bg-white p-4"></div>
       </div>
