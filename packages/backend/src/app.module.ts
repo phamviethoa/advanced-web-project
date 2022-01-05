@@ -15,10 +15,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { ClassroomsModule } from './classes/classrooms.module';
 import { ClassroomsController } from './classes/classrooms.controller';
 
+import { SendGridModule } from '@ntegral/nestjs-sendgrid';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    SendGridModule.forRoot({
+      apiKey: process.env.SEND_GRID_ACCESS_KEY,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

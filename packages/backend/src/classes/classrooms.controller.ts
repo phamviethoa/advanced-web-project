@@ -8,7 +8,6 @@ import {
   Put,
   Query,
   Request,
-  Response,
   Res,
   UseGuards,
   UseInterceptors,
@@ -25,6 +24,8 @@ import { StudentsService } from 'src/students/students.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { read } from 'xlsx';
 import { UpdateGradeDTO } from './dto/update-grade-dto';
+import { InviteByEmailDTO } from './dto/invite-by-email-dto';
+
 
 @Controller('classes')
 export class ClassroomsController {
@@ -109,6 +110,11 @@ export class ClassroomsController {
     return this.classroomsService.getInviteStudentLink(id);
   }
 
+  @Get('/invite-teacher-link/:classroomId')
+  getInviteTeacherLink(@Param('classroomId') classroomId: string) {
+    return this.classroomsService.getInviteTeacherLink(classroomId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('/add-student')
   addStudent(
@@ -118,6 +124,16 @@ export class ClassroomsController {
   ) {
     const email = req.user.email;
     return this.classroomsService.addStudent(email, identity, token);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/add-teacher')
+  addTeacher(
+    @Request() req: any,
+    @Query('token') token: string,
+  ) {
+    const email = req.user.email;
+    return this.classroomsService.addTeacher(email,  token);
   }
 
   @Put(':id')
@@ -148,5 +164,18 @@ export class ClassroomsController {
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
+  }
+
+
+  @Post('/invite-student-by-email/:classroomId')
+  inviteStudentByEmail(@Param('classroomId') classroomId: string,@Body() body: InviteByEmailDTO)
+  {
+    return this.classroomsService.inviteStudentByEmail(classroomId, body);
+  }
+
+  @Post('/invite-teacher-by-email/:classroomId')
+  inviteTeacherByEmail(@Param('classroomId') classroomId: string,@Body() body: InviteByEmailDTO)
+  {
+    return this.classroomsService.inviteTeacherByEmail(classroomId, body);
   }
 }

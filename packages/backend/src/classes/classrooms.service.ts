@@ -12,10 +12,16 @@ import { Grade } from 'src/entities/grade.entity';
 import { UpdateGradeDTO } from './dto/update-grade-dto';
 import { stream, utils, write, writeFile } from 'xlsx';
 import { unlink } from 'fs';
+import { InviteByEmailDTO } from './dto/invite-by-email-dto';
+import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
+import { throwError } from 'rxjs';
+import { Max } from 'class-validator';
+
 
 @Injectable()
 export class ClassroomsService {
   constructor(
+    @InjectSendGrid() private readonly sendGrid: SendGridService,
     @InjectRepository(Classroom) private classesRepo: Repository<Classroom>,
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Student) private studentsRepo: Repository<Student>,
@@ -23,6 +29,7 @@ export class ClassroomsService {
     private assignmentsRepo: Repository<Assignment>,
     @InjectRepository(Grade) private gradetsRepo: Repository<Grade>,
     private jwtService: JwtService,
+    
   ) {}
   async findAll(): Promise<Classroom[]> {
     return this.classesRepo.find();
@@ -71,6 +78,16 @@ export class ClassroomsService {
     return `${process.env.FRONT_END_URL}/class/add-student-by-link?token=${token}`;
   }
 
+  async getInviteTeacherLink(id: string){
+    const payload = {
+      classId: id,
+    };
+
+    const token = this.jwtService.sign(payload);
+
+    return `${process.env.FRONT_END_URL}/classes/add-teacher-by-link?token=${token}`;
+  }
+
   async addStudent(email: string, identity: string, token: string) {
     const payload = this.jwtService.verify(token);
     const classId = payload.classId;
@@ -96,29 +113,90 @@ export class ClassroomsService {
     return await this.classesRepo.save(classroom);
   }
 
+  async addTeacher(email: string,  token: string){
+    const payload = this.jwtService.verify(token);
+    const classId = payload.classId;
+
+    const classroom = await this.classesRepo.findOne(classId);
+    const user = await this.usersRepo.findOneOrFail({ email });
+
+    if (!classroom || !user) {
+      throw new BadRequestException();
+    }
+    classroom.teachers.push(user);
+    return await this.classesRepo.save(classroom);
+  }
+
+
   async updateAssignments(
     id: string,
-    updateAssignmentDto: UpdateAssignmentDto,
+    AssignmentDtoFE: UpdateAssignmentDto,
   ) {
-    const classes = await this.classesRepo.findOneOrFail(id);
-
-    const newAssignments: Assignment[] = [];
-
-    const removedAssignments = await this.assignmentsRepo.find({
+    const classes = await this.classesRepo.findOneOrFail({relations:["teachers"]});
+    const Assignments = await this.assignmentsRepo.findAndCount({
       classroom: classes,
     });
 
-    this.assignmentsRepo.remove(removedAssignments);
 
-    for (const assignment of updateAssignmentDto.assignments) {
-      const newAssignment = this.assignmentsRepo.create(assignment);
-      await this.assignmentsRepo.save(newAssignment);
 
-      newAssignments.push(newAssignment);
+    const DBAssignments=Assignments[0];
+    const countAssigments = Assignments[1];
+    let maxIndex = 0;
+
+    if(countAssigments===0)
+    {
+      maxIndex = 0;
+    }
+    else{
+      let arrorderDBAssignments:number[] = [];
+      DBAssignments.map(DBAssignment=> arrorderDBAssignments.push(DBAssignment.order));
+      maxIndex = Math.max(...arrorderDBAssignments);
+    }
+    
+    let isCreate: boolean = true;
+    for (const assignmentFE of AssignmentDtoFE.assignments){
+      for (const dbassignment of DBAssignments){
+        if(assignmentFE.name === dbassignment.name)// TH FEName == DBName update order
+        {
+          dbassignment.maxPoint=assignmentFE.maxPoint;
+          dbassignment.order = assignmentFE.order + 1;
+          isCreate=false;
+          await this.assignmentsRepo.save(dbassignment);
+        }
+      }
+      if(isCreate === true)
+      {
+        const newAssignment=new Assignment(); // duyet xong toan bo DBAssignment nhung k co thi tao moi
+        newAssignment.name=assignmentFE.name;
+        newAssignment.maxPoint=assignmentFE.maxPoint;
+        maxIndex++;
+        newAssignment.order = maxIndex;
+        newAssignment.classroom=classes;
+        
+        const newassignment = this.assignmentsRepo.create(newAssignment);
+        await this.assignmentsRepo.save(newassignment);
+      }
+      isCreate = true;
     }
 
-    classes.assignments = [...newAssignments];
-    return this.classesRepo.save(classes);
+    let isRemove: boolean = true;
+    for (const dbassignment of DBAssignments){
+      for (const assignmentFE of AssignmentDtoFE.assignments){
+        if(assignmentFE.name === dbassignment.name)
+        {
+          isRemove=false;
+        }
+      }
+      if(isRemove === true)
+      {
+        await this.assignmentsRepo.delete(dbassignment);
+      }
+      isRemove=true;
+    }
+    await this.classesRepo.save(classes);
+    return  await this.assignmentsRepo.find({
+      classroom: classes,
+    });
   }
 
   async findAllwithteacher(teacherid: string): Promise<Classroom[]> {
@@ -317,5 +395,36 @@ export class ClassroomsService {
     utils.book_append_sheet(wb, utils.aoa_to_sheet(data), 'SheetName 1');
     await writeFile(wb, filepath);
     return await res.download(filepath);
+  }
+
+  async inviteStudentByEmail(classroomId: string, body: InviteByEmailDTO) {
+    const linkInviteByEmail= await this.getInviteStudentLink(classroomId);
+    try {
+      return await this.sendGrid.send({
+        to:body.email,
+        from:process.env.FROM_EMAIL,
+        subject:"Link tham gia lớp học cho học sinh",
+        text:`Xin chào`,
+        html:`<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`
+      });
+    } catch (error) {
+
+      throw new BadRequestException(error);
+    }
+  }
+  async inviteTeacherByEmail(classroomId: string, body: InviteByEmailDTO) {
+    const linkInviteByEmail= await this.getInviteTeacherLink(classroomId);
+    try {
+      return await this.sendGrid.send({
+        to:body.email,
+        from:process.env.FROM_EMAIL,
+        subject:"Link tham gia lớp học cho giáo viên",
+        text:`Xin chào`,
+        html:`<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`
+      });
+    } catch (error) {
+
+      throw new BadRequestException(error);
+    }
   }
 }
