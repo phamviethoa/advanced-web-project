@@ -12,6 +12,16 @@ const classApi = {
     return axiosClient.get<Array<ClassDto>>(url);
   },
 
+  getOwnedClassroom: () => {
+    const url = '/classes/owned';
+    return axiosClient.get<ClassroomDto[]>(url);
+  },
+
+  getJoinedClassroom: () => {
+    const url = '/classes/joined';
+    return axiosClient.get<ClassroomDto[]>(url);
+  },
+
   getClass: async (id: string) => {
     const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`;
     const { data } = await axios.get<ClassroomDto>(url);
