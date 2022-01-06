@@ -122,14 +122,12 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
   const inviteByEmail = (role: Role) =>
     handleSubmit(({ email }: FormFields) => {
       if (role === Role.STUDENT) {
-        console.log('send invitation email for student.');
-        //inviteStudentByEmail({ classroomId: classroom.id, email });
+        inviteStudentByEmail({ classroomId: classroom.id, email });
         closeInviteStudentModal();
       }
 
       if (role === Role.TEACHER) {
-        console.log('send invitation email for teacher.');
-        //inviteTeacherByEmail({ classroomId: classroom.id, email });
+        inviteTeacherByEmail({ classroomId: classroom.id, email });
         closeInviteTeacherModal();
       }
 
