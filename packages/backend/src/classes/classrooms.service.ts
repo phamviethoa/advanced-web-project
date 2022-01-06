@@ -49,6 +49,18 @@ export class ClassroomsService {
     });
   }
 
+  async findAllClassIsTeacher(userid: string){
+    const userIsTeacher = await this.usersRepo.findOneOrFail({where:{id:userid},relations:["classrooms"]});
+    return userIsTeacher[0].classrooms;
+  }
+
+  async findAllClassIsStudent(userid: string){
+    const userfind= await this.usersRepo.findOneOrFail(userid);
+   // const classroomIsTeacher = await this.studentsRepo.find({where:{id:userid},relations:["students","students.classrooms"]});
+    const students = await this.studentsRepo.find({where:{user: userfind},relations:["classrooms"]});
+    return students[0].classrooms;
+  }
+
   async create(createClassDto: CreateClassDto, teacherId: any) {
     const newClasses = this.classesRepo.create(createClassDto);
     const teacher = await this.usersRepo.findOneOrFail(teacherId);
@@ -117,13 +129,18 @@ export class ClassroomsService {
     const payload = this.jwtService.verify(token);
     const classId = payload.classId;
 
-    const classroom = await this.classesRepo.findOne(classId);
+    const classroom = await this.classesRepo.findOne({
+      relations: ['teachers'],
+      where: { id: classId },
+    });
     const user = await this.usersRepo.findOneOrFail({ email });
 
     if (!classroom || !user) {
       throw new BadRequestException();
     }
     classroom.teachers.push(user);
+
+    this.usersRepo.save(user);
     return await this.classesRepo.save(classroom);
   }
 

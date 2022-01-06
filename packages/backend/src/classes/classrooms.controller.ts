@@ -93,6 +93,13 @@ export class ClassroomsController {
     return this.classroomsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findAllClassIsTeacher(@Request() req: any,) {
+    const userid: string=req.user.id;
+    return this.classroomsService.findAllClassIsTeacher(userid);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.classroomsService.findOne(id);
