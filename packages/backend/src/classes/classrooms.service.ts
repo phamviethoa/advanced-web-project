@@ -17,7 +17,6 @@ import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
 import { throwError } from 'rxjs';
 import { Max } from 'class-validator';
 
-
 @Injectable()
 export class ClassroomsService {
   constructor(
@@ -29,7 +28,6 @@ export class ClassroomsService {
     private assignmentsRepo: Repository<Assignment>,
     @InjectRepository(Grade) private gradetsRepo: Repository<Grade>,
     private jwtService: JwtService,
-    
   ) {}
   async findAll(): Promise<Classroom[]> {
     return this.classesRepo.find();
@@ -78,14 +76,14 @@ export class ClassroomsService {
     return `${process.env.FRONT_END_URL}/class/add-student-by-link?token=${token}`;
   }
 
-  async getInviteTeacherLink(id: string){
+  async getInviteTeacherLink(id: string) {
     const payload = {
       classId: id,
     };
 
     const token = this.jwtService.sign(payload);
 
-    return `${process.env.FRONT_END_URL}/classes/add-teacher-by-link?token=${token}`;
+    return `${process.env.FRONT_END_URL}/class/add-teacher-by-link?token=${token}`;
   }
 
   async addStudent(email: string, identity: string, token: string) {
@@ -113,7 +111,7 @@ export class ClassroomsService {
     return await this.classesRepo.save(classroom);
   }
 
-  async addTeacher(email: string,  token: string){
+  async addTeacher(email: string, token: string) {
     const payload = this.jwtService.verify(token);
     const classId = payload.classId;
 
@@ -127,52 +125,47 @@ export class ClassroomsService {
     return await this.classesRepo.save(classroom);
   }
 
-
-  async updateAssignments(
-    id: string,
-    AssignmentDtoFE: UpdateAssignmentDto,
-  ) {
-    const classes = await this.classesRepo.findOneOrFail({relations:["teachers"]});
+  async updateAssignments(id: string, AssignmentDtoFE: UpdateAssignmentDto) {
+    const classes = await this.classesRepo.findOneOrFail({
+      relations: ['teachers'],
+    });
     const Assignments = await this.assignmentsRepo.findAndCount({
       classroom: classes,
     });
 
-
-
-    const DBAssignments=Assignments[0];
+    const DBAssignments = Assignments[0];
     const countAssigments = Assignments[1];
     let maxIndex = 0;
 
-    if(countAssigments===0)
-    {
+    if (countAssigments === 0) {
       maxIndex = 0;
-    }
-    else{
-      let arrorderDBAssignments:number[] = [];
-      DBAssignments.map(DBAssignment=> arrorderDBAssignments.push(DBAssignment.order));
+    } else {
+      let arrorderDBAssignments: number[] = [];
+      DBAssignments.map((DBAssignment) =>
+        arrorderDBAssignments.push(DBAssignment.order),
+      );
       maxIndex = Math.max(...arrorderDBAssignments);
     }
-    
+
     let isCreate: boolean = true;
-    for (const assignmentFE of AssignmentDtoFE.assignments){
-      for (const dbassignment of DBAssignments){
-        if(assignmentFE.name === dbassignment.name)// TH FEName == DBName update order
-        {
-          dbassignment.maxPoint=assignmentFE.maxPoint;
+    for (const assignmentFE of AssignmentDtoFE.assignments) {
+      for (const dbassignment of DBAssignments) {
+        if (assignmentFE.name === dbassignment.name) {
+          // TH FEName == DBName update order
+          dbassignment.maxPoint = assignmentFE.maxPoint;
           dbassignment.order = assignmentFE.order + 1;
-          isCreate=false;
+          isCreate = false;
           await this.assignmentsRepo.save(dbassignment);
         }
       }
-      if(isCreate === true)
-      {
-        const newAssignment=new Assignment(); // duyet xong toan bo DBAssignment nhung k co thi tao moi
-        newAssignment.name=assignmentFE.name;
-        newAssignment.maxPoint=assignmentFE.maxPoint;
+      if (isCreate === true) {
+        const newAssignment = new Assignment(); // duyet xong toan bo DBAssignment nhung k co thi tao moi
+        newAssignment.name = assignmentFE.name;
+        newAssignment.maxPoint = assignmentFE.maxPoint;
         maxIndex++;
         newAssignment.order = maxIndex;
-        newAssignment.classroom=classes;
-        
+        newAssignment.classroom = classes;
+
         const newassignment = this.assignmentsRepo.create(newAssignment);
         await this.assignmentsRepo.save(newassignment);
       }
@@ -180,21 +173,19 @@ export class ClassroomsService {
     }
 
     let isRemove: boolean = true;
-    for (const dbassignment of DBAssignments){
-      for (const assignmentFE of AssignmentDtoFE.assignments){
-        if(assignmentFE.name === dbassignment.name)
-        {
-          isRemove=false;
+    for (const dbassignment of DBAssignments) {
+      for (const assignmentFE of AssignmentDtoFE.assignments) {
+        if (assignmentFE.name === dbassignment.name) {
+          isRemove = false;
         }
       }
-      if(isRemove === true)
-      {
+      if (isRemove === true) {
         await this.assignmentsRepo.delete(dbassignment);
       }
-      isRemove=true;
+      isRemove = true;
     }
     await this.classesRepo.save(classes);
-    return  await this.assignmentsRepo.find({
+    return await this.assignmentsRepo.find({
       classroom: classes,
     });
   }
@@ -398,32 +389,30 @@ export class ClassroomsService {
   }
 
   async inviteStudentByEmail(classroomId: string, body: InviteByEmailDTO) {
-    const linkInviteByEmail= await this.getInviteStudentLink(classroomId);
+    const linkInviteByEmail = await this.getInviteStudentLink(classroomId);
     try {
       return await this.sendGrid.send({
-        to:body.email,
-        from:process.env.FROM_EMAIL,
-        subject:"Link tham gia lớp học cho học sinh",
-        text:`Xin chào`,
-        html:`<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`
+        to: body.email,
+        from: process.env.FROM_EMAIL,
+        subject: 'Link tham gia lớp học cho học sinh',
+        text: `Xin chào`,
+        html: `<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`,
       });
     } catch (error) {
-
       throw new BadRequestException(error);
     }
   }
   async inviteTeacherByEmail(classroomId: string, body: InviteByEmailDTO) {
-    const linkInviteByEmail= await this.getInviteTeacherLink(classroomId);
+    const linkInviteByEmail = await this.getInviteTeacherLink(classroomId);
     try {
       return await this.sendGrid.send({
-        to:body.email,
-        from:process.env.FROM_EMAIL,
-        subject:"Link tham gia lớp học cho giáo viên",
-        text:`Xin chào`,
-        html:`<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`
+        to: body.email,
+        from: process.env.FROM_EMAIL,
+        subject: 'Link tham gia lớp học cho giáo viên',
+        text: `Xin chào`,
+        html: `<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`,
       });
     } catch (error) {
-
       throw new BadRequestException(error);
     }
   }
