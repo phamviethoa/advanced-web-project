@@ -100,6 +100,13 @@ export class ClassroomsController {
     return this.classroomsService.findAllClassIsTeacher(userid);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findAllClassIsStudent(@Request() req: any,) {
+    const userid: string=req.user.id;
+    return this.classroomsService.findAllClassIsStudent(userid);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.classroomsService.findOne(id);

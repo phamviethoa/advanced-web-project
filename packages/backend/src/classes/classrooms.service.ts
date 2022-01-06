@@ -14,7 +14,7 @@ import { stream, utils, write, writeFile } from 'xlsx';
 import { unlink } from 'fs';
 import { InviteByEmailDTO } from './dto/invite-by-email-dto';
 import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
-import { throwError } from 'rxjs';
+import { async, throwError } from 'rxjs';
 import { Max } from 'class-validator';
 
 @Injectable()
@@ -54,8 +54,7 @@ export class ClassroomsService {
 
   async findAllClassIsStudent(userid: string){
     const userfind= await this.usersRepo.findOneOrFail(userid);
-   // const classroomIsTeacher = await this.studentsRepo.find({where:{id:userid},relations:["students","students.classrooms"]});
-    const students = await this.studentsRepo.find({where:{user: userfind},relations:["classrooms"]});
+    const students = await this.studentsRepo.findOneOrFail({where:{user: userfind},relations:["classrooms"]});
     return students[0].classrooms;
   }
 
@@ -150,6 +149,7 @@ export class ClassroomsService {
       classroom: classes,
     });
 
+
     const DBAssignments = Assignments[0];
     const countAssigments = Assignments[1];
     let maxIndex = 0;
@@ -165,12 +165,16 @@ export class ClassroomsService {
     }
 
     let isCreate: boolean = true;
-    for (const assignmentFE of AssignmentDtoFE.assignments) {
-      for (const dbassignment of DBAssignments) {
-        if (assignmentFE.name === dbassignment.name) {
+    for (const assignmentFE of AssignmentDtoFE.assignments){}
+
+    let indexfe = 0;
+    for (const assignmentFE of AssignmentDtoFE.assignments){
+      for (const dbassignment of DBAssignments){
+        if (assignmentFE.id === dbassignment.id) {
           // TH FEName == DBName update order
           dbassignment.maxPoint = assignmentFE.maxPoint;
-          dbassignment.order = assignmentFE.order + 1;
+          dbassignment.name = assignmentFE.name;
+          dbassignment.order = indexfe + 1;
           isCreate = false;
           await this.assignmentsRepo.save(dbassignment);
         }
@@ -181,18 +185,21 @@ export class ClassroomsService {
         newAssignment.maxPoint = assignmentFE.maxPoint;
         maxIndex++;
         newAssignment.order = maxIndex;
+
         newAssignment.classroom = classes;
 
         const newassignment = this.assignmentsRepo.create(newAssignment);
         await this.assignmentsRepo.save(newassignment);
       }
       isCreate = true;
+      indexfe++;
     }
 
     let isRemove: boolean = true;
+    
     for (const dbassignment of DBAssignments) {
       for (const assignmentFE of AssignmentDtoFE.assignments) {
-        if (assignmentFE.name === dbassignment.name) {
+        if (assignmentFE.id === dbassignment.id) {
           isRemove = false;
         }
       }
@@ -202,7 +209,7 @@ export class ClassroomsService {
       isRemove = true;
     }
     await this.classesRepo.save(classes);
-    return await this.assignmentsRepo.find({
+    return  await this.assignmentsRepo.find({
       classroom: classes,
     });
   }
