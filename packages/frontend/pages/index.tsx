@@ -37,6 +37,14 @@ const schema = yup.object().shape({
 
 function Classes() {
   const { data: classes } = useQuery('classes', classApi.getAll);
+  //const { data: ownedClasses } = useQuery(
+  //'owned-classes',
+  //classApi.getOwnedClassroom
+  //);
+  //const { data: joinedClasses } = useQuery(
+  //'joined-classes',
+  //classApi.getJoinedClassroom
+  //);
 
   const [isOpenCreateClassModal, setIsOpenCreateClassModal] =
     useState<boolean>(false);
@@ -74,7 +82,6 @@ function Classes() {
   return (
     <Layout>
       <div className="d-flex justify-content-between">
-        <h1 className="">Classes</h1>
         <div className="text-muted">
           <a onClick={openCreateClassModal} className="fw-normal">
             <i style={{ fontSize: '0.8rem' }} className="fas fa-plus me-2"></i>
@@ -82,7 +89,19 @@ function Classes() {
           </a>
         </div>
       </div>
-      <ClassList classes={classes as unknown as ClassDto[]}></ClassList>
+      <div className="mt-5">
+        <h2 className="h4">Your Classrooms</h2>
+        <ClassList classes={classes as unknown as ClassDto[]}></ClassList>
+        {/*
+         * show owned classes
+         */}
+      </div>
+      <div className="mt-5">
+        <h2 className="h4">Joined Classrooms</h2>
+        {/*
+         * show joined classes
+         */}
+      </div>
       <Modal
         title="Create classroom"
         isOpen={isOpenCreateClassModal}
@@ -115,7 +134,12 @@ function Classes() {
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const queryClient = new QueryClient();
-  await queryClient.prefetchQuery('classes', classApi.getAll);
+
+  Promise.all([
+    queryClient.prefetchQuery('classes', classApi.getAll),
+    //queryClient.prefetchQuery('owned-classes', classApi.getOwnedClassroom),
+    //queryClient.prefetchQuery('joined-classes', classApi.getJoinedClassroom),
+  ]);
 
   return {
     props: {
