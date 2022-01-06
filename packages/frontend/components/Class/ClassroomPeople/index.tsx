@@ -107,8 +107,7 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
     };
 
     const getInviteTeacherLink = async () => {
-      //mutateInviteTeacherLink(classroom.id);
-      inviteTeacherLinkRef.current = 'dummy link';
+      mutateInviteTeacherLink(classroom.id);
     };
 
     getInviteStudentLink();
