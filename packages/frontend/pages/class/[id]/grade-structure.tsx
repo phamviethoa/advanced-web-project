@@ -19,16 +19,12 @@ import assignmentApi from 'api/assignment';
 import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-type UpdateAssignment = {
-  name: string;
-  maxPoint: number;
-};
-
 type FormFields = {
-  assignments: UpdateAssignment[];
+  assignments: UpdateAssignmentDto;
 };
 
 const assignmentsSchema = yup.object().shape({
+  id: yup.string(),
   name: yup
     .string()
     .required('Name is required.')
@@ -89,9 +85,15 @@ const GradeStructure = () => {
   });
 
   const updateAssignment = handleSubmit(async ({ assignments }) => {
+    const data: UpdateAssignmentDto = assignments.map((assignment) => ({
+      id: assignment.id,
+      name: assignment.name,
+      maxPoint: assignment.maxPoint,
+    }));
+
     mutateAssignments({
       classroomId: classroom?.id,
-      updateAssignmentDto: assignments,
+      updateAssignmentDto: data,
     });
 
     toggleViewMode();
@@ -102,13 +104,19 @@ const GradeStructure = () => {
       return;
     }
 
-    const items = Array.from(assignments as AssignemtDto[]);
+    const items = Array.from(assignments as UpdateAssignmentDto);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
+    const data: UpdateAssignmentDto = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      maxPoint: item.maxPoint,
+    }));
+
     mutateAssignments({
       classroomId: classroom?.id,
-      updateAssignmentDto: items,
+      updateAssignmentDto: data,
     });
   };
 
@@ -201,6 +209,10 @@ const GradeStructure = () => {
                             }
                           </div>
                         </div>
+                        <input
+                          type="hidden"
+                          {...register(`assignments.${index}.id` as const)}
+                        />
                         <div className="col-1 text-right">
                           <a onClick={() => remove(index)}>
                             <i className="fas fa-trash icon-md text-danger"></i>

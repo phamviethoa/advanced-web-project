@@ -9,6 +9,7 @@ export type AssignemtDto = {
 };
 
 export type UpdateAssignmentDto = {
+  id: string;
   name: string;
   maxPoint: number;
 }[];
