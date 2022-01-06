@@ -49,13 +49,13 @@ export class ClassroomsService {
 
   async findAllClassIsTeacher(userid: string){
     const userIsTeacher = await this.usersRepo.findOneOrFail({where:{id:userid},relations:["classrooms"]});
-    return userIsTeacher[0].classrooms;
+    return userIsTeacher.classrooms;
   }
 
   async findAllClassIsStudent(userid: string){
     const userfind= await this.usersRepo.findOneOrFail(userid);
     const students = await this.studentsRepo.findOneOrFail({where:{user: userfind},relations:["classrooms"]});
-    return students[0].classrooms;
+    return students.classrooms;
   }
 
   async create(createClassDto: CreateClassDto, teacherId: any) {
@@ -233,9 +233,9 @@ export class ClassroomsService {
     const countstudentinclassroom = assignment.classroom.students.length;
     if (gradesofassignement[1] === countstudentinclassroom) {
       assignment.isFinalized = true;
-      return this.assignmentsRepo.save(assignment);
+      return await this.assignmentsRepo.save(assignment);
     }
-    return console.log('Grades in assignement is not finalized');
+    throw new BadRequestException('Grades in assignement is not finalized');
   }
 
   downloadStudentListTemplate(res: any) {
@@ -415,7 +415,7 @@ export class ClassroomsService {
   async inviteStudentByEmail(classroomId: string, body: InviteByEmailDTO) {
     const linkInviteByEmail = await this.getInviteStudentLink(classroomId);
     try {
-      return await this.sendGrid.send({
+      return this.sendGrid.send({
         to: body.email,
         from: process.env.FROM_EMAIL,
         subject: 'Link tham gia lớp học cho học sinh',
@@ -429,7 +429,7 @@ export class ClassroomsService {
   async inviteTeacherByEmail(classroomId: string, body: InviteByEmailDTO) {
     const linkInviteByEmail = await this.getInviteTeacherLink(classroomId);
     try {
-      return await this.sendGrid.send({
+      return this.sendGrid.send({
         to: body.email,
         from: process.env.FROM_EMAIL,
         subject: 'Link tham gia lớp học cho giáo viên',
