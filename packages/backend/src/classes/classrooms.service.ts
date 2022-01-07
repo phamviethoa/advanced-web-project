@@ -14,8 +14,10 @@ import { stream, utils, write, writeFile } from 'xlsx';
 import { unlink } from 'fs';
 import { InviteByEmailDTO } from './dto/invite-by-email-dto';
 import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
-import { async, throwError } from 'rxjs';
+import { throwError } from 'rxjs';
 import { Max } from 'class-validator';
+import {createTransport} from 'nodemailer'
+import passport from 'passport';
 
 @Injectable()
 export class ClassroomsService {
@@ -414,10 +416,17 @@ export class ClassroomsService {
 
   async inviteStudentByEmail(classroomId: string, body: InviteByEmailDTO) {
     const linkInviteByEmail = await this.getInviteStudentLink(classroomId);
+    let tranport =createTransport({
+      service:'gmail',
+      auth: {
+        user:process.env.USER,
+        pass:process.env.PASS
+      }
+    })
     try {
-      return this.sendGrid.send({
+      return tranport.sendMail({
         to: body.email,
-        from: process.env.FROM_EMAIL,
+        from: process.env.USER,
         subject: 'Link tham gia lớp học cho học sinh',
         text: `Xin chào`,
         html: `<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`,
@@ -426,12 +435,21 @@ export class ClassroomsService {
       throw new BadRequestException(error);
     }
   }
+
   async inviteTeacherByEmail(classroomId: string, body: InviteByEmailDTO) {
     const linkInviteByEmail = await this.getInviteTeacherLink(classroomId);
+    let tranport =createTransport({
+      service:'gmail',
+      auth: {
+        user:process.env.USER,
+        pass:process.env.PASS
+      }
+    })
+
     try {
-      return this.sendGrid.send({
+      return tranport.sendMail({
         to: body.email,
-        from: process.env.FROM_EMAIL,
+        from: process.env.USER,
         subject: 'Link tham gia lớp học cho giáo viên',
         text: `Xin chào`,
         html: `<a href= ${linkInviteByEmail}>link tham gia lớp học</a>`,

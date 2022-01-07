@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Param, Put, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put, Patch, UseGuards, Query, Request } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { SignupUserDto } from './dto/signup-user.dto';
 import { UsersService } from './users.service';
 
@@ -9,7 +10,14 @@ export class UsersController {
   @Post('/signup')
   signin(@Body() signupUserDto: SignupUserDto) {
     const { email, fullName, password } = signupUserDto;
-    return this.usersService.addUser(email, fullName, password);
+    return this.usersService.sendActiveEmail(email, fullName, password);
+  }
+
+  @Post('/activate')
+  active(
+    @Query('token') token: string
+  ) {
+    return this.usersService.addUser(token);
   }
 
   @Get(':id')
@@ -25,5 +33,19 @@ export class UsersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {
     return this.usersService.update(id, body);
+  }
+
+  @Post('forgot-password')
+  fogotpassword(@Body() body: any){
+    return this.usersService.fogotpassword(body);
+  }
+
+  @Post('reset-password')
+  restpassword(
+    @Query('token') token: string,
+    @Body() body: any
+    ){
+    const password = body.password;
+    return this.usersService.newpassword(token,password);
   }
 }
