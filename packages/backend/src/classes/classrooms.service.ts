@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Response } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateAssignmentDto } from './dto/update-assignments.dto';
@@ -18,11 +19,16 @@ import { throwError } from 'rxjs';
 import { Max } from 'class-validator';
 import {createTransport} from 'nodemailer'
 import passport from 'passport';
+import { ReviewGradelDTO } from './dto/review-grade.dto';
+import { Notification } from 'src/entities/notification.entity';
+import { CommentReviewDTO } from './dto/comment-review.dto';
+import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
+import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
+import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
 
 @Injectable()
 export class ClassroomsService {
   constructor(
-    @InjectSendGrid() private readonly sendGrid: SendGridService,
     @InjectRepository(Classroom) private classesRepo: Repository<Classroom>,
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Student) private studentsRepo: Repository<Student>,
@@ -30,6 +36,7 @@ export class ClassroomsService {
     private assignmentsRepo: Repository<Assignment>,
     @InjectRepository(Grade) private gradetsRepo: Repository<Grade>,
     private jwtService: JwtService,
+    @InjectRepository(Notification) private notificationsRepo: Repository<Notification>,
   ) {}
   async findAll(): Promise<Classroom[]> {
     return this.classesRepo.find();
@@ -224,10 +231,10 @@ export class ClassroomsService {
     return classteacher[0].classrooms;
   }
 
-  async markFinalized(assignmentId: string) {
+  async markFinalized(assignmentId: string, teacherId: string) {
     const assignment = await this.assignmentsRepo.findOneOrFail({
       where: { id: assignmentId },
-      relations: ['classroom', 'classroom.students'],
+      relations: ['classroom', 'classroom.students', 'classroom.students.user'],
     });
     const gradesofassignement = await this.gradetsRepo.findAndCount({
       assignment: assignment,
@@ -235,6 +242,22 @@ export class ClassroomsService {
     const countstudentinclassroom = assignment.classroom.students.length;
     if (gradesofassignement[1] === countstudentinclassroom) {
       assignment.isFinalized = true;
+      const teacher = await this.usersRepo.findOneOrFail(teacherId);
+
+      const notification = new Notification();
+      notification.fromUser = teacher;
+
+      let students: User[] = [];
+      for (const student of assignment.classroom.students) {
+        if (!student.user) { } else {
+          students.push(student.user);
+        }
+      }
+      notification.toUser = students;
+      notification.description = `Giáo viên đã hoàn tất cột điểm ${assignment.name}`
+
+      const newnotification = this.notificationsRepo.create(notification);
+      await this.notificationsRepo.save(newnotification);
       return await this.assignmentsRepo.save(assignment);
     }
     throw new BadRequestException('Grades in assignement is not finalized');
@@ -457,5 +480,146 @@ export class ClassroomsService {
     } catch (error) {
       throw new BadRequestException(error);
     }
+  }
+
+  async requestReviewGrade(body: ReviewGradelDTO, studentId: string){
+    const classroomId = body.classroomId;
+    const gradeNeedToRivewId= body.gradeNeedToRivewId;
+    const expectationGrade= body.expectationGrade;
+    const description= body.description;
+
+    const classroom = await this.classesRepo.findOne({
+      relations: ['teachers'],
+      where: { id: classroomId },
+    });
+    const grade = await this.gradetsRepo.findOne(gradeNeedToRivewId);
+    const student = await this.usersRepo.findOne(studentId);
+
+    if (!classroom || !grade || !student) {
+      throw new BadRequestException();
+    }
+
+    const notification = new Notification();
+
+    notification.expectationGrade = expectationGrade;
+    notification.description = description;
+    notification.gradeNeedToRivew = grade;
+    notification.toUser = classroom.teachers;
+    notification.fromUser = student;
+
+    // await this.classesRepo.save(classroom);
+    // await this.gradetsRepo.save(grade);
+    // await this.usersRepo.save(student);
+
+    return  this.notificationsRepo.create(notification);
+  }
+
+  async commentStudentReview(body: CommentReviewDTO, fromUserId: string){
+    const description= body.description;
+    const toUserId = body.toUserId;
+    const fromUser = await this.usersRepo.findOne(fromUserId);
+    const toUser = await this.usersRepo.findOne(toUserId);
+
+    if (!fromUser || !toUser) {
+      throw new BadRequestException();
+    }
+    const notification = new Notification();
+    notification.fromUser = fromUser; 
+    notification.toUser = [toUser];
+    notification.description = description;
+
+    const newnotification = this.notificationsRepo.create(notification);
+    return await this.notificationsRepo.save(newnotification);
+  }
+
+  async viewOfStudentCommentsGradeReview(body: ViewOfStudentCommentsDTO){
+    const gradeNeedToRivewId =body.gradeNeedToRivewId;
+    const grade = await this.gradetsRepo.findOne({
+      relations: ['reviews', 
+                  'reviews.fromUser',
+                  'reviews.toUser'],
+      where: { id: gradeNeedToRivewId },});
+
+    if (!grade) {
+      throw new BadRequestException();
+    }
+    return grade;
+  }
+
+  async viewListOfGradeReviewsRequestByStudent(teacherId:string){
+    const teacher = await this.usersRepo.findOne({
+      relations: ['notificationsReceived', 
+                  'notificationsReceived.fromUser', 
+                  'notificationsReceived.gradeNeedToRivew'],
+      where: { id: teacherId },});
+
+    if(!teacher)
+    {
+      throw new BadRequestException();
+    }
+
+    let notifications: Notification[]=[];
+    for (const notification of teacher.notificationsReceived) {
+      if(!notification.gradeNeedToRivew)
+      { }
+      else{
+        notifications.push(notification);
+      }
+    }
+    return notifications;
+  }
+
+  async markFinalforStudentReviewUpdateGrade(body: FinalizedReviewDTO, teacherId:string){
+    const grade = await this.gradetsRepo.findOne(body.gradeNeedToUpdateId);
+    const teacher =await this.usersRepo.findOne(teacherId);
+    const student = await this.usersRepo.findOne(body.studenitId);
+    if(!grade || !teacher || student)
+    {
+      throw new BadRequestException();
+    }
+    grade.isFinalized = true;
+    grade.point = body.newPoint;
+
+    const notification = new Notification();
+    notification.fromUser=teacher;
+    notification.toUser = [student];
+    notification.description = 'Giáo viên đã hoàn tất việc cập nhật điểm'
+
+    const newnotification = this.notificationsRepo.create(notification);
+    await this.notificationsRepo.save(newnotification);
+    
+    return await this.gradetsRepo.save(grade);
+  }
+
+  async teacherViewGradeDetail(notificationId: string){
+    const notification = this.notificationsRepo.findOne({where:{id:notificationId},
+      relations:['gradeNeedToRivew', 
+                'gradeNeedToRivew.assignment',
+                'toUser', 
+                'fromUser']});
+    if(!notification)
+    {
+      throw new BadRequestException();
+    }
+    return notification;
+  }
+
+  async studentViewGradesCompositions(userId: string, classroomId: string)
+  {
+    const user = await this.usersRepo.findOne({where:{id:userId},
+      relations:['classrooms',
+      'classrooms.assignments', 
+      'classrooms.assignments.grades']});
+    if(!user){
+      throw new BadRequestException();
+    }
+    let assignmentsGrades: any;
+    for (const classroom of user.classrooms) {
+      if(classroom.id === classroomId)
+      {
+        assignmentsGrades=classroom.assignments;
+      }
+    }
+    return assignmentsGrades;
   }
 }

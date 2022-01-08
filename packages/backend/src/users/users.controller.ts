@@ -48,4 +48,11 @@ export class UsersController {
     const password = body.password;
     return this.usersService.newpassword(token,password);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/show-notifications')
+  showNotification(@Request() req: any){
+    const userId: string = req.user.id;
+    return this.usersService.showNotification(userId);
+  }
 }

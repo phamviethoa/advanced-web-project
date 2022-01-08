@@ -6,10 +6,12 @@ import { User } from 'src/entities/user.entity';
 import { createTransport } from 'nodemailer';
 import { throwError } from 'rxjs';
 const bcrypt = require('bcrypt');
+import { Notification } from 'src/entities/notification.entity';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectRepository(User) private usersRepo: Repository<User>,
+  @InjectRepository(Notification) private notificationsRepo: Repository<Notification>,
   private jwtService: JwtService,) {}
 
   async findOne(email: string): Promise<User | undefined> {
@@ -134,5 +136,18 @@ export class UsersService {
     user.password = hashedPassword;
 
     return this.usersRepo.save(user);
+  }
+
+  async showNotification(userId: string){
+    const user = await this.usersRepo.findOne({
+      relations: ['notificationsReceived', 
+                  'notificationsReceived.fromUser', 
+                  'notificationsReceived.gradeNeedToRivew'],
+      where: { id: userId },});
+      if(!user)
+    {
+      throw new BadRequestException();
+    }
+    return user.notificationsReceived;
   }
 }

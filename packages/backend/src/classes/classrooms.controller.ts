@@ -25,6 +25,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { read } from 'xlsx';
 import { UpdateGradeDTO } from './dto/update-grade-dto';
 import { InviteByEmailDTO } from './dto/invite-by-email-dto';
+import { ReviewGradelDTO } from './dto/review-grade.dto';
+import { CommentReviewDTO } from './dto/comment-review.dto';
+import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
+import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
+import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
 
 
 @Controller('classes')
@@ -49,9 +54,11 @@ export class ClassroomsController {
     return this.classroomsService.showstudentsgrades(classroomId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/assignments/:assignmentId/mark-finalized')
-  isFullAssignment(@Param('assignmentId') assignmentId) {
-    return this.classroomsService.markFinalized(assignmentId);
+  isFullAssignment(@Param('assignmentId') assignmentId , @Request() req: any) {
+    const teacherId = req.user.id;
+    return this.classroomsService.markFinalized(assignmentId,teacherId);
   }
 
   @Get('download-student-list-template')
@@ -181,7 +188,6 @@ export class ClassroomsController {
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
   }
 
-
   @Post('/invite-student-by-email/:classroomId')
   inviteStudentByEmail(@Param('classroomId') classroomId: string,@Body() body: InviteByEmailDTO)
   {
@@ -193,4 +199,54 @@ export class ClassroomsController {
   {
     return this.classroomsService.inviteTeacherByEmail(classroomId, body);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/student-request-review-grade')
+  requestReviewGrade(@Body() body: ReviewGradelDTO, @Request() req: any){
+    const studentId: string = req.user.id;
+    return this.classroomsService.requestReviewGrade(body, studentId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/comment-review')
+  commentStudentReview(@Body() body: CommentReviewDTO, @Request() req: any){
+    const fromUserId: string = req.user.id;
+    return this.classroomsService.commentStudentReview(body, fromUserId);
+  }
+
+  @Post('/view-of-student-comments-grade-review')
+  viewOfStudentCommentsGradeReview(@Body() body: ViewOfStudentCommentsDTO){
+    return this.classroomsService.viewOfStudentCommentsGradeReview(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/view-list-of-grade-reviews-request-by-students')
+  viewListOfGradeReviewsRequestByStudent(@Request() req: any){
+    const teacherId: string = req.user.id;
+    return this.classroomsService.viewListOfGradeReviewsRequestByStudent(teacherId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/teacher-view-grade-detail/:notificationId')
+  teacherViewGradeDetail( @Param('notificationId') notificationId: string ){
+    return this.classroomsService.teacherViewGradeDetail(notificationId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/mark-final-for-student-review-update-grade')
+  markFinalforStudentReviewUpdateGrade(@Body() body: FinalizedReviewDTO, @Request() req: any){
+    const teacherId: string = req.user.id;
+    return this.classroomsService.markFinalforStudentReviewUpdateGrade(body,teacherId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/student-view-grades-compositions/:classroomId')
+  studentViewGradesCompositions(@Request() req: any, @Param('classroomId') classroomId: string){
+    const studentId: string = req.user.id;
+    return this.classroomsService.studentViewGradesCompositions(studentId,classroomId);
+  // @Post('/student-view-grades-compositions')
+  // studentViewGradesCompositions(@Body() body:any ){
+  //return this.classroomsService.studentViewGradesCompositions(body.userId,body.classroomId);
+  }
+
 }

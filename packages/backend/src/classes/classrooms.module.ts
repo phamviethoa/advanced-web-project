@@ -12,10 +12,10 @@ import { StudentsService } from 'src/students/students.service';
 import { ClassroomsController } from './classrooms.controller';
 import { ClassroomsService } from './classrooms.service';
 import { Grade } from 'src/entities/grade.entity';
-
+import { Notification } from 'src/entities/notification.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Classroom, Assignment, Student, User, Grade]),
+    TypeOrmModule.forFeature([Classroom, Assignment, Student, User, Grade, Notification]),
     JwtModule.register({
       secret: 'secret',
     }),
