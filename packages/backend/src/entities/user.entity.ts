@@ -28,4 +28,10 @@ export class User extends BaseEntity {
 
   @ManyToMany(()=> Notification, (notification)=>notification.toUser)
   notificationsReceived: Notification[];
+
+  @Column({ default: false })
+  isAdmin: boolean;
+
+  @Column({ default: false })
+  isBanned: boolean;
 }

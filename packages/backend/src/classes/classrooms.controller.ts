@@ -39,6 +39,13 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/view-list-of-grade-reviews-request-by-students')
+  viewListOfGradeReviewsRequestByStudent(@Request() req: any){
+    const teacherId: string = req.user.id;
+    return this.classroomsService.viewListOfGradeReviewsRequestByStudent(teacherId);
+  }
+
   @Get(':classroomId/export-grade-board')
   exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any) {
     return this.classroomsService.exprotgradeboard(classroomId, res);
@@ -220,14 +227,7 @@ export class ClassroomsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/view-list-of-grade-reviews-request-by-students')
-  viewListOfGradeReviewsRequestByStudent(@Request() req: any){
-    const teacherId: string = req.user.id;
-    return this.classroomsService.viewListOfGradeReviewsRequestByStudent(teacherId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('/teacher-view-grade-detail/:notificationId')
+  @Get('/teacher-view-grade-detail/:notificationId')
   teacherViewGradeDetail( @Param('notificationId') notificationId: string ){
     return this.classroomsService.teacherViewGradeDetail(notificationId);
   }
@@ -248,5 +248,4 @@ export class ClassroomsController {
   // studentViewGradesCompositions(@Body() body:any ){
   //return this.classroomsService.studentViewGradesCompositions(body.userId,body.classroomId);
   }
-
 }
