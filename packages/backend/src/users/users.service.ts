@@ -75,7 +75,11 @@ export class UsersService {
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/user/activate?token=${token}`;
 
     let tranport =createTransport({
-      service:'gmail',
+      // service:'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
       auth: {
         user:process.env.USER,
         pass:process.env.PASS
@@ -105,7 +109,11 @@ export class UsersService {
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/auth/reset-password?token=${token}`;
     
     let tranport =createTransport({
-      service:'gmail',
+      // service:'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
       auth: {
         user:process.env.USER,
         pass:process.env.PASS
