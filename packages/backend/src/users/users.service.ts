@@ -9,14 +9,19 @@ const bcrypt = require('bcrypt');
 import { Notification } from 'src/entities/notification.entity';
 import { Classroom } from 'src/entities/classroom.entity';
 import { Student } from 'src/entities/student.entity';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private usersRepo: Repository<User>,
-  @InjectRepository(Notification) private notificationsRepo: Repository<Notification>,
-  @InjectRepository(Student) private studentsRepo: Repository<Student>,
-  @InjectRepository(Classroom) private classesRepo: Repository<Classroom>,
-  private jwtService: JwtService,) {}
+  constructor(
+    @InjectRepository(User) private usersRepo: Repository<User>,
+    @InjectRepository(Notification)
+    private notificationsRepo: Repository<Notification>,
+    @InjectRepository(Student) private studentsRepo: Repository<Student>,
+    @InjectRepository(Classroom) private classesRepo: Repository<Classroom>,
+    private jwtService: JwtService,
+    private readonly mailerService: MailerService,
+  ) {}
 
   async findOne(email: string): Promise<User | undefined> {
     return await this.usersRepo.findOne({ where: { email } });
@@ -64,61 +69,44 @@ export class UsersService {
     return await this.usersRepo.save(task);
   }
 
-  async sendActiveEmail(email: string, fullName: string, password: string){
+  async sendActiveEmail(email: string, fullName: string, password: string) {
     const payload = {
       email: email,
       fullName: fullName,
-      password: password
+      password: password,
     };
 
     const token = this.jwtService.sign(payload);
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/user/activate?token=${token}`;
 
-    let tranport =createTransport({
-      // service:'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user:process.env.USER,
-        pass:process.env.PASS
-      }
-    })
-
-    try {
-      return tranport.sendMail({
-        to: email,
-        from: process.env.USER,
-        subject: 'Email kích hoạt tài khoản',
-        text: `Xin chào`,
-        html: `<a href= ${linkActiveByEmail}>link kích hoạt tài khoản</a>`,
-      });
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
+    return this.mailerService.sendMail({
+      to: email,
+      from: process.env.USER,
+      subject: 'Email kích hoạt tài khoản',
+      text: `Xin chào`,
+      html: `<a href= ${linkActiveByEmail}>link kích hoạt tài khoản</a>`,
+    });
   }
 
-  async fogotpassword(body: any)
-  {
+  async fogotpassword(body: any) {
     const email = body.email;
     const payload = {
       email: email,
     };
     const token = this.jwtService.sign(payload);
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/auth/reset-password?token=${token}`;
-    
-    let tranport =createTransport({
+
+    let tranport = createTransport({
       // service:'gmail',
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
       requireTLS: true,
       auth: {
-        user:process.env.USER,
-        pass:process.env.PASS
-      }
-    })
+        user: process.env.USER,
+        pass: process.env.PASS,
+      },
+    });
 
     try {
       return tranport.sendMail({
@@ -133,14 +121,12 @@ export class UsersService {
     }
   }
 
-  async newpassword(token:any,password: string)
-  {
+  async newpassword(token: any, password: string) {
     const payload = this.jwtService.verify(token);
     const email = payload.email;
     const user = await this.usersRepo.findOne({ where: { email } });
-    
-    if(!user)
-    {
+
+    if (!user) {
       throw new BadRequestException("Didn't find user ");
     }
     const salt = await bcrypt.genSalt(10);
@@ -150,20 +136,22 @@ export class UsersService {
     return this.usersRepo.save(user);
   }
 
-  async showNotification(userId: string){
+  async showNotification(userId: string) {
     const user = await this.usersRepo.findOne({
-      relations: ['notificationsReceived', 
-                  'notificationsReceived.fromUser', 
-                  'notificationsReceived.gradeNeedToRivew'],
-      where: { id: userId },});
-      if(!user)
-    {
+      relations: [
+        'notificationsReceived',
+        'notificationsReceived.fromUser',
+        'notificationsReceived.gradeNeedToRivew',
+      ],
+      where: { id: userId },
+    });
+    if (!user) {
       throw new BadRequestException();
     }
     return user.notificationsReceived;
   }
 
-  async CreateAccountAdmin(email: string, fullName: string, password: string){
+  async CreateAccountAdmin(email: string, fullName: string, password: string) {
     const isValid = await this.checkUsernameIsExist(email);
 
     if (!isValid) {
@@ -177,66 +165,62 @@ export class UsersService {
       email,
       fullName,
       password: hashedPassword,
-      isAdmin: true
+      isAdmin: true,
     });
 
     return await this.usersRepo.save(newAdmin);
   }
 
-  async ViewAdminList()
-  {
+  async ViewAdminList() {
     return await this.usersRepo.find({
-      where:{isAdmin:true},
-      order:{createdAt: "ASC"}})
+      where: { isAdmin: true },
+      order: { createdAt: 'ASC' },
+    });
   }
 
-  async ViewDetailAdmin(adminId: string){
+  async ViewDetailAdmin(adminId: string) {
     const admin = this.usersRepo.findOne(adminId);
 
-    if(!admin || (await admin).isAdmin === false)
-    {
+    if (!admin || (await admin).isAdmin === false) {
       throw new BadRequestException();
     }
     return admin;
   }
 
-  async ViewClassListByAdmin(){
+  async ViewClassListByAdmin() {
     return await this.classesRepo.find({
-      order:{createdAt: "ASC"}})
-  }
-
-  async ViewDetailClassByAdmin(classroomId: string){
-    return this.classesRepo.findOneOrFail(classroomId, {
-      relations: [
-        'teachers',
-        'students',
-        'students.grades',
-        'assignments',
-      ],
+      order: { createdAt: 'ASC' },
     });
   }
-  
-  async viewUserList(){
-    return await this.usersRepo.find({
-      where:{isAdmin : false},
-      order:{createdAt: "ASC"}})
+
+  async ViewDetailClassByAdmin(classroomId: string) {
+    return this.classesRepo.findOneOrFail(classroomId, {
+      relations: ['teachers', 'students', 'students.grades', 'assignments'],
+    });
   }
 
-  async viewDetailUserByAdmin(userId: string){
+  async viewUserList() {
+    return await this.usersRepo.find({
+      where: { isAdmin: false },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async viewDetailUserByAdmin(userId: string) {
     return this.usersRepo.findOneOrFail(userId);
   }
 
-  async banUnnamAccountByAdmin(AccountId: string){
+  async banUnnamAccountByAdmin(AccountId: string) {
     const toBanAccount = await this.usersRepo.findOneOrFail(AccountId);
     toBanAccount.isBanned = !toBanAccount.isBanned;
     return await this.usersRepo.save(toBanAccount);
   }
 
-  async MapStudentToUserByAdmin( studentId: string, userId: string){
+  async MapStudentToUserByAdmin(studentId: string, userId: string) {
     const user = await this.usersRepo.findOne(userId);
     const student = await this.studentsRepo.findOne(studentId);
 
-    if(!user || !student){
+    if (!user || !student) {
       throw new BadRequestException();
     }
     student.user = user;
@@ -244,17 +228,16 @@ export class UsersService {
     return await this.studentsRepo.save(student);
   }
 
-  async unMapStudentToUserByAdmin(studentId: string, userId: string)
-  {
+  async unMapStudentToUserByAdmin(studentId: string, userId: string) {
     const user = await this.usersRepo.findOne(userId);
     const student = await this.studentsRepo.findOne(studentId);
 
-    if(!user || !student){
+    if (!user || !student) {
       throw new BadRequestException();
     }
     student.user = undefined;
     student.identity = undefined;
-    
+
     return await this.studentsRepo.save(student);
   }
 }

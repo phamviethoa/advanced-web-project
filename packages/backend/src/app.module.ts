@@ -16,6 +16,9 @@ import { ClassroomsModule } from './classes/classrooms.module';
 import { ClassroomsController } from './classes/classrooms.controller';
 
 import { SendGridModule } from '@ntegral/nestjs-sendgrid';
+import { MailerModule } from '@nestjs-modules/mailer';
+//import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +39,15 @@ import { SendGridModule } from '@ntegral/nestjs-sendgrid';
       //},
       synchronize: true,
       autoLoadEntities: true,
+    }),
+    MailerModule.forRoot({
+      transport: {
+        service: 'gmail',
+        auth: {
+          user: process.env.USER,
+          pass: process.env.PASS,
+        },
+      },
     }),
     ClassroomsModule,
     UsersModule,
