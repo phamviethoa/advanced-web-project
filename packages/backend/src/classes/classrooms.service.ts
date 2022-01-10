@@ -18,7 +18,7 @@ import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
 import { throwError } from 'rxjs';
 import { Max } from 'class-validator';
 import {createTransport} from 'nodemailer'
-import passport from 'passport';
+import passport, { use } from 'passport';
 import { ReviewGradelDTO } from './dto/review-grade.dto';
 import { Notification } from 'src/entities/notification.entity';
 import { CommentReviewDTO } from './dto/comment-review.dto';
@@ -86,7 +86,9 @@ export class ClassroomsService {
     return true;
   }
 
-  async getInviteStudentLink(id: string) {
+  async getInviteStudentLink(userId: string, id: string) {
+    await this.checkIsTeacher(userId,id);
+
     const payload = {
       classId: id,
     };
@@ -96,7 +98,9 @@ export class ClassroomsService {
     return `${process.env.FRONT_END_URL}/class/add-student-by-link?token=${token}`;
   }
 
-  async getInviteTeacherLink(id: string) {
+  async getInviteTeacherLink(userId: string, id: string) {
+    await this.checkIsTeacher(userId,id);
+
     const payload = {
       classId: id,
     };
@@ -152,6 +156,7 @@ export class ClassroomsService {
 
   async updateAssignments(id: string, AssignmentDtoFE: UpdateAssignmentDto) {
     const classes = await this.classesRepo.findOneOrFail({
+      where:{id: id},
       relations: ['teachers'],
     });
     const Assignments = await this.assignmentsRepo.findAndCount({
@@ -174,7 +179,6 @@ export class ClassroomsService {
     }
 
     let isCreate: boolean = true;
-    for (const assignmentFE of AssignmentDtoFE.assignments){}
 
     let indexfe = 0;
     for (const assignmentFE of AssignmentDtoFE.assignments){
@@ -217,6 +221,7 @@ export class ClassroomsService {
       }
       isRemove = true;
     }
+
     await this.classesRepo.save(classes);
     return  await this.assignmentsRepo.find({
       classroom: classes,
@@ -236,6 +241,9 @@ export class ClassroomsService {
       where: { id: assignmentId },
       relations: ['classroom', 'classroom.students', 'classroom.students.user'],
     });
+
+    await this.checkIsTeacher(teacherId, assignment.classroom.id);
+
     const gradesofassignement = await this.gradetsRepo.findAndCount({
       assignment: assignment,
     });
@@ -268,7 +276,9 @@ export class ClassroomsService {
     return res.download('./src/classes/template/' + filename);
   }
 
-  async savestudentlist(workSheet: any, classroomId: string) {
+  async savestudentlist(userId: string, workSheet: any, classroomId: string) {
+    await this.checkIsTeacher(userId, classroomId);
+
     const ref = workSheet['!ref'];
     const array = ref.split(':');
     array[0] = array[0].replace('A', '');
@@ -304,7 +314,8 @@ export class ClassroomsService {
     });
   }
 
-  async saveAssignmentGrade(workSheet: any, assignmentid: string) {
+  async saveAssignmentGrade(userId: string, workSheet: any, assignmentid: string) {
+   
     const ref = workSheet['!ref'];
     const array = ref.split(':');
     array[0] = array[0].replace('A', '');
@@ -314,6 +325,8 @@ export class ClassroomsService {
       relations: ['classroom', 'classroom.students'],
       where: { id: assignmentid },
     });
+
+    await this.checkIsTeacher(userId, assignment.classroom.id);
 
     const students = assignment.classroom.students; // danh sach hoc sinh
     const grades = await this.gradetsRepo.find({
@@ -336,7 +349,7 @@ export class ClassroomsService {
       ); // vi tri neu co identity
       console.log('index_grade: ', index_grade);
       if (index === -1) {
-        console.log('khong ton tai sinh vien');
+        console.log('khong ton tai sinh vien'); // khong ton tai sinh vien thi bo qua
       } else {
         if (index_grade === -1) {
           //khong ton tai diem thi tao moi
@@ -358,16 +371,20 @@ export class ClassroomsService {
     });
   }
 
-  async showstudentsgrades(classroomId: string) {
+  async showstudentsgrades(userId: string, classroomId: string) {
+    await this.checkIsTeacher(userId, classroomId);
+
     return await this.assignmentsRepo.find({
       relations: ['grades', 'grades.student', 'classroom'],
       where: { classroom: { id: classroomId } },
     });
   }
 
-  async inputGradeStudentAssignment(body: UpdateGradeDTO) {
-    const assignment = await this.assignmentsRepo.findOne(body.assignmentId);
+  async inputGradeStudentAssignment(userId: string, body: UpdateGradeDTO) {
+    const assignment = await this.assignmentsRepo.findOne({where:{id: body.assignmentId}, relations: ['classroom']});
     const student = await this.studentsRepo.findOne(body.studentId);
+
+    await this.checkIsTeacher(userId,assignment.classroom.id);
 
     if (!assignment || !student) {
       return new BadRequestException();
@@ -397,10 +414,13 @@ export class ClassroomsService {
     }
   }
 
-  async exprotgradeboard(classroomId: string, res: any) {
-    const assignmentsgradesofstudent = await this.showstudentsgrades(
-      classroomId,
-    );
+  async exprotgradeboard(userId: string, classroomId: string, res: any) {
+    await this.checkIsTeacher(userId, classroomId);
+
+    const assignmentsgradesofstudent =await this.assignmentsRepo.find({
+      relations: ['grades', 'grades.student', 'classroom'],
+      where: { classroom: { id: classroomId } },
+    });
     const data = [];
     const row1 = [''];
     for (const assignment of assignmentsgradesofstudent) {
@@ -438,7 +458,8 @@ export class ClassroomsService {
   }
 
   async inviteStudentByEmail(classroomId: string, body: InviteByEmailDTO) {
-    const linkInviteByEmail = await this.getInviteStudentLink(classroomId);
+    const user = await this.usersRepo.findOneOrFail({where:{email: body.email}})
+    const linkInviteByEmail = await this.getInviteStudentLink(user.id, classroomId);
     let tranport =createTransport({
       service:'gmail',
       auth: {
@@ -460,7 +481,9 @@ export class ClassroomsService {
   }
 
   async inviteTeacherByEmail(classroomId: string, body: InviteByEmailDTO) {
-    const linkInviteByEmail = await this.getInviteTeacherLink(classroomId);
+    const user = await this.usersRepo.findOneOrFail({where:{email: body.email}})
+
+    const linkInviteByEmail = await this.getInviteTeacherLink(user.id, classroomId);
     let tranport =createTransport({
       service:'gmail',
       auth: {
@@ -510,8 +533,9 @@ export class ClassroomsService {
     // await this.classesRepo.save(classroom);
     // await this.gradetsRepo.save(grade);
     // await this.usersRepo.save(student);
+    const newnotification = this.notificationsRepo.create(notification);
+    return await this.notificationsRepo.save(newnotification);
 
-    return  this.notificationsRepo.create(notification);
   }
 
   async commentStudentReview(body: CommentReviewDTO, fromUserId: string){
@@ -573,6 +597,7 @@ export class ClassroomsService {
     const grade = await this.gradetsRepo.findOne(body.gradeNeedToUpdateId);
     const teacher =await this.usersRepo.findOne(teacherId);
     const student = await this.usersRepo.findOne(body.studenitId);
+
     if(!grade || !teacher || student)
     {
       throw new BadRequestException();
@@ -618,8 +643,22 @@ export class ClassroomsService {
       if(classroom.id === classroomId)
       {
         assignmentsGrades=classroom.assignments;
+        return assignmentsGrades;
       }
     }
-    return assignmentsGrades;
+    throw new BadRequestException(); 
+  }
+
+  async checkIsTeacher(userId: string, classroomId: string){
+    const user = await this.usersRepo.findOneOrFail({where:{id:userId},
+      relations:['classrooms']});
+
+      for (const classroom of user.classrooms) {
+        if(classroom.id === classroomId)
+        {
+          return;
+        }
+      } 
+      throw new BadRequestException("Unauthorized"); 
   }
 }

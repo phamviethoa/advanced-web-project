@@ -224,7 +224,7 @@ export class UsersService {
     return await this.usersRepo.save(toBanAccount);
   }
 
-  async MapStudentToUserByAdmin( studentId: string, userId: string, mssv: string){
+  async MapStudentToUserByAdmin( studentId: string, userId: string){
     const user = await this.usersRepo.findOne(userId);
     const student = await this.studentsRepo.findOne(studentId);
 
@@ -232,7 +232,6 @@ export class UsersService {
       throw new BadRequestException();
     }
     student.user = user;
-    student.identity = mssv;
 
     return await this.studentsRepo.save(student);
   }

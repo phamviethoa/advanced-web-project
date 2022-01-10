@@ -46,19 +46,28 @@ export class ClassroomsController {
     return this.classroomsService.viewListOfGradeReviewsRequestByStudent(teacherId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':classroomId/export-grade-board')
-  exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any) {
-    return this.classroomsService.exprotgradeboard(classroomId, res);
+  exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any, @Request() req: any) {
+    const userId: string = req.user.id;
+    return this.classroomsService.exprotgradeboard(userId, classroomId, res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/input-grade-student-assignment')
-  inputGradeStudentAssignment(@Body() body: UpdateGradeDTO) {
-    return this.classroomsService.inputGradeStudentAssignment(body);
+  inputGradeStudentAssignment(@Body() body: UpdateGradeDTO, 
+  @Request() req: any
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.inputGradeStudentAssignment(userId, body);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':classroomId/show-students-list-grades')
-  showstudents(@Param('classroomId') classroomId) {
-    return this.classroomsService.showstudentsgrades(classroomId);
+  showstudents(@Param('classroomId') classroomId,
+  @Request() req: any) {
+    const userId: string = req.user.id;
+    return this.classroomsService.showstudentsgrades(userId, classroomId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -73,15 +82,18 @@ export class ClassroomsController {
     return this.classroomsService.downloadStudentListTemplate(res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':classroomId/upload-list-student')
   @UseInterceptors(FileInterceptor('file'))
   uploatFilestudentlist(
+    @Request() req: any,
     @UploadedFile() file: any,
     @Param('classroomId') classroomId: string,
   ) {
+    const userId = req.user.id;
     const workBook = read(file.buffer);
     const workSheet = workBook.Sheets[workBook.SheetNames[0]];
-    return this.classroomsService.savestudentlist(workSheet, classroomId);
+    return this.classroomsService.savestudentlist(userId, workSheet, classroomId);
   }
 
   @Get('/download-template-grade')
@@ -90,16 +102,18 @@ export class ClassroomsController {
     return res.download('./src/classes/template/' + filename);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/upload-assignment-grades/:assignmentId')
   @UseInterceptors(FileInterceptor('file'))
   uploatFile(
+    @Request() req: any,
     @UploadedFile() file: any,
     @Param('assignmentId') assignmentId: string,
   ) {
-    console.log('ID: ', assignmentId);
+    const userId = req.user.id;
     const workBook = read(file.buffer);
     const workSheet = workBook.Sheets[workBook.SheetNames[0]];
-    return this.classroomsService.saveAssignmentGrade(workSheet, assignmentId);
+    return this.classroomsService.saveAssignmentGrade(userId, workSheet, assignmentId);
   }
 
   @Get()
@@ -134,14 +148,18 @@ export class ClassroomsController {
     return this.classroomsService.create(createClassDto, teacherId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('invite-student-link/:id')
-  getInviteStudentLink(@Param('id') id: string) {
-    return this.classroomsService.getInviteStudentLink(id);
+  getInviteStudentLink(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    return this.classroomsService.getInviteStudentLink(userId, id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/invite-teacher-link/:classroomId')
-  getInviteTeacherLink(@Param('classroomId') classroomId: string) {
-    return this.classroomsService.getInviteTeacherLink(classroomId);
+  getInviteTeacherLink(@Request() req: any, @Param('classroomId') classroomId: string) {
+    const userId = req.user.id;
+    return this.classroomsService.getInviteTeacherLink(userId, classroomId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -188,11 +206,14 @@ export class ClassroomsController {
   @Post('/update-assignments/:id')
   //@Roles(Role.TEACHER)
   //@UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   updateAssignments(
+    @Request() req: any,
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
-    return this.classroomsService.updateAssignments(id, updateAssignmentDto);
+    const userId = req.user.id;
+    return this.classroomsService.updateAssignments( id, updateAssignmentDto);
   }
 
   @Post('/invite-student-by-email/:classroomId')

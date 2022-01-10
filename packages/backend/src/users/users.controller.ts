@@ -99,12 +99,12 @@ export class UsersController {
   @Post('/ban-unban-account-by-admin')
   banUnnamAccountByAdmin(@Body() body:BanAccountByADminDTO)
   {
-    return this.usersService.banUnnamAccountByAdmin(body.AccountId);
+    return this.usersService.banUnnamAccountByAdmin(body.accountId);
   }
 
   @Post('map-student-to-user-by-admin')
   mapStudentToUserByAdmin(body: MapStudentToUserByADminDTO){
-    return this.usersService.MapStudentToUserByAdmin(body.studentId, body.userId, body.mssv);
+    return this.usersService.MapStudentToUserByAdmin(body.studentId, body.userId);
   }
 
   @Post('unmap-student-to-user-by-admin')
