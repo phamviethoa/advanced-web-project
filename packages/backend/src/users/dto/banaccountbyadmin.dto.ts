@@ -1,3 +1,3 @@
 export class BanAccountByADminDTO {
-  AccountId: string
+  accountId: string
   }

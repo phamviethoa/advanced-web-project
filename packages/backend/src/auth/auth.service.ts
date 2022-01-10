@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -20,6 +20,11 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findOne(email);
     const isCorrectPassword = await this.isMatchPassword(user, password);
+
+    if(user.isBanned===true)
+    {
+      throw new BadRequestException(`User is banned`);
+    }
 
     if (user && isCorrectPassword) {
       const { password, ...info } = user;
