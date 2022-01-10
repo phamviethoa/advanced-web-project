@@ -36,15 +36,14 @@ const schema = yup.object().shape({
 });
 
 function Classes() {
-  const { data: classes } = useQuery('classes', classApi.getAll);
-  //const { data: ownedClasses } = useQuery(
-  //'owned-classes',
-  //classApi.getOwnedClassroom
-  //);
-  //const { data: joinedClasses } = useQuery(
-  //'joined-classes',
-  //classApi.getJoinedClassroom
-  //);
+  const { data: ownedClasses } = useQuery(
+    'owned-classes',
+    classApi.getOwnedClassroom
+  );
+  const { data: joinedClasses } = useQuery(
+    'joined-classes',
+    classApi.getJoinedClassroom
+  );
 
   const [isOpenCreateClassModal, setIsOpenCreateClassModal] =
     useState<boolean>(false);
@@ -91,16 +90,11 @@ function Classes() {
       </div>
       <div className="mt-5">
         <h2 className="h4">Your Classrooms</h2>
-        <ClassList classes={classes as unknown as ClassDto[]}></ClassList>
-        {/*
-         * show owned classes
-         */}
+        <ClassList classes={ownedClasses as unknown as ClassDto[]}></ClassList>
       </div>
       <div className="mt-5">
         <h2 className="h4">Joined Classrooms</h2>
-        {/*
-         * show joined classes
-         */}
+        <ClassList classes={joinedClasses as unknown as ClassDto[]}></ClassList>
       </div>
       <Modal
         title="Create classroom"
@@ -136,9 +130,8 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const queryClient = new QueryClient();
 
   Promise.all([
-    queryClient.prefetchQuery('classes', classApi.getAll),
-    //queryClient.prefetchQuery('owned-classes', classApi.getOwnedClassroom),
-    //queryClient.prefetchQuery('joined-classes', classApi.getJoinedClassroom),
+    queryClient.prefetchQuery('owned-classes', classApi.getOwnedClassroom),
+    queryClient.prefetchQuery('joined-classes', classApi.getJoinedClassroom),
   ]);
 
   return {
