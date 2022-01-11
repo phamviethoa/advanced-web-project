@@ -9,3 +9,8 @@ export type UserDto = {
   classrooms: ClassroomDto[];
   students: StudentDto[];
 };
+
+export enum UserRole {
+  TEACHER = 'TEACHER',
+  STUDENT = 'STUDENT',
+}

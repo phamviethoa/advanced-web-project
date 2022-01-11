@@ -6,6 +6,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { UserDto } from 'types/user.dto';
 
 export default NextAuth({
   providers: [
@@ -43,7 +44,7 @@ export default NextAuth({
           }
         );
 
-        const user = res.data;
+        const user: UserDto = res.data;
 
         if (user) {
           return user;

@@ -9,20 +9,17 @@ import Input, { InputCategory, InputType } from 'components/Form/Input';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import { useForm, FormProvider } from 'react-hook-form';
+import { UserRole } from 'types/user.dto';
 
 type Props = {
   classroom: ClassroomDto;
   students: StudentDto[];
+  role: UserRole;
 };
 
 type FormFields = {
   email: string;
 };
-
-enum Role {
-  STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER',
-}
 
 const schema = yup.object().shape({
   email: yup
@@ -32,7 +29,7 @@ const schema = yup.object().shape({
     .email('Email is in correct'),
 });
 
-const ClassroomPeople = ({ classroom, students }: Props) => {
+const ClassroomPeople = ({ classroom, students, role }: Props) => {
   const methods = useForm<FormFields>({
     mode: 'all',
     resolver: yupResolver(schema),
@@ -110,8 +107,10 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
       mutateInviteTeacherLink(classroom.id);
     };
 
-    getInviteStudentLink();
-    getInviteTeacherLink();
+    if (role === UserRole.TEACHER) {
+      getInviteStudentLink();
+      getInviteTeacherLink();
+    }
   }, []);
 
   const copyToClipboard = (link: string) => () => {
@@ -119,14 +118,14 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
     toast.success('Copy to clipboard successfully.');
   };
 
-  const inviteByEmail = (role: Role) =>
+  const inviteByEmail = (role: UserRole) =>
     handleSubmit(({ email }: FormFields) => {
-      if (role === Role.STUDENT) {
+      if (role === UserRole.STUDENT) {
         inviteStudentByEmail({ classroomId: classroom.id, email });
         closeInviteStudentModal();
       }
 
-      if (role === Role.TEACHER) {
+      if (role === UserRole.TEACHER) {
         inviteTeacherByEmail({ classroomId: classroom.id, email });
         closeInviteTeacherModal();
       }
@@ -139,7 +138,12 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
       <div className="row">
         <div className="border-bottom border-primary d-flex justify-content-between text-primary">
           <h2 className="h3">Teachers</h2>
-          <i onClick={openInviteTeacherModal} className="fas fa-user-plus"></i>
+          {role === UserRole.TEACHER && (
+            <i
+              onClick={openInviteTeacherModal}
+              className="fas fa-user-plus"
+            ></i>
+          )}
         </div>
         {classroom.teachers?.map((teacher) => (
           <div key={teacher.id} className="my-3 d-flex align-items-center">
@@ -154,7 +158,12 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
       <div className="row mt-5">
         <div className="border-bottom border-primary d-flex justify-content-between text-primary">
           <h2 className="h3">Students</h2>
-          <i onClick={openInviteStudentModal} className="fas fa-user-plus"></i>
+          {role === UserRole.TEACHER && (
+            <i
+              onClick={openInviteStudentModal}
+              className="fas fa-user-plus"
+            ></i>
+          )}
         </div>
         {students.map((student) => (
           <div key={student.id} className="my-3 d-flex align-items-center">
@@ -165,12 +174,6 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
             <h2 className="h6 m-0 p-0 ms-3">{student.fullName}</h2>
           </div>
         ))}
-      </div>
-      <div className="row mt-5 text-primary">
-        <a onClick={openInviteStudentModal}>
-          <i className="fas fa-user-plus me-3"></i>
-          Invite student
-        </a>
       </div>
       <Modal
         isOpen={isOpenInviteStudentModal}
@@ -197,7 +200,7 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
             </div>
           </div>
           <FormProvider {...methods}>
-            <form onSubmit={inviteByEmail(Role.STUDENT)} noValidate>
+            <form onSubmit={inviteByEmail(UserRole.STUDENT)} noValidate>
               <Input
                 type={InputType.TEXT}
                 category={InputCategory.INPUT}
@@ -236,7 +239,7 @@ const ClassroomPeople = ({ classroom, students }: Props) => {
             </div>
           </div>
           <FormProvider {...methods}>
-            <form onSubmit={inviteByEmail(Role.TEACHER)} noValidate>
+            <form onSubmit={inviteByEmail(UserRole.TEACHER)} noValidate>
               <Input
                 type={InputType.TEXT}
                 category={InputCategory.INPUT}

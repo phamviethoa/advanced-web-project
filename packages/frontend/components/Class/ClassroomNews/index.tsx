@@ -1,22 +1,10 @@
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { AssignemtDto } from 'types/assignment.dto';
 import { ClassroomDto } from 'types/classroom.dto';
 
 type Props = {
   classroom: ClassroomDto;
-  assignments: AssignemtDto[];
-  onOpenUpdateAssginmentModal: () => void;
-  onHandleOnDragEnd: (result: any) => Promise<void>;
-  onGetInviteStudentLink: () => void;
 };
 
-const ClassroomNews = ({
-  classroom,
-  assignments,
-  onOpenUpdateAssginmentModal: openUpdateAssignmentModal,
-  onHandleOnDragEnd: handleOnDragEnd,
-  onGetInviteStudentLink: getInviteStudentLink,
-}: Props) => {
+const ClassroomNews = ({ classroom }: Props) => {
   return (
     <div>
       <div className="row">
@@ -26,14 +14,7 @@ const ClassroomNews = ({
         </div>
       </div>
       <div className="row">
-        <div className="col-3 rounded shadow-sm bg-white p-4 me-3">
-          <h2 className="h5 mb-4">
-            Assignments
-            <a onClick={openUpdateAssignmentModal}>
-              <i className="fas fa-pencil-alt d-inline-block ms-3 icon-sm"></i>
-            </a>
-          </h2>
-        </div>
+        <div className="col-3 rounded shadow-sm bg-white p-4 me-3"></div>
         <div className="col rounded shadow-sm bg-white p-4"></div>
       </div>
     </div>
