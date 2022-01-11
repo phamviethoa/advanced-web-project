@@ -43,16 +43,14 @@ const ActivateAccount = ({ token }: Props) => {
   };
 
   return (
-    <Layout>
-      <div
-        style={{ minHeight: '80vh' }}
-        className="d-flex justify-content-center align-items-center"
-      >
-        <button onClick={activate} className="btn btn-primary">
-          Activate
-        </button>
-      </div>
-    </Layout>
+    <div
+      style={{ minHeight: '80vh' }}
+      className="d-flex justify-content-center align-items-center"
+    >
+      <button onClick={activate} className="btn btn-primary">
+        Activate
+      </button>
+    </div>
   );
 };
 

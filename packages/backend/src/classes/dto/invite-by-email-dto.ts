@@ -1,3 +1,4 @@
 export class InviteByEmailDTO {
-    email: string;
-  }
+  email: string;
+}
+

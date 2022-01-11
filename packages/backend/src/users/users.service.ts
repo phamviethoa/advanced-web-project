@@ -96,29 +96,13 @@ export class UsersService {
     const token = this.jwtService.sign(payload);
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/auth/reset-password?token=${token}`;
 
-    let tranport = createTransport({
-      // service:'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: process.env.USER,
-        pass: process.env.PASS,
-      },
+    return this.mailerService.sendMail({
+      to: email,
+      from: process.env.USER,
+      subject: 'Email reset mật khẩu',
+      text: `Xin chào`,
+      html: `<a href= ${linkActiveByEmail}>link reset mật khẩu</a>`,
     });
-
-    try {
-      return tranport.sendMail({
-        to: email,
-        from: process.env.USER,
-        subject: 'Email reset mật khẩu',
-        text: `Xin chào`,
-        html: `<a href= ${linkActiveByEmail}>link reset mật khẩu</a>`,
-      });
-    } catch (error) {
-      throw new BadRequestException(error);
-    }
   }
 
   async newpassword(token: any, password: string) {

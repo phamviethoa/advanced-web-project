@@ -17,7 +17,8 @@ import { ClassroomsController } from './classes/classrooms.controller';
 
 import { SendGridModule } from '@ntegral/nestjs-sendgrid';
 import { MailerModule } from '@nestjs-modules/mailer';
-//import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+
+require('dotenv').config();
 
 @Module({
   imports: [
@@ -44,8 +45,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
       transport: {
         service: 'gmail',
         auth: {
-          user: process.env.USER,
-          pass: process.env.PASS,
+          user: 'advanced.web.mail.server@gmail.com',
+          pass: 'Admin@123Admin@123',
         },
       },
     }),

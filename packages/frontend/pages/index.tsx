@@ -62,7 +62,7 @@ function Classes() {
 
   const { mutateAsync } = useMutation(classApi.createClass, {
     onSuccess: () => {
-      queryClient.invalidateQueries('classes');
+      queryClient.invalidateQueries('owned-classes');
       toast.success('Create class successfully.');
     },
     onError: () => {

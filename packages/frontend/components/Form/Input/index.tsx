@@ -16,6 +16,7 @@ type Props = {
   category?: InputCategory;
   name: string;
   label: string;
+  defaultValue?: string;
 };
 
 const Input = ({
@@ -23,6 +24,7 @@ const Input = ({
   category = InputCategory.INPUT,
   name,
   label,
+  defaultValue,
 }: Props) => {
   const {
     register,
@@ -38,6 +40,7 @@ const Input = ({
         <>
           <input
             type={type}
+            defaultValue={defaultValue}
             className={`form-control ${errors[name] ? 'is-invalid' : ''}`}
             {...register(name)}
           />
