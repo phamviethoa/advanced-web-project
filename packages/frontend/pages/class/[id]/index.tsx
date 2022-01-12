@@ -36,11 +36,16 @@ function DetailClassPage() {
 
   const [session] = useSession();
 
+  const userId = session?.user && (session?.user as UserDto).id;
+  const student = classroom?.students.find(
+    (student) => student.user?.id === userId
+  );
+
   useEffect(() => {
     const checkRole = () => {
       const teacherIds = classroom?.teachers.map((teacher) => teacher.id);
-      const studentIds = classroom?.students.map((student) => student.user.id);
-      const userId = (session?.user as UserDto).id;
+      const studentIds = classroom?.students.map((student) => student.user?.id);
+      const userId = session?.user && (session?.user as UserDto).id;
 
       if (teacherIds?.find((id) => id === userId)) {
         setRole(UserRole.TEACHER);
@@ -89,7 +94,10 @@ function DetailClassPage() {
       role === UserRole.TEACHER ? (
         <ClassroomGrade classroom={classroom as ClassroomDto} />
       ) : (
-        <ClassroomStudentGrade classroom={classroom as ClassroomDto} />
+        <ClassroomStudentGrade
+          student={student}
+          classroom={classroom as ClassroomDto}
+        />
       ),
   };
 

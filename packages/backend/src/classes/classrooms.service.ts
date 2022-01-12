@@ -644,19 +644,22 @@ export class ClassroomsService {
     const user = await this.usersRepo.findOne({
       where: { id: userId },
       relations: [
-        'classrooms',
-        'classrooms.assignments',
-        'classrooms.assignments.grades',
+        'students',
+        'students.grades',
+        'students.grades.assignment',
+        'students.grades.assignment.classroom',
       ],
     });
+
     if (!user) {
       throw new BadRequestException();
     }
-    let assignmentsGrades: any;
-    for (const classroom of user.classrooms) {
-      if (classroom.id === classroomId) {
-        assignmentsGrades = classroom.assignments;
-        return assignmentsGrades;
+
+    console.log('user: ', user);
+
+    for (const student of user.students) {
+      if (student.grades[0].assignment.classroom.id === classroomId) {
+        return student.grades;
       }
     }
     throw new BadRequestException();

@@ -1,7 +1,6 @@
 import axiosClient from 'api/axiosClient';
 import axios from 'axios';
 import FileDownload from 'js-file-download';
-import { ClassDto } from 'types/class.dto';
 import { ClassroomDto, CreateClassroomDto } from 'types/classroom.dto';
 import { UpdateGradeDto } from 'types/grade.dto';
 import queryString from 'query-string';
@@ -9,7 +8,7 @@ import queryString from 'query-string';
 const classApi = {
   getAll: () => {
     const url = '/classes';
-    return axiosClient.get<Array<ClassDto>>(url);
+    return axiosClient.get<Array<ClassroomDto>>(url);
   },
 
   getOwnedClassroom: () => {

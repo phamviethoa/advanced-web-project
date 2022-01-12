@@ -11,9 +11,9 @@ import Link from 'next/link';
 import { useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
 import { ClassroomDto } from 'types/classroom.dto';
-import { StudentInSystemDto } from 'types/student.dto';
 import Modal from 'components/Modal';
 import { FileWithPath, useDropzone } from 'react-dropzone';
+import { StudentDto } from 'types/student.dto';
 
 const baseStyle = {
   flex: 1,
@@ -86,7 +86,7 @@ type Props = {
 };
 
 const ClassroomGrade = ({ classroom }: Props) => {
-  const students = classroom.students as StudentInSystemDto[];
+  const students = classroom.students as StudentDto[];
   const assignments = classroom.assignments;
 
   const [isOpenUploadFileModal, setIsOpenUploadFileModal] =

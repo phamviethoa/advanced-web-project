@@ -1,5 +1,5 @@
 import { AssignemtDto } from './assignment.dto';
-import { StudentInSystemDto } from './student.dto';
+import { StudentDto } from './student.dto';
 import { UserDto } from './user.dto';
 
 export type ClassroomDto = {
@@ -7,7 +7,7 @@ export type ClassroomDto = {
   subject: string;
   description: string;
   teachers: UserDto[];
-  students: StudentInSystemDto[];
+  students: StudentDto[];
   assignments: AssignemtDto[];
 };
 

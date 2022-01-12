@@ -17,7 +17,7 @@ import {
   useQueryClient,
 } from 'react-query';
 import classApi from 'api/class';
-import { ClassDto } from 'types/class.dto';
+import { ClassroomDto } from 'types/classroom.dto';
 
 interface FormFields {
   subject: string;
@@ -90,11 +90,15 @@ function Classes() {
       </div>
       <div className="mt-5">
         <h2 className="h4">Your Classrooms</h2>
-        <ClassList classes={ownedClasses as unknown as ClassDto[]}></ClassList>
+        <ClassList
+          classes={ownedClasses as unknown as ClassroomDto[]}
+        ></ClassList>
       </div>
       <div className="mt-5">
         <h2 className="h4">Joined Classrooms</h2>
-        <ClassList classes={joinedClasses as unknown as ClassDto[]}></ClassList>
+        <ClassList
+          classes={joinedClasses as unknown as ClassroomDto[]}
+        ></ClassList>
       </div>
       <Modal
         title="Create classroom"

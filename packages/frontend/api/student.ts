@@ -1,8 +1,9 @@
 import axiosClient from 'api/axiosClient';
 
 const studentService = {
-  getGrades: async (classroomId?: string) => {
-    const url = `classes/student-view-grades-compositions/${classroomId}`;
+  getGrades: async (params: { classroomId: string; studentId: string }) => {
+    const { classroomId, studentId } = params;
+    const url = `students/grades/${classroomId}/${studentId}`;
     return axiosClient.get(url);
   },
 };
