@@ -4,6 +4,7 @@ export type AssignemtDto = {
   id?: string;
   name: string;
   maxPoint: number;
+  order: number;
   grades: GradeDto[];
   isFinalized: boolean;
 };

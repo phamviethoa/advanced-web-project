@@ -16,15 +16,19 @@ import { useRouter } from 'next/router';
 import { ClassroomDto } from 'types/classroom.dto';
 import { AssignemtDto, UpdateAssignmentDto } from 'types/assignment.dto';
 import assignmentApi from 'api/assignment';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 type FormFields = {
-  assignments: UpdateAssignmentDto;
+  assignments: {
+    key: string;
+    name: string;
+    maxPoint: number;
+  }[];
 };
 
 const assignmentsSchema = yup.object().shape({
-  id: yup.string(),
+  key: yup.string(),
   name: yup
     .string()
     .required('Name is required.')
@@ -44,6 +48,7 @@ const GradeStructure = () => {
   const id = router.query.id as string;
 
   const [isViewMode, setIsViewMode] = useState<boolean>(true);
+  const [assignments, setAssignments] = useState<AssignemtDto[] | undefined>();
 
   const toggleViewMode = () => setIsViewMode(true);
   const toggleEditMode = () => setIsViewMode(false);
@@ -52,20 +57,33 @@ const GradeStructure = () => {
     classApi.getClass(id)
   );
 
-  const assignments = classroom?.assignments;
-
   const {
     register,
     control,
     handleSubmit,
+    reset,
+    watch,
     formState: { errors },
   } = useForm<FormFields>({
     mode: 'all',
     resolver: yupResolver(schema),
-    defaultValues: {
-      assignments,
-    },
   });
+
+  useEffect(() => {
+    setAssignments(classroom?.assignments);
+  }, [classroom]);
+
+  useEffect(() => {
+    const defaultValues = assignments?.map((assignment) => ({
+      key: assignment.id,
+      name: assignment.name,
+      maxPoint: assignment.maxPoint,
+    }));
+
+    reset({ assignments: defaultValues });
+  }, [assignments]);
+
+  console.log(assignments);
 
   const { fields, append, remove } = useFieldArray<FormFields>({
     control,
@@ -85,8 +103,8 @@ const GradeStructure = () => {
   });
 
   const updateAssignment = handleSubmit(async ({ assignments }) => {
-    const data: UpdateAssignmentDto = assignments.map((assignment) => ({
-      id: assignment.id,
+    const data = assignments.map((assignment) => ({
+      id: assignment.key,
       name: assignment.name,
       maxPoint: assignment.maxPoint,
     }));
@@ -144,25 +162,27 @@ const GradeStructure = () => {
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {assignments?.map((assignment, index) => (
-                    <Draggable
-                      key={index}
-                      draggableId={`${assignment.name + index}`}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
-                          className="row p-2 border my-2 rounded bg-white"
-                        >
-                          <div className="col">{assignment.name}</div>
-                          <div className="col">{`${assignment.maxPoint} points`}</div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                  {assignments
+                    ?.sort((a, b) => a.order - b.order)
+                    .map((assignment, index) => (
+                      <Draggable
+                        key={index}
+                        draggableId={`${assignment.name + index}`}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <div
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                            className="row p-2 border my-2 rounded bg-white"
+                          >
+                            <div className="col">{assignment.name}</div>
+                            <div className="col">{`${assignment.maxPoint} points`}</div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
                   {provided.placeholder}
                 </div>
               )}
@@ -211,7 +231,7 @@ const GradeStructure = () => {
                         </div>
                         <input
                           type="hidden"
-                          {...register(`assignments.${index}.id` as const)}
+                          {...register(`assignments.${index}.key` as const)}
                         />
                         <div className="col-1 text-right">
                           <a onClick={() => remove(index)}>

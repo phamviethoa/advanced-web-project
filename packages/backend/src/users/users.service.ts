@@ -3,8 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
-import { createTransport } from 'nodemailer';
-import { throwError } from 'rxjs';
 const bcrypt = require('bcrypt');
 import { Notification } from 'src/entities/notification.entity';
 import { Classroom } from 'src/entities/classroom.entity';
@@ -120,20 +118,20 @@ export class UsersService {
     return this.usersRepo.save(user);
   }
 
-  async showNotification(userId: string) {
-    const user = await this.usersRepo.findOne({
-      relations: [
-        'notificationsReceived',
-        'notificationsReceived.fromUser',
-        'notificationsReceived.gradeNeedToRivew',
-      ],
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new BadRequestException();
-    }
-    return user.notificationsReceived;
-  }
+  //async showNotification(userId: string) {
+  //const user = await this.usersRepo.findOne({
+  //relations: [
+  //'notificationsReceived',
+  //'notificationsReceived.fromUser',
+  //'notificationsReceived.gradeNeedToRivew',
+  //],
+  //where: { id: userId },
+  //});
+  //if (!user) {
+  //throw new BadRequestException();
+  //}
+  //return user.notificationsReceived;
+  //}
 
   async CreateAccountAdmin(email: string, fullName: string, password: string) {
     const isValid = await this.checkUsernameIsExist(email);
