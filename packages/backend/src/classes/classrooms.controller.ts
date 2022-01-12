@@ -75,12 +75,12 @@ export class ClassroomsController {
     return this.classroomsService.showstudentsgrades(userId, classroomId);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  //@Post('/assignments/:assignmentId/mark-finalized')
-  //isFullAssignment(@Param('assignmentId') assignmentId, @Request() req: any) {
-  //const teacherId = req.user.id;
-  //return this.classroomsService.markFinalized(assignmentId, teacherId);
-  //}
+  @UseGuards(JwtAuthGuard)
+  @Post('/assignments/:assignmentId/mark-finalized')
+  isFullAssignment(@Param('assignmentId') assignmentId, @Request() req: any) {
+    const teacherId = req.user.id;
+    return this.classroomsService.markFinalized(assignmentId, teacherId);
+  }
 
   @Get('download-student-list-template')
   downloadstudentlist(@Res() res: any) {
@@ -216,8 +216,6 @@ export class ClassroomsController {
   }
 
   @Post('/update-assignments/:id')
-  //@Roles(Role.TEACHER)
-  //@UseGuards(JwtAuthGuard, RolesGuard)
   @UseGuards(JwtAuthGuard)
   updateAssignments(
     @Request() req: any,
@@ -228,20 +226,34 @@ export class ClassroomsController {
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/invite-student-by-email/:classroomId')
   inviteStudentByEmail(
+    @Request() req: any,
     @Param('classroomId') classroomId: string,
     @Body() body: InviteByEmailDTO,
   ) {
-    return this.classroomsService.inviteStudentByEmail(classroomId, body);
+    const userId = req.user.id;
+    return this.classroomsService.inviteStudentByEmail(
+      classroomId,
+      body,
+      userId,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/invite-teacher-by-email/:classroomId')
   inviteTeacherByEmail(
+    @Request() req: any,
     @Param('classroomId') classroomId: string,
     @Body() body: InviteByEmailDTO,
   ) {
-    return this.classroomsService.inviteTeacherByEmail(classroomId, body);
+    const userId = req.user.id;
+    return this.classroomsService.inviteTeacherByEmail(
+      classroomId,
+      body,
+      userId,
+    );
   }
 
   //@UseGuards(JwtAuthGuard)

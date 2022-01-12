@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Response } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Response,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -244,41 +249,23 @@ export class ClassroomsService {
     return classteacher[0].classrooms;
   }
 
-  //async markFinalized(assignmentId: string, teacherId: string) {
-  //const assignment = await this.assignmentsRepo.findOneOrFail({
-  //where: { id: assignmentId },
-  //relations: ['classroom', 'classroom.students', 'classroom.students.user'],
-  //});
+  async markFinalized(assignmentId: string, teacherId: string) {
+    const teacher = await this.usersRepo.findOne(teacherId);
+    const assignment = await this.assignmentsRepo.findOne(assignmentId, {
+      relations: ['classroom', 'classroom.teachers'],
+    });
+    const classroom = assignment.classroom;
 
-  //await this.checkIsTeacher(teacherId, assignment.classroom.id);
+    if (!teacher || !assignment) {
+      throw new BadRequestException();
+    }
 
-  //const gradesofassignement = await this.gradetsRepo.findAndCount({
-  //assignment: assignment,
-  //});
-  //const countstudentinclassroom = assignment.classroom.students.length;
-  //if (gradesofassignement[1] === countstudentinclassroom) {
-  //assignment.isFinalized = true;
-  //const teacher = await this.usersRepo.findOneOrFail(teacherId);
+    if (!classroom.teachers.find((teacher) => teacher.id === teacherId)) {
+      throw new UnauthorizedException();
+    }
 
-  //const notification = new Notification();
-  //notification.fromUser = teacher;
-
-  //let students: User[] = [];
-  //for (const student of assignment.classroom.students) {
-  //if (!student.user) {
-  //} else {
-  //students.push(student.user);
-  //}
-  //}
-  //notification.toUser = students;
-  //notification.description = `Giáo viên đã hoàn tất cột điểm ${assignment.name}`;
-
-  //const newnotification = this.notificationsRepo.create(notification);
-  //await this.notificationsRepo.save(newnotification);
-  //return await this.assignmentsRepo.save(assignment);
-  //}
-  //throw new BadRequestException('Grades in assignement is not finalized');
-  //}
+    return this.assignmentsRepo.save({ ...assignment, isFinalized: true });
+  }
 
   downloadStudentListTemplate(res: any) {
     const filename = 'templatestudentlist.xlsx';
@@ -472,19 +459,20 @@ export class ClassroomsService {
     return await res.download(filepath);
   }
 
-  async inviteStudentByEmail(classroomId: string, body: InviteByEmailDTO) {
-    const user = await this.usersRepo.findOne({
-      where: { email: body.email },
-    });
+  async inviteStudentByEmail(
+    classroomId: string,
+    body: InviteByEmailDTO,
+    userId: string,
+  ) {
+    const { email } = body;
 
-    // ko get duoc cai nay
     const linkInviteByEmail = await this.getInviteStudentLink(
-      user.id,
+      userId,
       classroomId,
     );
 
     return this.mailerService.sendMail({
-      to: body.email,
+      to: email,
       from: process.env.USER,
       subject: 'Link tham gia lớp học cho học sinh',
       text: `Xin chào`,
@@ -492,19 +480,20 @@ export class ClassroomsService {
     });
   }
 
-  async inviteTeacherByEmail(classroomId: string, body: InviteByEmailDTO) {
-    const user = await this.usersRepo.findOneOrFail({
-      where: { email: body.email },
-    });
+  async inviteTeacherByEmail(
+    classroomId: string,
+    body: InviteByEmailDTO,
+    userId: string,
+  ) {
+    const { email } = body;
 
-    // ko get duojc cai nay
     const linkInviteByEmail = await this.getInviteTeacherLink(
-      user.id,
+      userId,
       classroomId,
     );
 
     return this.mailerService.sendMail({
-      to: body.email,
+      to: email,
       from: process.env.USER,
       subject: 'Link tham gia lớp học cho giáo viên',
       text: `Xin chào`,
@@ -676,6 +665,6 @@ export class ClassroomsService {
         return;
       }
     }
-    throw new BadRequestException('Unauthorized');
+    throw new UnauthorizedException();
   }
 }
