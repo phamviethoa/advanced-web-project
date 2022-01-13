@@ -33,7 +33,9 @@ import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
 import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
 import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
 import { MailerService } from '@nestjs-modules/mailer';
-import { GradeReview } from 'src/entities/grade-review.entity';
+import { GradeReview, ReviewStatus } from 'src/entities/grade-review.entity';
+import { CloseReviewDto } from './dto/close-review.dto';
+import { error } from 'console';
 
 @Injectable()
 export class ClassroomsService {
@@ -43,7 +45,7 @@ export class ClassroomsService {
     @InjectRepository(Student) private studentsRepo: Repository<Student>,
     @InjectRepository(Assignment)
     private assignmentsRepo: Repository<Assignment>,
-    @InjectRepository(Grade) private gradetsRepo: Repository<Grade>,
+    @InjectRepository(Grade) private gradesRepo: Repository<Grade>,
     private jwtService: JwtService,
     @InjectRepository(Notification)
     private notificationsRepo: Repository<Notification>,
@@ -337,7 +339,7 @@ export class ClassroomsService {
     await this.checkIsTeacher(userId, assignment.classroom.id);
 
     const students = assignment.classroom.students; // danh sach hoc sinh
-    const grades = await this.gradetsRepo.find({
+    const grades = await this.gradesRepo.find({
       where: { assignment: assignment },
       relations: ['student'],
     }); // danh sach diem
@@ -365,11 +367,11 @@ export class ClassroomsService {
           newGrade.student = students[index];
           newGrade.assignment = assignment;
           newGrade.point = grade;
-          await this.gradetsRepo.save(newGrade);
+          await this.gradesRepo.save(newGrade);
         } else {
           // da ton tai diem thi chinh sua diem
           grades[index_grade].point = grade;
-          await this.gradetsRepo.save(grades[index_grade]);
+          await this.gradesRepo.save(grades[index_grade]);
         }
       }
     }
@@ -401,7 +403,7 @@ export class ClassroomsService {
       return new BadRequestException();
     }
 
-    const grade = await this.gradetsRepo.findOne({
+    const grade = await this.gradesRepo.findOne({
       relations: ['assignment', 'student'],
       where: {
         assignment: { id: body.assignmentId },
@@ -418,10 +420,10 @@ export class ClassroomsService {
         id: body.assignmentId,
       });
       newGrade.point = body.point;
-      return await this.gradetsRepo.save(newGrade);
+      return await this.gradesRepo.save(newGrade);
     } else {
       grade.point = body.point;
-      return await this.gradetsRepo.save(grade);
+      return await this.gradesRepo.save(grade);
     }
   }
 
@@ -514,134 +516,6 @@ export class ClassroomsService {
     });
   }
 
-  //async requestReviewGrade(body: ReviewGradelDTO, studentId: string) {
-  //const classroomId = body.classroomId;
-  //const gradeNeedToRivewId = body.gradeNeedToRivewId;
-  //const expectationGrade = body.expectationGrade;
-  //const description = body.description;
-
-  //const classroom = await this.classesRepo.findOne({
-  //relations: ['teachers'],
-  //where: { id: classroomId },
-  //});
-  //const grade = await this.gradetsRepo.findOne(gradeNeedToRivewId);
-  //const student = await this.usersRepo.findOne(studentId);
-
-  //if (!classroom || !grade || !student) {
-  //throw new BadRequestException();
-  //}
-
-  //const notification = new Notification();
-
-  //notification.expectationGrade = expectationGrade;
-  //notification.description = description;
-  //notification.gradeNeedToRivew = grade;
-  //notification.toUser = classroom.teachers;
-  //notification.fromUser = student;
-
-  //// await this.classesRepo.save(classroom);
-  //// await this.gradetsRepo.save(grade);
-  //// await this.usersRepo.save(student);
-  //const newnotification = this.notificationsRepo.create(notification);
-  //return await this.notificationsRepo.save(newnotification);
-  //}
-
-  //async commentStudentReview(body: CommentReviewDTO, fromUserId: string) {
-  //const description = body.description;
-  //const toUserId = body.toUserId;
-  //const fromUser = await this.usersRepo.findOne(fromUserId);
-  //const toUser = await this.usersRepo.findOne(toUserId);
-
-  //if (!fromUser || !toUser) {
-  //throw new BadRequestException();
-  //}
-  //const notification = new Notification();
-  //notification.fromUser = fromUser;
-  //notification.toUser = [toUser];
-  //notification.description = description;
-
-  //const newnotification = this.notificationsRepo.create(notification);
-  //return await this.notificationsRepo.save(newnotification);
-  //}
-
-  //async viewOfStudentCommentsGradeReview(body: ViewOfStudentCommentsDTO) {
-  //const gradeNeedToRivewId = body.gradeNeedToRivewId;
-  //const grade = await this.gradetsRepo.findOne({
-  //relations: ['reviews', 'reviews.fromUser', 'reviews.toUser'],
-  //where: { id: gradeNeedToRivewId },
-  //});
-
-  //if (!grade) {
-  //throw new BadRequestException();
-  //}
-  //return grade;
-  //}
-
-  //async viewListOfGradeReviewsRequestByStudent(teacherId: string) {
-  //const teacher = await this.usersRepo.findOne({
-  //relations: [
-  //'notificationsReceived',
-  //'notificationsReceived.fromUser',
-  //'notificationsReceived.gradeNeedToRivew',
-  //],
-  //where: { id: teacherId },
-  //});
-
-  //if (!teacher) {
-  //throw new BadRequestException();
-  //}
-
-  //let notifications: Notification[] = [];
-  //for (const notification of teacher.notificationsReceived) {
-  //if (!notification.gradeNeedToRivew) {
-  //} else {
-  //notifications.push(notification);
-  //}
-  //}
-  //return notifications;
-  //}
-
-  //async markFinalforStudentReviewUpdateGrade(
-  //body: FinalizedReviewDTO,
-  //teacherId: string,
-  //) {
-  //const grade = await this.gradetsRepo.findOne(body.gradeNeedToUpdateId);
-  //const teacher = await this.usersRepo.findOne(teacherId);
-  //const student = await this.usersRepo.findOne(body.studenitId);
-
-  //if (!grade || !teacher || student) {
-  //throw new BadRequestException();
-  //}
-  //grade.isFinalized = true;
-  //grade.point = body.newPoint;
-
-  //const notification = new Notification();
-  //notification.fromUser = teacher;
-  //notification.toUser = [student];
-  //notification.description = 'Giáo viên đã hoàn tất việc cập nhật điểm';
-
-  //const newnotification = this.notificationsRepo.create(notification);
-  //await this.notificationsRepo.save(newnotification);
-
-  //return await this.gradetsRepo.save(grade);
-  //}
-
-  //async teacherViewGradeDetail(notificationId: string) {
-  //const notification = this.notificationsRepo.findOne({
-  //where: { id: notificationId },
-  //relations: [
-  //'gradeNeedToRivew',
-  //'gradeNeedToRivew.assignment',
-  //'toUser',
-  //'fromUser',
-  //],
-  //});
-  //if (!notification) {
-  //throw new BadRequestException();
-  //}
-  //return notification;
-  //}
-
   async studentViewGradesCompositions(userId: string, classroomId: string) {
     const user = await this.usersRepo.findOne({
       where: { id: userId },
@@ -656,8 +530,6 @@ export class ClassroomsService {
     if (!user) {
       throw new BadRequestException();
     }
-
-    console.log('user: ', user);
 
     for (const student of user.students) {
       if (student.grades[0].assignment.classroom.id === classroomId) {
@@ -727,6 +599,7 @@ export class ClassroomsService {
       .addSelect(['assignment.name'])
       .innerJoin('grade.student', 'student')
       .addSelect(['student.identity', 'student.fullName'])
+      .where('review.id = :reviewId', { reviewId })
       .getOne();
 
     if (!classroom || !review) {
@@ -746,5 +619,40 @@ export class ClassroomsService {
     }
 
     return review;
+  }
+
+  async closeReview(
+    userId: string,
+    classroomId: string,
+    reviewId: string,
+    dto: CloseReviewDto,
+  ) {
+    const { grade: point } = dto;
+    const classroom = await this.classesRepo.findOne(classroomId, {
+      relations: ['teachers', 'students', 'students.user'],
+    });
+
+    const review = await this.reviewsRepo.findOne(reviewId);
+
+    const grade = await this.gradesRepo
+      .createQueryBuilder('grade')
+      .innerJoin('grade.review', 'review')
+      .where('review.id = :reviewId', { reviewId })
+      .getOne();
+
+    if (!classroom || !review) {
+      throw new NotFoundException();
+    }
+
+    const userIsATeacher = classroom.teachers.find(
+      (teacher) => teacher.id === userId,
+    );
+
+    if (!userIsATeacher) {
+      throw new ForbiddenException();
+    }
+
+    this.reviewsRepo.save({ ...review, status: ReviewStatus.RESOLVED });
+    return this.gradesRepo.save({ ...grade, point });
   }
 }

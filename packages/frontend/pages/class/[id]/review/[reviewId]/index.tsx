@@ -1,7 +1,13 @@
 import reviewService from 'api/review';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
-import { dehydrate, QueryClient, useQuery } from 'react-query';
+import {
+  dehydrate,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from 'react-query';
 import Layout from 'components/Layout';
 import {
   Typography,
@@ -16,8 +22,9 @@ import {
 } from 'antd';
 import { ReviewStatus } from 'types/grade.dto';
 import { useState } from 'react';
-import { number } from 'yup/lib/locale';
-const { Title } = Typography;
+import { toast } from 'react-toastify';
+import { CheckCircleTwoTone } from '@ant-design/icons';
+const { Title, Text } = Typography;
 
 type GradeReview = {
   id: string;
@@ -52,11 +59,28 @@ const ReviewDetail = () => {
 
   const data = review as unknown as GradeReview;
 
-  const closeReview = ({ grade }: any) => {
-    closeCloseReviewModal();
-  };
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: closeReviewMutate } = useMutation(
+    reviewService.closeReview,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['review', reviewId]);
+        toast.success('Close review successfully.');
+      },
+      onError: () => {
+        toast.error('Close review unsuccessfylly.');
+      },
+    }
+  );
 
   const [form] = Form.useForm();
+
+  const closeReview = ({ grade }: any) => {
+    closeCloseReviewModal();
+    form.resetFields();
+    closeReviewMutate({ grade: +grade, classroomId, reviewId });
+  };
 
   return (
     <Layout>
@@ -108,9 +132,19 @@ const ReviewDetail = () => {
               <Title level={2}>Grade Review</Title>
             </Col>
             <Col>
-              <Button onClick={openCloseReviewModal} type="primary">
-                Close Review
-              </Button>
+              {data?.status === ReviewStatus.ACTIVE && (
+                <Button onClick={openCloseReviewModal} type="primary">
+                  Close Review
+                </Button>
+              )}
+              {data?.status === ReviewStatus.RESOLVED && (
+                <Space>
+                  <Text type="success" strong={true}>
+                    Resolved
+                  </Text>
+                  <CheckCircleTwoTone twoToneColor="#52c41a" />
+                </Space>
+              )}
             </Col>
           </Row>
           <div>

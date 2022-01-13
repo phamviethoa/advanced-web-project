@@ -30,6 +30,7 @@ import { CommentReviewDTO } from './dto/comment-review.dto';
 import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
 import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
 import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
+import { CloseReviewDto } from './dto/close-review.dto';
 
 @Controller('classes')
 export class ClassroomsController {
@@ -274,37 +275,6 @@ export class ClassroomsController {
     return this.classroomsService.getReview(userId, classroomId, reviewId);
   }
 
-  //@UseGuards(JwtAuthGuard)
-  //@Post('/student-request-review-grade')
-  //requestReviewGrade(@Body() body: ReviewGradelDTO, @Request() req: any){
-  //const studentId: string = req.user.id;
-  //return this.classroomsService.requestReviewGrade(body, studentId);
-  //}
-
-  //@UseGuards(JwtAuthGuard)
-  //@Post('/comment-review')
-  //commentStudentReview(@Body() body: CommentReviewDTO, @Request() req: any){
-  //const fromUserId: string = req.user.id;
-  //return this.classroomsService.commentStudentReview(body, fromUserId);
-  //}
-
-  //@Post('/view-of-student-comments-grade-review')
-  //viewOfStudentCommentsGradeReview(@Body() body: ViewOfStudentCommentsDTO){
-  //return this.classroomsService.viewOfStudentCommentsGradeReview(body);
-  //}
-
-  //@UseGuards(JwtAuthGuard)
-  //@Get('/teacher-view-grade-detail/:notificationId')
-  //teacherViewGradeDetail( @Param('notificationId') notificationId: string ){
-  //return this.classroomsService.teacherViewGradeDetail(notificationId);
-  //}
-
-  //@UseGuards(JwtAuthGuard)
-  //@Post('/mark-final-for-student-review-update-grade')
-  //markFinalforStudentReviewUpdateGrade(@Body() body: FinalizedReviewDTO, @Request() req: any){
-  //const teacherId: string = req.user.id;
-  //return this.classroomsService.markFinalforStudentReviewUpdateGrade(body,teacherId);
-  //}
   @UseGuards(JwtAuthGuard)
   @Get('/student-view-grades-compositions/:classroomId')
   studentViewGradesCompositions(
@@ -316,8 +286,22 @@ export class ClassroomsController {
       studentId,
       classroomId,
     );
-    // @Post('/student-view-grades-compositions')
-    // studentViewGradesCompositions(@Body() body:any ){
-    //return this.classroomsService.studentViewGradesCompositions(body.userId,body.classroomId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/:classroomId/close-review/:reviewId')
+  closeReview(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+    @Param('reviewId') reviewId: string,
+    @Body() closeReviewDto: CloseReviewDto,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.closeReview(
+      userId,
+      classroomId,
+      reviewId,
+      closeReviewDto,
+    );
   }
 }
