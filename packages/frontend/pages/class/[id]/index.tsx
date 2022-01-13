@@ -95,7 +95,7 @@ function DetailClassPage() {
         <ClassroomGrade classroom={classroom as ClassroomDto} />
       ) : (
         <ClassroomStudentGrade
-          student={student}
+          student={student as StudentDto}
           classroom={classroom as ClassroomDto}
         />
       ),

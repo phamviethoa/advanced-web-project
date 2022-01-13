@@ -6,7 +6,7 @@ export type StudentDto = {
   id?: string;
   identity: string;
   fullName: string;
-  classrooms: ClassroomDto[];
+  classroom: ClassroomDto;
   grades: GradeDto[];
   user?: UserDto;
 };

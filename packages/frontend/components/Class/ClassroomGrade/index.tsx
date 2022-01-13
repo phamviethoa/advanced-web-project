@@ -57,8 +57,12 @@ const flatten = (studentId: string, assignments: AssignemtDto[]) => {
   const filteredAssignments: AssignemtDto[] = assignments.map((assignment) => ({
     id: assignment.id,
     name: assignment.name,
+    order: assignment.order,
     maxPoint: assignment.maxPoint,
-    grades: assignment.grades.filter((grade) => grade.student.id === studentId),
+    grades: assignment.grades.filter(
+      (grade) =>
+        (grade as unknown as { student: StudentDto }).student.id === studentId
+    ),
     isFinalized: assignment.isFinalized,
   }));
 
@@ -103,7 +107,7 @@ const ClassroomGrade = ({ classroom }: Props) => {
 
   const queryClient = useQueryClient();
 
-  const { handleSubmit, register, watch } = useForm<FormFields>({
+  const { register, watch } = useForm<FormFields>({
     defaultValues: {
       assignments,
     },
@@ -149,7 +153,6 @@ const ClassroomGrade = ({ classroom }: Props) => {
   };
 
   const handleClickUploadGrade = (assignmentId: string) => {
-    console.log('id: ', assignmentId);
     openUploadGradeModal();
     setUpdateAssignmentId(assignmentId);
   };
@@ -229,7 +232,6 @@ const ClassroomGrade = ({ classroom }: Props) => {
     const point = watch(
       `assignments.${assignmentOrder}.grades.${studentOrder}.point` as const
     );
-
     mutateAsync({ studentId, assignmentId, point: Number(point) });
   };
 
@@ -355,6 +357,11 @@ const ClassroomGrade = ({ classroom }: Props) => {
         <h2 className="text-primary">Grade</h2>
         <div>
           <span className="text-muted me-4">
+            <Link href={`/class/${classroom.id}/grade-reviews`}>
+              <a className="fw-normal">Grade Review</a>
+            </Link>
+          </span>
+          <span className="text-muted me-4">
             <Link href={`/class/${classroom.id}/grade-structure`}>
               <a className="fw-normal">Grade Structure</a>
             </Link>
@@ -426,8 +433,8 @@ const ClassroomGrade = ({ classroom }: Props) => {
             </Column>
 
             {assignments
-              .sort((a, b) => a.maxPoint - b.maxPoint)
-              .map((assignment, order) => (
+              .sort((a, b) => a.order - b.order)
+              .map((assignment, assignmentOrder) => (
                 <Column width={150} fixed align="center" key={assignment.id}>
                   <HeaderCell>
                     <div className="d-flex align-items-center justify-content-end me-2">
@@ -478,9 +485,9 @@ const ClassroomGrade = ({ classroom }: Props) => {
                     </div>
                   </HeaderCell>
                   <Cell>
-                    {({ grades, id }, index) => (
+                    {({ grades, id }, gradeOrder) => (
                       <InlineEdit
-                        defaultValue={grades[order]}
+                        defaultValue={grades[assignmentOrder]}
                         editView={() => (
                           <div className="d-flex align-items-center justify-content-end me-2">
                             <div
@@ -492,7 +499,7 @@ const ClassroomGrade = ({ classroom }: Props) => {
                                 className={`${styles.gradeInput}`}
                                 type="text"
                                 {...register(
-                                  `assignments.${order}.grades.${index}.point` as const
+                                  `assignments.${assignmentOrder}.grades.${gradeOrder}.point` as const
                                 )}
                               />
                               <span className="text-muted">{`/${assignment.maxPoint}`}</span>
@@ -502,7 +509,7 @@ const ClassroomGrade = ({ classroom }: Props) => {
                         )}
                         readView={() => (
                           <span>
-                            {grades[order] || (
+                            {grades[assignmentOrder] || (
                               <span className="text-muted">empty</span>
                             )}
                           </span>
@@ -511,8 +518,8 @@ const ClassroomGrade = ({ classroom }: Props) => {
                           triggerSubmit(
                             id,
                             assignment.id as string,
-                            order,
-                            index
+                            assignmentOrder,
+                            gradeOrder
                           );
                         }}
                       />

@@ -55,7 +55,7 @@ export class ClassroomsController {
     @Request() req: any,
   ) {
     const userId: string = req.user.id;
-    return this.classroomsService.exprotgradeboard(userId, classroomId, res);
+    return this.classroomsService.exportGradeBoard(userId, classroomId, res);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -256,6 +256,24 @@ export class ClassroomsController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/:classroomId/reviews')
+  getReviews(@Request() req: any, @Param('classroomId') classroomId: string) {
+    const userId = req.user.id;
+    return this.classroomsService.getReviews(userId, classroomId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/:classroomId/review/:reviewId')
+  getReview(
+    @Request() req: any,
+    @Param('reviewId') reviewId: string,
+    @Param('classroomId') classroomId: string,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.getReview(userId, classroomId, reviewId);
+  }
+
   //@UseGuards(JwtAuthGuard)
   //@Post('/student-request-review-grade')
   //requestReviewGrade(@Body() body: ReviewGradelDTO, @Request() req: any){
@@ -287,7 +305,6 @@ export class ClassroomsController {
   //const teacherId: string = req.user.id;
   //return this.classroomsService.markFinalforStudentReviewUpdateGrade(body,teacherId);
   //}
-
   @UseGuards(JwtAuthGuard)
   @Get('/student-view-grades-compositions/:classroomId')
   studentViewGradesCompositions(

@@ -4,6 +4,7 @@ import { UserDto } from './user.dto';
 
 export type ClassroomDto = {
   id?: string;
+  code: string;
   subject: string;
   description: string;
   teachers: UserDto[];

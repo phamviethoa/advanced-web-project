@@ -1,12 +1,11 @@
-import { AssignemtDto } from './assignment.dto';
-import { StudentDto } from './student.dto';
+import { UserDto } from './user.dto';
 
 export type GradeDto = {
   id?: string;
   point: number;
-  assignment: AssignemtDto;
-  student: StudentDto;
-  isFinalized: boolean;
+  //assignment: AssignemtDto;
+  //student: StudentDto;
+  review: GradeReviewDto;
 };
 
 export type UpdateGradeDto = {
@@ -14,3 +13,22 @@ export type UpdateGradeDto = {
   point: number;
   assignmentId: string;
 };
+
+export type GradeReviewDto = {
+  id: string;
+  expectation: number;
+  explanation: string;
+  status: ReviewStatus;
+  comments: GradeCommentDto[];
+};
+
+export type GradeCommentDto = {
+  message: string;
+  review: GradeReviewDto;
+  teacher: UserDto;
+};
+
+export enum ReviewStatus {
+  ACTIVE = 'ACTIVE',
+  RESOLVED = 'RESOLVED',
+}

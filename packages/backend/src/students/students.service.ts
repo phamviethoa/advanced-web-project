@@ -1,8 +1,17 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Classroom } from 'src/entities/classroom.entity';
+import { GradeReview, ReviewStatus } from 'src/entities/grade-review.entity';
 import { Grade } from 'src/entities/grade.entity';
 import { Student } from 'src/entities/student.entity';
+import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
+import { JoinClassByCodeDto } from './dto/join-class-by-code.dto';
+import { RequestGradeReviewDto } from './dto/request-grade-review.dto';
 
 @Injectable()
 export class StudentsService {
@@ -12,6 +21,15 @@ export class StudentsService {
 
     @InjectRepository(Grade)
     private gradesRepo: Repository<Grade>,
+
+    @InjectRepository(GradeReview)
+    private gradeReviewsRepo: Repository<GradeReview>,
+
+    @InjectRepository(Classroom)
+    private classesRepo: Repository<Classroom>,
+
+    @InjectRepository(User)
+    private usersRepo: Repository<User>,
   ) {}
 
   async findOne(id: string) {
@@ -44,5 +62,54 @@ export class StudentsService {
       where: { studentId: particiid },
     });
     return partics;
+  }
+
+  async joinClassByCode(userId: string, dto: JoinClassByCodeDto) {
+    const { code, identity } = dto;
+    const classroom = await this.classesRepo.findOne({ where: { code } });
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!classroom || !user) {
+      throw new BadRequestException();
+    }
+
+    const newStudent = this.studentsRepo.create({
+      identity,
+      fullName: user.fullName,
+      classroom,
+      user,
+    });
+
+    return this.studentsRepo.save(newStudent);
+  }
+
+  async requestGradeReview(
+    userId: string,
+    gradeId: string,
+    dto: RequestGradeReviewDto,
+  ) {
+    const { expectation, explanation } = dto;
+    const user = await this.usersRepo.findOne(userId);
+    const student = await this.studentsRepo.findOne({ where: { user } });
+    const grade = await this.gradesRepo.findOne(gradeId, {
+      relations: ['student'],
+    });
+
+    if (!grade) {
+      throw new BadRequestException();
+    }
+
+    if (grade.student.id !== student.id) {
+      throw new UnauthorizedException();
+    }
+
+    const newGradeReview = this.gradeReviewsRepo.create({
+      expectation,
+      explanation,
+      status: ReviewStatus.ACTIVE,
+      grade,
+    });
+
+    return this.gradeReviewsRepo.save(newGradeReview);
   }
 }

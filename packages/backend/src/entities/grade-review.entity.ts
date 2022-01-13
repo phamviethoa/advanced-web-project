@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { GradeComment } from './grade-comment.entity';
 import { Grade } from './grade.entity';
 
-enum ReviewStatus {
+export enum ReviewStatus {
   ACTIVE = 'ACTIVE',
   RESOLVED = 'RESOLVED',
 }
@@ -19,7 +19,7 @@ export class GradeReview extends BaseEntity {
   @Column()
   status: ReviewStatus;
 
-  @OneToOne(() => Grade)
+  @OneToOne(() => Grade, (grade) => grade.review)
   @JoinColumn()
   grade: Grade;
 

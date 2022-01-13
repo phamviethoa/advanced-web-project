@@ -1,4 +1,6 @@
 import { ClassroomDto } from 'types/classroom.dto';
+import { Typography } from 'antd';
+const { Title, Paragraph } = Typography;
 
 type Props = {
   classroom: ClassroomDto;
@@ -14,7 +16,12 @@ const ClassroomNews = ({ classroom }: Props) => {
         </div>
       </div>
       <div className="row">
-        <div className="col-3 rounded shadow-sm bg-white p-4 me-3"></div>
+        <div className="col-3 rounded shadow-sm bg-white p-4 me-3">
+          <Title level={4}>Class Code</Title>
+          <div>
+            <Paragraph copyable>{classroom.code}</Paragraph>
+          </div>
+        </div>
         <div className="col rounded shadow-sm bg-white p-4"></div>
       </div>
     </div>

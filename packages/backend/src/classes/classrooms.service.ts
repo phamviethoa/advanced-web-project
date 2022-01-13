@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
+  NotFoundException,
   Response,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -20,7 +22,7 @@ import { stream, utils, write, writeFile } from 'xlsx';
 import { unlink } from 'fs';
 import { InviteByEmailDTO } from './dto/invite-by-email-dto';
 import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
-import { throwError } from 'rxjs';
+import { async, NotFoundError, throwError } from 'rxjs';
 import { Max } from 'class-validator';
 import { createTransport } from 'nodemailer';
 import passport, { use } from 'passport';
@@ -31,6 +33,7 @@ import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
 import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
 import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { GradeReview } from 'src/entities/grade-review.entity';
 
 @Injectable()
 export class ClassroomsService {
@@ -44,6 +47,8 @@ export class ClassroomsService {
     private jwtService: JwtService,
     @InjectRepository(Notification)
     private notificationsRepo: Repository<Notification>,
+    @InjectRepository(GradeReview)
+    private reviewsRepo: Repository<GradeReview>,
     private readonly mailerService: MailerService,
   ) {}
   async findAll(): Promise<Classroom[]> {
@@ -65,20 +70,24 @@ export class ClassroomsService {
   }
 
   async findAllClassIsTeacher(userid: string) {
-    const userIsTeacher = await this.usersRepo.findOneOrFail({
-      where: { id: userid },
-      relations: ['classrooms'],
-    });
-    return userIsTeacher.classrooms;
+    const teacher = await this.usersRepo.findOne(userid);
+
+    if (!teacher) {
+      throw new BadRequestException();
+    }
+
+    return teacher.classrooms || [];
   }
 
   async findAllClassIsStudent(userid: string) {
-    const userfind = await this.usersRepo.findOneOrFail(userid);
-    const students = await this.studentsRepo.findOneOrFail({
-      where: { user: userfind },
-      relations: ['classrooms'],
-    });
-    return students.classrooms;
+    const classrooms = await this.classesRepo
+      .createQueryBuilder('classroom')
+      .innerJoin('classroom.students', 'student')
+      .innerJoin('student.user', 'user')
+      .where('user.id = :userid', { userid })
+      .getMany();
+
+    return classrooms;
   }
 
   async create(createClassDto: CreateClassDto, teacherId: any) {
@@ -140,7 +149,7 @@ export class ClassroomsService {
       fullName: user.fullName,
     });
 
-    newStudent.classrooms = [classroom];
+    newStudent.classroom = classroom;
     newStudent.user = user;
 
     this.studentsRepo.save(newStudent);
@@ -295,7 +304,7 @@ export class ClassroomsService {
       console.log(index);
       if (index === -1) {
         let newstudent = new Student();
-        newstudent.classrooms = [classroom];
+        newstudent.classroom = classroom;
         newstudent.fullName = fullName;
         newstudent.identity = studentId;
         await this.studentsRepo.save(newstudent);
@@ -416,23 +425,27 @@ export class ClassroomsService {
     }
   }
 
-  async exprotgradeboard(userId: string, classroomId: string, res: any) {
+  async exportGradeBoard(userId: string, classroomId: string, res: any) {
     await this.checkIsTeacher(userId, classroomId);
 
     const assignmentsgradesofstudent = await this.assignmentsRepo.find({
       relations: ['grades', 'grades.student', 'classroom'],
       where: { classroom: { id: classroomId } },
     });
+
     const data = [];
     const row1 = [''];
+
     for (const assignment of assignmentsgradesofstudent) {
       if (assignment.isFinalized === false) {
         return new BadRequestException();
       }
       row1.push(assignment.name);
     }
+
     row1.push('Total');
     data.push(row1);
+
     const classroom = await this.classesRepo.findOneOrFail({
       where: { id: classroomId },
       relations: ['students', 'students.grades'],
@@ -666,5 +679,72 @@ export class ClassroomsService {
       }
     }
     throw new UnauthorizedException();
+  }
+
+  async getReviews(userId: string, classroomId: string) {
+    const classroom = await this.classesRepo.findOne(classroomId, {
+      relations: ['teachers'],
+    });
+
+    if (!classroom) {
+      throw new BadRequestException();
+    }
+
+    if (!classroom.teachers.find((teacher) => teacher.id === userId)) {
+      throw new UnauthorizedException();
+    }
+
+    const reviews = await this.reviewsRepo
+      .createQueryBuilder('review')
+      .innerJoinAndSelect('review.grade', 'grade')
+      .innerJoinAndSelect('grade.student', 'student')
+      .innerJoinAndSelect('grade.assignment', 'assignment')
+      .innerJoin('assignment.classroom', 'classroom')
+      .where('classroom.id = :classroomId', { classroomId })
+      .getRawMany();
+
+    return reviews.map((review: any) => ({
+      reviewId: review.review_id,
+      assignmentName: review.assignment_name,
+      identity: review.student_identity,
+      fullName: review.student_fullName,
+      currentGrade: review.grade_point,
+      expectation: review.review_expectation,
+      status: review.review_status,
+    }));
+  }
+
+  async getReview(userId: string, classroomId: string, reviewId: string) {
+    const classroom = await this.classesRepo.findOne(classroomId, {
+      relations: ['teachers', 'students', 'students.user'],
+    });
+
+    const review = await this.reviewsRepo
+      .createQueryBuilder('review')
+      .innerJoin('review.grade', 'grade')
+      .addSelect(['grade.point'])
+      .innerJoin('grade.assignment', 'assignment')
+      .addSelect(['assignment.name'])
+      .innerJoin('grade.student', 'student')
+      .addSelect(['student.identity', 'student.fullName'])
+      .getOne();
+
+    if (!classroom || !review) {
+      throw new NotFoundException();
+    }
+
+    const userIsATeacher = classroom.teachers.find(
+      (teacher) => teacher.id === userId,
+    );
+
+    const userIsAStudent = classroom.students.find(
+      (student) => student.user.id === userId,
+    );
+
+    if (!userIsAStudent && !userIsATeacher) {
+      throw new ForbiddenException();
+    }
+
+    return review;
   }
 }

@@ -2,6 +2,7 @@ import 'rsuite/dist/rsuite.min.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import '../styles/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
+import 'antd/dist/antd.css';
 import type { AppProps } from 'next/app';
 import { Provider as NextAuthProvider } from 'next-auth/client';
 import Script from 'next/script';

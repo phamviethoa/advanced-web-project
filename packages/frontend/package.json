@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ant-design/icons": "^4.7.0",
     "@atlaskit/inline-edit": "^12.1.5",
     "@hookform/resolvers": "^2.8.3",
     "@popperjs/core": "^2.10.2",
