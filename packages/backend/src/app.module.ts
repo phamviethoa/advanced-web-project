@@ -18,6 +18,7 @@ import { ClassroomsController } from './classes/classrooms.controller';
 import { SendGridModule } from '@ntegral/nestjs-sendgrid';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { NotificationsModule } from './notifications/notifications.module';
+import { CommentsModule } from './comments/comments.module';
 
 require('dotenv').config();
 
@@ -56,6 +57,7 @@ require('dotenv').config();
     AuthModule,
     StudentsModule,
     NotificationsModule,
+    CommentsModule,
   ],
   controllers: [AppController, ClassroomsController, UsersController],
   providers: [

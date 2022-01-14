@@ -599,6 +599,14 @@ export class ClassroomsService {
       .addSelect(['assignment.name'])
       .innerJoin('grade.student', 'student')
       .addSelect(['student.identity', 'student.fullName'])
+      .innerJoin('review.comments', 'comment')
+      .innerJoin('comment.user', 'user')
+      .addSelect([
+        'comment.message',
+        'user.fullName',
+        'comment.createdAt',
+        'user.id',
+      ])
       .where('review.id = :reviewId', { reviewId })
       .getOne();
 

@@ -19,12 +19,22 @@ import {
   Modal,
   Form,
   Input,
+  Divider,
+  Comment,
+  Avatar,
+  Tooltip,
 } from 'antd';
 import { ReviewStatus } from 'types/grade.dto';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { CheckCircleTwoTone } from '@ant-design/icons';
+import useUser from 'hooks/useUser';
+import { UserRole } from 'types/user.dto';
+import commentService from 'api/comment';
+import { CommentDto } from 'types/comment.dto';
+import moment from 'moment';
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 type GradeReview = {
   id: string;
@@ -41,12 +51,15 @@ type GradeReview = {
       identity: string;
     };
   };
+  comments: any;
 };
 
 const ReviewDetail = () => {
   const router = useRouter();
   const classroomId = router.query.id as string;
   const reviewId = router.query.reviewId as string;
+
+  const user = useUser(classroomId as string);
 
   const [isOpenCloseReviewModal, setIsOpenCloseReviewModal] =
     useState<boolean>(false);
@@ -58,6 +71,25 @@ const ReviewDetail = () => {
   );
 
   const data = review as unknown as GradeReview;
+
+  const comments: CommentDto[] = data?.comments.map((comment: any) => {
+    return {
+      name: comment.user.fullName,
+      message: comment.message,
+      createAt: comment.createdAt,
+      authorId: comment.user.id,
+    };
+  });
+
+  console.log(comments);
+
+  const isStudentCommenter = (id: string) => {
+    if (user.role === UserRole.STUDENT) {
+      return id === user.id;
+    } else {
+      return id !== user.id;
+    }
+  };
 
   const queryClient = useQueryClient();
 
@@ -74,13 +106,45 @@ const ReviewDetail = () => {
     }
   );
 
+  const { mutateAsync: addCommentMutate } = useMutation(
+    commentService.addGradeComment,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['review', reviewId]);
+        toast.success('Add comment successfully.');
+      },
+      onError: () => {
+        toast.error('Add comment unsuccessfylly.');
+      },
+    }
+  );
+
   const [form] = Form.useForm();
+  const [commentForm] = Form.useForm();
 
   const closeReview = ({ grade }: any) => {
     closeCloseReviewModal();
     form.resetFields();
     closeReviewMutate({ grade: +grade, classroomId, reviewId });
   };
+
+  const addComment = ({ message }: any) => {
+    commentForm.resetFields();
+    addCommentMutate({ reviewId, message });
+  };
+
+  const Editor = () => (
+    <Form form={commentForm} onFinish={addComment}>
+      <Form.Item name="message">
+        <TextArea />
+      </Form.Item>
+      <Form.Item>
+        <Button htmlType="submit" type="primary">
+          Add Comment
+        </Button>
+      </Form.Item>
+    </Form>
+  );
 
   return (
     <Layout>
@@ -132,12 +196,19 @@ const ReviewDetail = () => {
               <Title level={2}>Grade Review</Title>
             </Col>
             <Col>
-              {data?.status === ReviewStatus.ACTIVE && (
-                <Button onClick={openCloseReviewModal} type="primary">
-                  Close Review
-                </Button>
-              )}
-              {data?.status === ReviewStatus.RESOLVED && (
+              {data?.status === ReviewStatus.ACTIVE ? (
+                user.role === UserRole.TEACHER ? (
+                  <Button onClick={openCloseReviewModal} type="primary">
+                    Close Review
+                  </Button>
+                ) : (
+                  <Space>
+                    <Text type="danger" strong={true}>
+                      Active
+                    </Text>
+                  </Space>
+                )
+              ) : (
                 <Space>
                   <Text type="success" strong={true}>
                     Resolved
@@ -171,6 +242,80 @@ const ReviewDetail = () => {
                   {data?.explanation}
                 </Descriptions.Item>
               </Descriptions>
+              <Divider orientation="left">Comments</Divider>
+              <Row>
+                <Col span={12}>
+                  <Comment
+                    avatar={
+                      <Avatar
+                        style={{
+                          backgroundColor:
+                            user.role === UserRole.TEACHER
+                              ? '#f56a00'
+                              : '#7265e6',
+                          verticalAlign: 'middle',
+                        }}
+                        size="large"
+                        gap={4}
+                      >
+                        {user && user.name && user.name[0].toUpperCase()}
+                      </Avatar>
+                    }
+                    content={<Editor />}
+                  />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  {comments
+                    ?.sort((a, b) => {
+                      if (a.createAt && b.createAt) {
+                        return (
+                          moment(a.createAt).valueOf() -
+                          moment(b.createAt).valueOf()
+                        );
+                      } else {
+                        return 0;
+                      }
+                    })
+                    .map((comment, index) => (
+                      <Comment
+                        key={index}
+                        author={<a>{comment.name}</a>}
+                        avatar={
+                          <Avatar
+                            style={{
+                              backgroundColor: !isStudentCommenter(
+                                comment.authorId
+                              )
+                                ? '#f56a00'
+                                : '#7265e6',
+                              verticalAlign: 'middle',
+                            }}
+                            size="large"
+                            gap={4}
+                          >
+                            {comment.name[0].toUpperCase()}
+                          </Avatar>
+                        }
+                        content={<p>{comment.message}</p>}
+                        datetime={
+                          <Tooltip
+                            title={moment(moment.utc(comment.createAt))
+                              .local()
+                              .format('YYYY-MM-DD HH:mm:ss')}
+                          >
+                            <span>
+                              {moment(moment.utc(comment.createAt))
+                                .local()
+                                .fromNow()}
+                            </span>
+                          </Tooltip>
+                        }
+                      />
+                    ))}
+                </Col>
+              </Row>
             </Space>
           </div>
         </Space>

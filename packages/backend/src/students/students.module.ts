@@ -4,8 +4,10 @@ import { Classroom } from 'src/entities/classroom.entity';
 import { GradeComment } from 'src/entities/grade-comment.entity';
 import { GradeReview } from 'src/entities/grade-review.entity';
 import { Grade } from 'src/entities/grade.entity';
+import { Notification } from 'src/entities/notification.entity';
 import { Student } from 'src/entities/student.entity';
 import { User } from 'src/entities/user.entity';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 import { StudentsController } from './students.controller';
 import { StudentsService } from './students.service';
 
@@ -18,7 +20,9 @@ import { StudentsService } from './students.service';
       GradeComment,
       Classroom,
       User,
+      Notification,
     ]),
+    NotificationsModule,
   ],
   controllers: [StudentsController],
   providers: [StudentsService],

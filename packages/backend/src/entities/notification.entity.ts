@@ -5,10 +5,10 @@ import { User } from './user.entity';
 @Entity()
 export class Notification extends BaseEntity {
   @Column()
-  title: string;
+  message: string;
 
   @Column()
-  description: string;
+  isChecked: boolean;
 
   @ManyToOne(() => User, (user) => user.notifications)
   user: User;

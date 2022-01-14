@@ -12,5 +12,5 @@ export class GradeComment extends BaseEntity {
   review: GradeReview;
 
   @ManyToOne(() => User, (user) => user.comments)
-  teacher: User;
+  user: User;
 }

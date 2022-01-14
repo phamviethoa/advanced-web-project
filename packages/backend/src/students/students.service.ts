@@ -9,6 +9,8 @@ import { GradeReview, ReviewStatus } from 'src/entities/grade-review.entity';
 import { Grade } from 'src/entities/grade.entity';
 import { Student } from 'src/entities/student.entity';
 import { User } from 'src/entities/user.entity';
+import notificationTemplate from 'src/notifications/notification-template';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { Repository } from 'typeorm';
 import { JoinClassByCodeDto } from './dto/join-class-by-code.dto';
 import { RequestGradeReviewDto } from './dto/request-grade-review.dto';
@@ -30,6 +32,8 @@ export class StudentsService {
 
     @InjectRepository(User)
     private usersRepo: Repository<User>,
+
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findOne(id: string) {
@@ -90,7 +94,10 @@ export class StudentsService {
   ) {
     const { expectation, explanation } = dto;
     const user = await this.usersRepo.findOne(userId);
-    const student = await this.studentsRepo.findOne({ where: { user } });
+    const student = await this.studentsRepo.findOne({
+      where: { user },
+      relations: ['classroom'],
+    });
     const grade = await this.gradesRepo.findOne(gradeId, {
       relations: ['student'],
     });
@@ -108,6 +115,25 @@ export class StudentsService {
       explanation,
       status: ReviewStatus.ACTIVE,
       grade,
+    });
+
+    const teachers = await this.usersRepo
+      .createQueryBuilder('teacher')
+      .innerJoin('teacher.classrooms', 'classroom')
+      .innerJoin('classroom.assignments', 'assignment')
+      .innerJoin('assignment.grades', 'grade')
+      .where('grade.id = :gradeId', { gradeId })
+      .select(['teacher.id', 'classroom.subject'])
+      .getMany();
+
+    teachers.forEach((teacher) => {
+      this.notificationsService.addNotification(
+        teacher.id,
+        notificationTemplate.requestGradeReview(
+          student.fullName,
+          student.classroom.subject,
+        ),
+      );
     });
 
     return this.gradeReviewsRepo.save(newGradeReview);

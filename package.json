@@ -12,6 +12,7 @@
     "lerna": "^4.0.0"
   },
   "dependencies": {
+    "@nestjs/mapped-types": "*",
     "axios": "^0.24.0"
   }
 }

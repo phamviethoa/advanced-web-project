@@ -1,4 +1,5 @@
 import { AssignemtDto } from 'types/assignment.dto';
+import Link from 'next/link';
 import Input, { InputType, InputCategory } from 'components/Form/Input';
 import { ClassroomDto } from 'types/classroom.dto';
 import { StudentDto } from 'types/student.dto';
@@ -181,8 +182,10 @@ const ClassroomStudentGrade = ({ classroom, student }: Props) => {
         if (record.reviewId !== null) {
           return (
             <Space size="middle">
-              <Button type="primary" onClick={() => {}}>
-                View Review
+              <Button type="primary">
+                <Link href={`/class/${classroom.id}/review/${record.reviewId}`}>
+                  <a>View Review</a>
+                </Link>
               </Button>
             </Space>
           );
