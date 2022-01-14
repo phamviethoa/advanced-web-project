@@ -126,9 +126,12 @@ const Signin = ({ providers }: Props) => {
           ))}
         </form>
 
-        <div className="text-center text-primary">
+        <div className="d-flex justify-content-between text-center text-primary">
           <Link href="/auth/signup">
             <a>Create an account?</a>
+          </Link>
+          <Link href="/auth/forgot-password">
+            <a>Forgot password?</a>
           </Link>
         </div>
       </div>

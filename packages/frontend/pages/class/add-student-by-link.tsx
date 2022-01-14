@@ -7,6 +7,8 @@ import { useRouter } from 'next/router';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { GetServerSideProps } from 'next';
+import { useMutation } from 'react-query';
+import classApi from 'api/class';
 
 type Props = {
   token: string;
@@ -37,8 +39,6 @@ const schema = yup.object().shape({
 const AddStudentByLink = ({ token, classId }: Props) => {
   const router = useRouter();
 
-  console.log(classId);
-
   const {
     handleSubmit,
     register,
@@ -48,18 +48,18 @@ const AddStudentByLink = ({ token, classId }: Props) => {
     resolver: yupResolver(schema),
   });
 
-  const addStudent = handleSubmit(async ({ identity }: FormFields) => {
-    try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/add-student?token=${token}`,
-        { identity }
-      );
-
+  const { mutateAsync } = useMutation(classApi.addStudent, {
+    onSuccess: () => {
       router.push(`/class/${classId}`);
       toast.success('Join class successfully.');
-    } catch (e) {
+    },
+    onError: () => {
       toast.error('Join class unsuccessfully.');
-    }
+    },
+  });
+
+  const addStudent = handleSubmit(async ({ identity }: FormFields) => {
+    mutateAsync({ identity, token });
   });
 
   return (

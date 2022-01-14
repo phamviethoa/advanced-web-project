@@ -16,6 +16,7 @@ type Props = {
   category?: InputCategory;
   name: string;
   label: string;
+  defaultValue?: string;
 };
 
 const Input = ({
@@ -23,6 +24,7 @@ const Input = ({
   category = InputCategory.INPUT,
   name,
   label,
+  defaultValue,
 }: Props) => {
   const {
     register,
@@ -38,8 +40,9 @@ const Input = ({
         <>
           <input
             type={type}
+            defaultValue={defaultValue}
             className={`form-control ${errors[name] ? 'is-invalid' : ''}`}
-            {...register('subject')}
+            {...register(name)}
           />
           <div className="invalid-feedback">{errors[name]?.message}</div>
         </>
@@ -47,7 +50,7 @@ const Input = ({
         <>
           <textarea
             className={`form-control ${errors[name] ? 'is-invalid' : ''}`}
-            {...register('description')}
+            {...register(name)}
           ></textarea>
           <div className="invalid-feedback">{errors[name]?.message}</div>
         </>

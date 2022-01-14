@@ -1,9 +1,9 @@
 import * as React from 'react';
 import ClassCard from 'components/ClassCard';
-import { ClassDto } from 'types/class.dto';
+import { ClassroomDto } from 'types/classroom.dto';
 
 export interface ClassListProps {
-  classes?: ClassDto[];
+  classes?: ClassroomDto[];
 }
 
 export default function ClassList({ classes }: ClassListProps) {
@@ -13,7 +13,7 @@ export default function ClassList({ classes }: ClassListProps) {
         {classes?.map((classroom) => (
           <ClassCard
             key={classroom.id}
-            id={classroom.id}
+            id={classroom.id as string}
             subject={classroom.subject}
             description={classroom.description}
           />

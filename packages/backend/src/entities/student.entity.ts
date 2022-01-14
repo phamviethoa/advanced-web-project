@@ -2,7 +2,7 @@ import { User } from './user.entity';
 import { Grade } from './grade.entity';
 import { Classroom } from './classroom.entity';
 import { BaseEntity } from 'src/common/base.entity';
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Student extends BaseEntity {
@@ -12,8 +12,8 @@ export class Student extends BaseEntity {
   @Column()
   fullName: string;
 
-  @ManyToMany(() => Classroom, (classroom) => classroom.students)
-  classrooms: Classroom[];
+  @ManyToOne(() => Classroom, (classroom) => classroom.students)
+  classroom: Classroom;
 
   @OneToMany(() => Grade, (grade) => grade.student)
   grades: Grade[];

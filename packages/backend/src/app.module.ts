@@ -15,10 +15,20 @@ import { APP_GUARD } from '@nestjs/core';
 import { ClassroomsModule } from './classes/classrooms.module';
 import { ClassroomsController } from './classes/classrooms.controller';
 
+import { SendGridModule } from '@ntegral/nestjs-sendgrid';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { NotificationsModule } from './notifications/notifications.module';
+import { CommentsModule } from './comments/comments.module';
+
+require('dotenv').config();
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    SendGridModule.forRoot({
+      apiKey: process.env.SEND_GRID_ACCESS_KEY,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -33,10 +43,21 @@ import { ClassroomsController } from './classes/classrooms.controller';
       synchronize: true,
       autoLoadEntities: true,
     }),
+    MailerModule.forRoot({
+      transport: {
+        service: 'gmail',
+        auth: {
+          user: 'advanced.web.mail.server@gmail.com',
+          pass: 'Admin@123Admin@123',
+        },
+      },
+    }),
     ClassroomsModule,
     UsersModule,
     AuthModule,
     StudentsModule,
+    NotificationsModule,
+    CommentsModule,
   ],
   controllers: [AppController, ClassroomsController, UsersController],
   providers: [

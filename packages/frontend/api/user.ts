@@ -1,3 +1,5 @@
+import axiosClient from 'api/axiosClient';
+import queryString from 'query-string';
 import axios from 'axios';
 
 const userService = {
@@ -5,6 +7,12 @@ const userService = {
     axios
       .get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`)
       .then((res) => res.data),
+
+  activate: (token: string) => {
+    const query = queryString.stringify({ token });
+    const url = `/users/activate?${query}`;
+    return axiosClient.post(url);
+  },
 
   updateUser: async (params: { id?: string; fullName: string }) => {
     const { id } = params;

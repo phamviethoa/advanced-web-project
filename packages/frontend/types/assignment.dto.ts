@@ -4,6 +4,13 @@ export type AssignemtDto = {
   id?: string;
   name: string;
   maxPoint: number;
+  order: number;
   grades: GradeDto[];
   isFinalized: boolean;
 };
+
+export type UpdateAssignmentDto = {
+  id: string;
+  name: string;
+  maxPoint: number;
+}[];

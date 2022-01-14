@@ -8,7 +8,6 @@ import {
   Put,
   Query,
   Request,
-  Response,
   Res,
   UseGuards,
   UseInterceptors,
@@ -25,6 +24,13 @@ import { StudentsService } from 'src/students/students.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { read } from 'xlsx';
 import { UpdateGradeDTO } from './dto/update-grade-dto';
+import { InviteByEmailDTO } from './dto/invite-by-email-dto';
+import { ReviewGradelDTO } from './dto/review-grade.dto';
+import { CommentReviewDTO } from './dto/comment-review.dto';
+import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
+import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
+import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
+import { CloseReviewDto } from './dto/close-review.dto';
 
 @Controller('classes')
 export class ClassroomsController {
@@ -33,24 +39,48 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
+  //@UseGuards(JwtAuthGuard)
+  //@Get('/view-list-of-grade-reviews-request-by-students')
+  //viewListOfGradeReviewsRequestByStudent(@Request() req: any) {
+  //const teacherId: string = req.user.id;
+  //return this.classroomsService.viewListOfGradeReviewsRequestByStudent(
+  //teacherId,
+  //);
+  //}
+
+  @UseGuards(JwtAuthGuard)
   @Get(':classroomId/export-grade-board')
-  exprotgradeboard(@Param('classroomId') classroomId: string, @Res() res: any) {
-    return this.classroomsService.exprotgradeboard(classroomId, res);
+  exprotgradeboard(
+    @Param('classroomId') classroomId: string,
+    @Res() res: any,
+    @Request() req: any,
+  ) {
+    const userId: string = req.user.id;
+    return this.classroomsService.exportGradeBoard(userId, classroomId, res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/input-grade-student-assignment')
-  inputGradeStudentAssignment(@Body() body: UpdateGradeDTO) {
-    return this.classroomsService.inputGradeStudentAssignment(body);
+  inputGradeStudentAssignment(
+    @Body() body: UpdateGradeDTO,
+    @Request() req: any,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.inputGradeStudentAssignment(userId, body);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':classroomId/show-students-list-grades')
-  showstudents(@Param('classroomId') classroomId) {
-    return this.classroomsService.showstudentsgrades(classroomId);
+  showstudents(@Param('classroomId') classroomId, @Request() req: any) {
+    const userId: string = req.user.id;
+    return this.classroomsService.showstudentsgrades(userId, classroomId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/assignments/:assignmentId/mark-finalized')
-  isFullAssignment(@Param('assignmentId') assignmentId) {
-    return this.classroomsService.markFinalized(assignmentId);
+  isFullAssignment(@Param('assignmentId') assignmentId, @Request() req: any) {
+    const teacherId = req.user.id;
+    return this.classroomsService.markFinalized(assignmentId, teacherId);
   }
 
   @Get('download-student-list-template')
@@ -58,15 +88,22 @@ export class ClassroomsController {
     return this.classroomsService.downloadStudentListTemplate(res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':classroomId/upload-list-student')
   @UseInterceptors(FileInterceptor('file'))
   uploatFilestudentlist(
+    @Request() req: any,
     @UploadedFile() file: any,
     @Param('classroomId') classroomId: string,
   ) {
+    const userId = req.user.id;
     const workBook = read(file.buffer);
     const workSheet = workBook.Sheets[workBook.SheetNames[0]];
-    return this.classroomsService.savestudentlist(workSheet, classroomId);
+    return this.classroomsService.savestudentlist(
+      userId,
+      workSheet,
+      classroomId,
+    );
   }
 
   @Get('/download-template-grade')
@@ -75,21 +112,41 @@ export class ClassroomsController {
     return res.download('./src/classes/template/' + filename);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/upload-assignment-grades/:assignmentId')
   @UseInterceptors(FileInterceptor('file'))
   uploatFile(
+    @Request() req: any,
     @UploadedFile() file: any,
     @Param('assignmentId') assignmentId: string,
   ) {
-    console.log('ID: ', assignmentId);
+    const userId = req.user.id;
     const workBook = read(file.buffer);
     const workSheet = workBook.Sheets[workBook.SheetNames[0]];
-    return this.classroomsService.saveAssignmentGrade(workSheet, assignmentId);
+    return this.classroomsService.saveAssignmentGrade(
+      userId,
+      workSheet,
+      assignmentId,
+    );
   }
 
   @Get()
   findAll() {
     return this.classroomsService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/owned')
+  findAllClassIsTeacher(@Request() req: any) {
+    const userid: string = req.user.id;
+    return this.classroomsService.findAllClassIsTeacher(userid);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/joined')
+  findAllClassIsStudent(@Request() req: any) {
+    const userid: string = req.user.id;
+    return this.classroomsService.findAllClassIsStudent(userid);
   }
 
   @Get(':id')
@@ -104,9 +161,21 @@ export class ClassroomsController {
     return this.classroomsService.create(createClassDto, teacherId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('invite-student-link/:id')
-  getInviteStudentLink(@Param('id') id: string) {
-    return this.classroomsService.getInviteStudentLink(id);
+  getInviteStudentLink(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    return this.classroomsService.getInviteStudentLink(userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/invite-teacher-link/:classroomId')
+  getInviteTeacherLink(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.getInviteTeacherLink(userId, classroomId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -118,6 +187,13 @@ export class ClassroomsController {
   ) {
     const email = req.user.email;
     return this.classroomsService.addStudent(email, identity, token);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/add-teacher')
+  addTeacher(@Request() req: any, @Query('token') token: string) {
+    const email = req.user.email;
+    return this.classroomsService.addTeacher(email, token);
   }
 
   @Put(':id')
@@ -141,12 +217,91 @@ export class ClassroomsController {
   }
 
   @Post('/update-assignments/:id')
-  //@Roles(Role.TEACHER)
-  //@UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   updateAssignments(
+    @Request() req: any,
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
+    const userId = req.user.id;
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/invite-student-by-email/:classroomId')
+  inviteStudentByEmail(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+    @Body() body: InviteByEmailDTO,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.inviteStudentByEmail(
+      classroomId,
+      body,
+      userId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/invite-teacher-by-email/:classroomId')
+  inviteTeacherByEmail(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+    @Body() body: InviteByEmailDTO,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.inviteTeacherByEmail(
+      classroomId,
+      body,
+      userId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/:classroomId/reviews')
+  getReviews(@Request() req: any, @Param('classroomId') classroomId: string) {
+    const userId = req.user.id;
+    return this.classroomsService.getReviews(userId, classroomId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/:classroomId/review/:reviewId')
+  getReview(
+    @Request() req: any,
+    @Param('reviewId') reviewId: string,
+    @Param('classroomId') classroomId: string,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.getReview(userId, classroomId, reviewId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/student-view-grades-compositions/:classroomId')
+  studentViewGradesCompositions(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+  ) {
+    const studentId: string = req.user.id;
+    return this.classroomsService.studentViewGradesCompositions(
+      studentId,
+      classroomId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/:classroomId/close-review/:reviewId')
+  closeReview(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+    @Param('reviewId') reviewId: string,
+    @Body() closeReviewDto: CloseReviewDto,
+  ) {
+    const userId = req.user.id;
+    return this.classroomsService.closeReview(
+      userId,
+      classroomId,
+      reviewId,
+      closeReviewDto,
+    );
   }
 }

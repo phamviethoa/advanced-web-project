@@ -44,8 +44,6 @@ const Signup = () => {
     resolver: yupResolver(schema),
   });
 
-  console.log('Hello');
-
   const signup = handleSubmit(
     async ({ email, fullName, password }: FormFields) => {
       try {
