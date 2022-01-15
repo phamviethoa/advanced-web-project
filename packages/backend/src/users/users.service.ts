@@ -33,9 +33,14 @@ export class UsersService {
     return this.usersRepo.find();
   }
 
-  async checkUsernameIsExist(email: string): Promise<Boolean> {
-    const users = await this.usersRepo.find({ where: { email } });
-    return users.length === 0 ? true : false;
+  async checkUsernameIsExist(email: string) {
+    const user = await this.usersRepo.findOne({ where: { email } });
+
+    if (!user) {
+      return true;
+    }
+
+    return user.socialId !== null;
   }
 
   async loginByFacebook(email: string, id: string, name: string) {
