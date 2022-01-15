@@ -13,6 +13,16 @@ const authService = {
     const url = `users/reset-password?${query}`;
     return axiosClient.post(url, { password });
   },
+
+  facebookLogin: async (params: {
+    email: string;
+    id: string;
+    name: string;
+  }) => {
+    const { email, id, name } = params;
+    const url = `auth/facebook`;
+    return await axiosClient.post(url, { email, id, name });
+  },
 };
 
 export default authService;

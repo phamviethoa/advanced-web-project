@@ -34,6 +34,8 @@ const Layout = ({ children, options }: Props) => {
   const router = useRouter();
   const [session, loading] = useSession();
 
+  console.log(session);
+
   const id = (session as Session)?.user?.id;
 
   const { data } = useQuery('notifications', () =>

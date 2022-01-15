@@ -11,6 +11,9 @@ export class User extends BaseEntity {
   email: string;
 
   @Column()
+  socialId: string;
+
+  @Column()
   fullName: string;
 
   @Column()

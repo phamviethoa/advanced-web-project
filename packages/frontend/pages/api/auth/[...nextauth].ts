@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth';
+import NextAuth, { Account, Profile, User } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 //import FacebookProvider from 'next-auth/providers/facebook';
 import FacebookProvider from 'next-auth/providers/facebook';
@@ -7,6 +7,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { UserDto } from 'types/user.dto';
+import authService from 'api/auth';
 
 export default NextAuth({
   providers: [
@@ -64,7 +65,15 @@ export default NextAuth({
     redirect(url) {
       return url;
     },
-    signIn() {
+    async signIn(user: User, account: Account, profile: Profile) {
+      if (account.provider === 'facebook') {
+        const email = profile.email as string;
+        const id = profile.id as string;
+        const name = profile.name as string;
+        const data = await authService.facebookLogin({ email, id, name });
+        Object.assign(user, data);
+      }
+
       return true;
     },
     jwt(payload, user) {

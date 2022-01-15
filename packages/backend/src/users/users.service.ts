@@ -38,6 +38,24 @@ export class UsersService {
     return users.length === 0 ? true : false;
   }
 
+  async loginByFacebook(email: string, id: string, name: string) {
+    const user = await this.usersRepo.findOne({ where: { socialId: id } });
+
+    if (!user) {
+      const newUser = this.usersRepo.create({
+        socialId: id.toString(),
+        fullName: name,
+        email: email,
+        password: `no need password`,
+      });
+
+      const result = this.usersRepo.save(newUser);
+      return result;
+    }
+
+    return user;
+  }
+
   async addUser(token: any) {
     const payload = this.jwtService.verify(token);
     const email = payload.email;
@@ -117,21 +135,6 @@ export class UsersService {
 
     return this.usersRepo.save(user);
   }
-
-  //async showNotification(userId: string) {
-  //const user = await this.usersRepo.findOne({
-  //relations: [
-  //'notificationsReceived',
-  //'notificationsReceived.fromUser',
-  //'notificationsReceived.gradeNeedToRivew',
-  //],
-  //where: { id: userId },
-  //});
-  //if (!user) {
-  //throw new BadRequestException();
-  //}
-  //return user.notificationsReceived;
-  //}
 
   async CreateAccountAdmin(email: string, fullName: string, password: string) {
     const isValid = await this.checkUsernameIsExist(email);

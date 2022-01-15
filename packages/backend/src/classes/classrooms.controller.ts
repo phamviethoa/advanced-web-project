@@ -39,15 +39,6 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
-  //@UseGuards(JwtAuthGuard)
-  //@Get('/view-list-of-grade-reviews-request-by-students')
-  //viewListOfGradeReviewsRequestByStudent(@Request() req: any) {
-  //const teacherId: string = req.user.id;
-  //return this.classroomsService.viewListOfGradeReviewsRequestByStudent(
-  //teacherId,
-  //);
-  //}
-
   @UseGuards(JwtAuthGuard)
   @Get(':classroomId/export-grade-board')
   exprotgradeboard(
@@ -139,6 +130,9 @@ export class ClassroomsController {
   @Get('/owned')
   findAllClassIsTeacher(@Request() req: any) {
     const userid: string = req.user.id;
+
+    console.log('USER: ', req.user);
+
     return this.classroomsService.findAllClassIsTeacher(userid);
   }
 

@@ -65,6 +65,8 @@ const Signin = ({ providers }: Props) => {
     });
   });
 
+  console.log(providers);
+
   return (
     <div
       style={{ minHeight: '100vh' }}
