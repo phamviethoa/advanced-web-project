@@ -1,4 +1,4 @@
-import { Controller, UseGuards, Request, Get } from '@nestjs/common';
+import { Controller, UseGuards, Request, Get, Param } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { NotificationsService } from './notifications.service';
 
@@ -11,5 +11,10 @@ export class NotificationsController {
   getAll(@Request() req: any) {
     const userId = req.user.id;
     return this.notificationsService.getAll(userId);
+  }
+
+  @Get('/:id/checked')
+  markChecked(@Param('id') id: string) {
+    return this.notificationsService.markNotificationIsChecked(id);
   }
 }

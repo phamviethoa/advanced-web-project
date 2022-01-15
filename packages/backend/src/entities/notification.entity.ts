@@ -5,6 +5,12 @@ import { User } from './user.entity';
 @Entity()
 export class Notification extends BaseEntity {
   @Column()
+  from: string;
+
+  @Column()
+  link: string;
+
+  @Column()
   message: string;
 
   @Column()

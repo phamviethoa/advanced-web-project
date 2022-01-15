@@ -10,13 +10,13 @@ export abstract class BaseEntity {
   id: string;
 
   @CreateDateColumn({ name: 'created_at', select: false, type: 'timestamptz' })
-  createdAt?: Date;
+  createdAt: Date;
 
   @Column({ name: 'created_by', nullable: true, select: false })
   createdBy?: string;
 
   @UpdateDateColumn({ name: 'updated_at', select: false })
-  updatedAt?: Date;
+  updatedAt: Date;
 
   @Column({ name: 'updated_by', nullable: true, select: false })
   updatedBy?: string;

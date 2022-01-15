@@ -1,11 +1,12 @@
 import { signIn, signOut, useSession } from 'next-auth/client';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import notificationService from 'api/notification';
-import { Row, Menu, Dropdown, Space, Badge } from 'antd';
+import { Row, Menu, Dropdown, Space, Badge, Comment, Tooltip } from 'antd';
 import { NotificationDto } from 'types/notification.dto';
 import { BellFilled } from '@ant-design/icons';
+import moment from 'moment';
 
 export type LayoutOptions = {
   name: string;
@@ -40,16 +41,62 @@ const Layout = ({ children, options }: Props) => {
   );
 
   const notifications = data as unknown as NotificationDto[];
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: markChecked } = useMutation(
+    notificationService.markChecked,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('notifications');
+      },
+    }
+  );
+
+  const checkNotification = (link: string, notificationId: string) => () => {
+    router.push(link);
+    markChecked(notificationId);
+  };
 
   const NotificationList = (
     <Menu>
-      {notifications?.map((notification) => (
-        <Menu.Item>
-          <div style={{ width: '250px' }} className="text-wrap text-break">
-            <span>{notification.message}</span>
-          </div>
-        </Menu.Item>
-      ))}
+      {notifications
+        ?.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            return (
+              moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf()
+            );
+          } else {
+            return 0;
+          }
+        })
+        .map((notification, index) => (
+          <Menu.Item>
+            <div
+              onClick={checkNotification(notification.link, notification.id)}
+              style={{ width: '250px' }}
+              className="text-wrap text-break"
+            >
+              <Comment
+                key={index}
+                author={<a>{notification.from}</a>}
+                content={<p>{notification.message}</p>}
+                datetime={
+                  <Tooltip
+                    title={moment(moment.utc(notification.createdAt))
+                      .local()
+                      .format('YYYY-MM-DD HH:mm:ss')}
+                  >
+                    <span>
+                      {moment(moment.utc(notification.createdAt))
+                        .local()
+                        .fromNow()}
+                    </span>
+                  </Tooltip>
+                }
+              />
+            </div>
+          </Menu.Item>
+        ))}
     </Menu>
   );
 
@@ -88,7 +135,7 @@ const Layout = ({ children, options }: Props) => {
             <Space size="middle">
               <div>
                 <Dropdown trigger={['click']} overlay={NotificationList}>
-                  <Badge count={5}>
+                  <Badge count={notifications?.length}>
                     <BellFilled />
                   </Badge>
                 </Dropdown>

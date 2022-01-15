@@ -126,16 +126,15 @@ export class StudentsService {
       .select(['teacher.id', 'classroom.subject'])
       .getMany();
 
+    const result = await this.gradeReviewsRepo.save(newGradeReview);
+
     teachers.forEach((teacher) => {
       this.notificationsService.addNotification(
+        student.fullName,
         teacher.id,
-        notificationTemplate.requestGradeReview(
-          student.fullName,
-          student.classroom.subject,
-        ),
+        notificationTemplate.requestGradeReview(student.classroom.subject),
+        `${process.env.FRONT_END_URL}/class/${student.classroom.id}/review/${result.id}`,
       );
     });
-
-    return this.gradeReviewsRepo.save(newGradeReview);
   }
 }
