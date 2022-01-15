@@ -24,5 +24,5 @@ export class GradeReview extends BaseEntity {
   grade: Grade;
 
   @OneToMany(() => GradeComment, (comment) => comment.review)
-  comments: GradeComment[];
+  comments?: GradeComment[];
 }

@@ -5,6 +5,11 @@ const notificationService = {
     const url = `/notifications`;
     return await axiosClient.get(url);
   },
+
+  markChecked: async (id: string) => {
+    const url = `/notifications/${id}/checked`;
+    return await axiosClient.get(url);
+  },
 };
 
 export default notificationService;

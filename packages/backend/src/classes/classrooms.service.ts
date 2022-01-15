@@ -36,6 +36,8 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { GradeReview, ReviewStatus } from 'src/entities/grade-review.entity';
 import { CloseReviewDto } from './dto/close-review.dto';
 import { error } from 'console';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import notificationTemplate from 'src/notifications/notification-template';
 
 @Injectable()
 export class ClassroomsService {
@@ -52,6 +54,7 @@ export class ClassroomsService {
     @InjectRepository(GradeReview)
     private reviewsRepo: Repository<GradeReview>,
     private readonly mailerService: MailerService,
+    private readonly notificationsService: NotificationsService,
   ) {}
   async findAll(): Promise<Classroom[]> {
     return this.classesRepo.find();
@@ -267,6 +270,14 @@ export class ClassroomsService {
     });
     const classroom = assignment.classroom;
 
+    const students = await this.studentsRepo
+      .createQueryBuilder('student')
+      .innerJoin('student.classroom', 'classroom')
+      .innerJoin('classroom.assignments', 'assignment')
+      .innerJoinAndSelect('student.user', 'user')
+      .where('assignment.id = :assignmentId', { assignmentId })
+      .getMany();
+
     if (!teacher || !assignment) {
       throw new BadRequestException();
     }
@@ -275,7 +286,22 @@ export class ClassroomsService {
       throw new UnauthorizedException();
     }
 
-    return this.assignmentsRepo.save({ ...assignment, isFinalized: true });
+    students.forEach((student) => {
+      this.notificationsService.addNotification(
+        teacher.fullName,
+        student.user.id,
+        notificationTemplate.finalizeAGradeComposition(
+          assignment.name,
+          classroom.subject,
+        ),
+        `${process.env.FRONT_END_URL}/class/${classroom.id}`,
+      );
+    });
+
+    return this.assignmentsRepo.save({
+      ...assignment,
+      isFinalized: true,
+    });
   }
 
   downloadStudentListTemplate(res: any) {
@@ -591,6 +617,8 @@ export class ClassroomsService {
       relations: ['teachers', 'students', 'students.user'],
     });
 
+    const test = await this.reviewsRepo.findOne(reviewId);
+
     const review = await this.reviewsRepo
       .createQueryBuilder('review')
       .innerJoin('review.grade', 'grade')
@@ -599,8 +627,8 @@ export class ClassroomsService {
       .addSelect(['assignment.name'])
       .innerJoin('grade.student', 'student')
       .addSelect(['student.identity', 'student.fullName'])
-      .innerJoin('review.comments', 'comment')
-      .innerJoin('comment.user', 'user')
+      .leftJoin('review.comments', 'comment')
+      .leftJoin('comment.user', 'user')
       .addSelect([
         'comment.message',
         'user.fullName',
@@ -609,6 +637,8 @@ export class ClassroomsService {
       ])
       .where('review.id = :reviewId', { reviewId })
       .getOne();
+
+    console.log('review: ', test);
 
     if (!classroom || !review) {
       throw new NotFoundException();
@@ -640,6 +670,23 @@ export class ClassroomsService {
       relations: ['teachers', 'students', 'students.user'],
     });
 
+    const teacher = await this.usersRepo.findOne(userId);
+    const student = await this.studentsRepo
+      .createQueryBuilder('student')
+      .innerJoin('student.grades', 'grade')
+      .innerJoin('student.user', 'user')
+      .addSelect(['user.id'])
+      .innerJoin('grade.review', 'review')
+      .where('review.id = :reviewId', { reviewId })
+      .getOne();
+
+    const assignment = await this.assignmentsRepo
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.grades', 'grade')
+      .innerJoin('grade.review', 'review')
+      .where('review.id = :reviewId', { reviewId })
+      .getOne();
+
     const review = await this.reviewsRepo.findOne(reviewId);
 
     const grade = await this.gradesRepo
@@ -659,6 +706,13 @@ export class ClassroomsService {
     if (!userIsATeacher) {
       throw new ForbiddenException();
     }
+
+    this.notificationsService.addNotification(
+      teacher.fullName,
+      student.user.id,
+      notificationTemplate.markFinalGrade(assignment.name, classroom.subject),
+      `${process.env.FRONT_END_URL}/class/${classroom.id}/review/${reviewId}`,
+    );
 
     this.reviewsRepo.save({ ...review, status: ReviewStatus.RESOLVED });
     return this.gradesRepo.save({ ...grade, point });

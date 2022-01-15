@@ -10,6 +10,9 @@ export class User extends BaseEntity {
   @Column()
   email: string;
 
+  @Column({ nullable: true })
+  socialId: string;
+
   @Column()
   fullName: string;
 
