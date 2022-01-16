@@ -4,16 +4,19 @@ import {
   Post,
   UseGuards,
   Get,
-  HttpStatus,
   Body,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from './auth/local-auth.guard';
 import { UsersService } from './users/users.service';
 
 @Controller()
 export class AppController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  hello() {
+    return 'Deploy Successfully';
+  }
 
   @UseGuards(LocalAuthGuard)
   @Post('/auth/validate')

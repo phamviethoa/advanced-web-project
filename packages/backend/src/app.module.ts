@@ -19,7 +19,6 @@ import { SendGridModule } from '@ntegral/nestjs-sendgrid';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CommentsModule } from './comments/comments.module';
-import { FacebookStrategy } from './auth/facebook.strategy';
 import { AuthorizationModule } from './authorization/authorization.module';
 
 require('dotenv').config();
@@ -78,7 +77,6 @@ const databaseConfig: TypeOrmModuleOptions =
   ],
   controllers: [AppController, ClassroomsController, UsersController],
   providers: [
-    FacebookStrategy,
     AppService,
     {
       provide: APP_GUARD,
