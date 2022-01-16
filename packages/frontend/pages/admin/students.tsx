@@ -110,7 +110,6 @@ const StudentsManagement = () => {
   const fetchMappableUsers = async (classroomId: string) => {
     try {
       const users = await userService.getMappableUser(classroomId);
-      console.log('users: ', users);
       setMappableUsers(users as unknown as UserDto[]);
     } catch {
       toast.error('Map student unsuccessfully.');

@@ -83,8 +83,6 @@ const GradeStructure = () => {
     reset({ assignments: defaultValues });
   }, [assignments]);
 
-  console.log(assignments);
-
   const { fields, append, remove } = useFieldArray<FormFields>({
     control,
     name: 'assignments',

@@ -64,8 +64,6 @@ export class CommentsService {
       .where('review.id = :reviewId', { reviewId })
       .getOne();
 
-    console.log('assignment: ', assignment);
-
     if (student.user.id !== userId) {
       this.notificationsService.addNotification(
         user.fullName,

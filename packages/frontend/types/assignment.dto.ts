@@ -9,6 +9,18 @@ export type AssignemtDto = {
   isFinalized: boolean;
 };
 
+export type AssignemtDtoInteract = {
+  id?: string;
+  name: string;
+  maxPoint: number;
+  order: number;
+  grades: {
+    id?: string;
+    point: number;
+  }[];
+  isFinalized: boolean;
+};
+
 export type UpdateAssignmentDto = {
   id: string;
   name: string;

@@ -81,8 +81,6 @@ const ReviewDetail = () => {
     };
   });
 
-  console.log(comments);
-
   const isStudentCommenter = (id: string) => {
     if (user.role === UserRole.STUDENT) {
       return id === user.id;

@@ -15,8 +15,6 @@ const UserInfo = () => {
     userService.getUser(id as string)
   );
 
-  console.log('user: ', user);
-
   return (
     <AdminLayout>
       <div>

@@ -1,5 +1,5 @@
 import { Table, Column, HeaderCell, Cell } from 'rsuite-table';
-import { AssignemtDto } from 'types/assignment.dto';
+import { AssignemtDto, AssignemtDtoInteract } from 'types/assignment.dto';
 import 'rsuite-table/dist/css/rsuite-table.css';
 import { useForm } from 'react-hook-form';
 import styles from 'components/Class/ClassroomGrade/index.module.css';
@@ -76,7 +76,7 @@ const flatten = (studentId: string, assignments: AssignemtDto[]) => {
 };
 
 type FormFields = {
-  assignments: AssignemtDto[];
+  assignments: AssignemtDtoInteract[];
 };
 
 enum SelectOptionKey {
@@ -142,11 +142,7 @@ const ClassroomGrade = ({ classroom }: Props) => {
     }
   );
 
-  const downloadAssignmentGradeTemplate = (assignmentId: string) => {
-    console.log(
-      `downloading grade template for assignment ${assignmentId} ...`
-    );
-  };
+  const downloadAssignmentGradeTemplate = (assignmentId: string) => {};
 
   const markAssignmentAsFinalized = (assignmentId: string) => {
     markAssignmentFinalizedMutate(assignmentId);

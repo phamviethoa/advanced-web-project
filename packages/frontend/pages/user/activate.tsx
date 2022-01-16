@@ -1,13 +1,7 @@
-import Layout from 'components/Layout';
-import * as yup from 'yup';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
-import jwt from 'jsonwebtoken';
 import { GetServerSideProps } from 'next';
 import { useMutation } from 'react-query';
-import classApi from 'api/class';
 import userService from 'api/user';
 
 type Props = {
@@ -47,9 +41,12 @@ const ActivateAccount = ({ token }: Props) => {
       style={{ minHeight: '80vh' }}
       className="d-flex justify-content-center align-items-center"
     >
-      <button onClick={activate} className="btn btn-primary">
-        Activate
-      </button>
+      <div className="p-5 rounded shadow" style={{ width: '300px' }}>
+        <h2 className="h4 mb-5">Click below button to activate your account</h2>
+        <button onClick={activate} className="btn btn-primary">
+          Activate
+        </button>
+      </div>
     </div>
   );
 };

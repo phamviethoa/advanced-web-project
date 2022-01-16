@@ -5,6 +5,7 @@ import { Col, Menu, Row, Space } from 'antd';
 import SubMenu from 'antd/lib/menu/SubMenu';
 import { HomeOutlined, TeamOutlined } from '@ant-design/icons';
 import { useState } from 'react';
+import Error from 'next/error';
 
 export type LayoutOptions = {
   name: string;
@@ -23,6 +24,7 @@ type Session = {
     iat: string;
     id: string;
     image: any;
+    isAdmin: boolean;
     name: string;
     sub: string;
   };
@@ -35,6 +37,8 @@ const AdminLayout = ({ children, options }: Props) => {
   const [session, loading] = useSession();
 
   const id = (session as Session)?.user?.id;
+
+  const isAdmin = (session as Session)?.user?.isAdmin;
 
   const callbackUrl = router.asPath;
 
@@ -52,6 +56,10 @@ const AdminLayout = ({ children, options }: Props) => {
       setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
     }
   };
+
+  if (!isAdmin) {
+    return <Error statusCode={404} />;
+  }
 
   return (
     <div

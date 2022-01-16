@@ -99,8 +99,6 @@ const ClassroomStudentGrade = ({ classroom, student }: Props) => {
     };
   });
 
-  console.log('data: ', data);
-
   const [gradeId, setGradeId] = useState<string | undefined>();
 
   const overall = {

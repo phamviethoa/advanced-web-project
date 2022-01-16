@@ -17,6 +17,7 @@ import { StudentsService } from './students.service';
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
+  // OK
   @Get()
   @UseGuards(JwtAuthGuard)
   getStudents(@Request() req: any) {
@@ -29,6 +30,7 @@ export class StudentsController {
     return this.studentsService.findOne(id);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/join-class-by-code')
   joinClassByCode(
@@ -39,6 +41,7 @@ export class StudentsController {
     return this.studentsService.joinClassByCode(userId, joinClassByCodeDto);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/request-grade-review/:gradeId')
   requestGradeReview(
@@ -54,6 +57,7 @@ export class StudentsController {
     );
   }
 
+  // OK
   @Get(':id/unmap')
   @UseGuards(JwtAuthGuard)
   unmapStudent(@Request() req: any, @Param('id') id: string) {
@@ -61,6 +65,7 @@ export class StudentsController {
     return this.studentsService.unmap(userId, id);
   }
 
+  // OK
   @Post(':id/map')
   @UseGuards(JwtAuthGuard)
   mapStudent(
@@ -70,9 +75,6 @@ export class StudentsController {
   ) {
     const accountId = dto.accountId;
     const userId = req.user.id;
-
-    console.log('accountId: ', accountId);
-    console.log('studentId: ', id);
 
     return this.studentsService.map(userId, id, accountId);
   }

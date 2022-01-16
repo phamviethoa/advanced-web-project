@@ -6,6 +6,7 @@ import { NotificationsService } from './notifications.service';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get()
   getAll(@Request() req: any) {
@@ -13,6 +14,7 @@ export class NotificationsController {
     return this.notificationsService.getAll(userId);
   }
 
+  // OK
   @Get('/:id/checked')
   markChecked(@Param('id') id: string) {
     return this.notificationsService.markNotificationIsChecked(id);

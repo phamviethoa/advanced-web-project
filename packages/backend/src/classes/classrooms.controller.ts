@@ -16,20 +16,12 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateAssignmentDto } from 'src/classes/dto/update-assignments.dto';
-import { Roles } from 'src/auth/author/role.decorator';
-import { Role } from 'src/auth/author/entities/role.enum';
-import { RolesGuard } from 'src/auth/author/role.guard';
 import { ClassroomsService } from './classrooms.service';
 import { StudentsService } from 'src/students/students.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { read } from 'xlsx';
 import { UpdateGradeDTO } from './dto/update-grade-dto';
 import { InviteByEmailDTO } from './dto/invite-by-email-dto';
-import { ReviewGradelDTO } from './dto/review-grade.dto';
-import { CommentReviewDTO } from './dto/comment-review.dto';
-import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
-import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
-import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
 import { CloseReviewDto } from './dto/close-review.dto';
 
 @Controller('classes')
@@ -39,6 +31,7 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
+  // YES
   @Get('/managed')
   @UseGuards(JwtAuthGuard)
   getManagedClassrooms(@Request() req: any) {
@@ -57,6 +50,7 @@ export class ClassroomsController {
     return this.classroomsService.exportGradeBoard(userId, classroomId, res);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/input-grade-student-assignment')
   inputGradeStudentAssignment(
@@ -74,6 +68,7 @@ export class ClassroomsController {
     return this.classroomsService.showstudentsgrades(userId, classroomId);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/assignments/:assignmentId/mark-finalized')
   isFullAssignment(@Param('assignmentId') assignmentId, @Request() req: any) {
@@ -81,11 +76,13 @@ export class ClassroomsController {
     return this.classroomsService.markFinalized(assignmentId, teacherId);
   }
 
+  // OK
   @Get('download-student-list-template')
-  downloadstudentlist(@Res() res: any) {
+  downloadstudentlist(@Request() req: any, @Res() res: any) {
     return this.classroomsService.downloadStudentListTemplate(res);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post(':classroomId/upload-list-student')
   @UseInterceptors(FileInterceptor('file'))
@@ -110,6 +107,7 @@ export class ClassroomsController {
     return res.download('./src/classes/template/' + filename);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/upload-assignment-grades/:assignmentId')
   @UseInterceptors(FileInterceptor('file'))
@@ -128,21 +126,22 @@ export class ClassroomsController {
     );
   }
 
-  @Get()
-  findAll() {
-    return this.classroomsService.findAll();
-  }
+  // HERE
+  //@UseGuards(JwtAuthGuard)
+  //@Get()
+  //findAll() {
+  //return this.classroomsService.findAll();
+  //}
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get('/owned')
   findAllClassIsTeacher(@Request() req: any) {
     const userid: string = req.user.id;
-
-    console.log('USER: ', req.user);
-
     return this.classroomsService.findAllClassIsTeacher(userid);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get('/joined')
   findAllClassIsStudent(@Request() req: any) {
@@ -150,11 +149,15 @@ export class ClassroomsController {
     return this.classroomsService.findAllClassIsStudent(userid);
   }
 
+  // OK
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.classroomsService.findOne(id);
+  findOne(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    return this.classroomsService.findOne(userId, id);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Request() req: any, @Body() createClassDto: CreateClassDto) {
@@ -162,6 +165,7 @@ export class ClassroomsController {
     return this.classroomsService.create(createClassDto, teacherId);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get('invite-student-link/:id')
   getInviteStudentLink(@Request() req: any, @Param('id') id: string) {
@@ -169,6 +173,7 @@ export class ClassroomsController {
     return this.classroomsService.getInviteStudentLink(userId, id);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get('/invite-teacher-link/:classroomId')
   getInviteTeacherLink(
@@ -179,6 +184,7 @@ export class ClassroomsController {
     return this.classroomsService.getInviteTeacherLink(userId, classroomId);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/add-student')
   addStudent(
@@ -190,6 +196,7 @@ export class ClassroomsController {
     return this.classroomsService.addStudent(email, identity, token);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/add-teacher')
   addTeacher(@Request() req: any, @Query('token') token: string) {
@@ -217,6 +224,7 @@ export class ClassroomsController {
     return this.studentsService.findAllpartici(id);
   }
 
+  // OK
   @Post('/update-assignments/:id')
   @UseGuards(JwtAuthGuard)
   updateAssignments(
@@ -228,6 +236,7 @@ export class ClassroomsController {
     return this.classroomsService.updateAssignments(id, updateAssignmentDto);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/invite-student-by-email/:classroomId')
   inviteStudentByEmail(
@@ -243,6 +252,7 @@ export class ClassroomsController {
     );
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/invite-teacher-by-email/:classroomId')
   inviteTeacherByEmail(
@@ -258,6 +268,7 @@ export class ClassroomsController {
     );
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get('/:classroomId/reviews')
   getReviews(@Request() req: any, @Param('classroomId') classroomId: string) {
@@ -265,6 +276,7 @@ export class ClassroomsController {
     return this.classroomsService.getReviews(userId, classroomId);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get('/:classroomId/review/:reviewId')
   getReview(
@@ -289,6 +301,7 @@ export class ClassroomsController {
     );
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/:classroomId/close-review/:reviewId')
   closeReview(

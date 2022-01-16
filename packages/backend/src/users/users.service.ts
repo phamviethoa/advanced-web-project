@@ -240,8 +240,6 @@ export class UsersService {
         isAdmin: true,
       });
 
-      console.log('INITIAL!!!!');
-
       return this.usersRepo.save(newAdmin);
     }
 
@@ -348,8 +346,6 @@ export class UsersService {
         !user.classrooms.find((classroom) => classroom.id === classroomId) &&
         !user.students.find((student) => student.classroom.id === classroomId),
     );
-
-    console.log('users: ', mappableUsers);
 
     return mappableUsers;
   }

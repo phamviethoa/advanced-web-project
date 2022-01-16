@@ -21,18 +21,7 @@ export class AppController {
     return req.user;
   }
 
-  //@Get('/facebook')
-  //@UseGuards(AuthGuard('facebook'))
-  //async facebookLogin(): Promise<any> {
-  //return HttpStatus.OK;
-  //}
-
-  //@Get('/facebook/redirect')
-  //@UseGuards(AuthGuard('facebook'))
-  //async facebookLoginRedirect(@Request() req: any): Promise<any> {
-  //return this.usersService.loginByFacebook(req.user);
-  //}
-
+  // OK
   @Post('/auth/facebook')
   facebookLogin(@Body() body: any) {
     const { email, id, name } = body;

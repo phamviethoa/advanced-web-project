@@ -7,6 +7,7 @@ import { AddGradeCommentDto } from './dto/add-grade-comment.dto';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post()
   addGradeComment(
