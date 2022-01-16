@@ -8,6 +8,8 @@ export type UserDto = {
   password: string;
   classrooms: ClassroomDto[];
   students: StudentDto[];
+  isAdmin: boolean;
+  isBanned: boolean;
 };
 
 export enum UserRole {

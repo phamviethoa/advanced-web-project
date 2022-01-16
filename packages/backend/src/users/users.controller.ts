@@ -9,8 +9,10 @@ import {
   UseGuards,
   Query,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CreateAdminDto } from './dto/add-admin.dto';
 import { BanAccountByADminDTO } from './dto/banaccountbyadmin.dto';
 import { MapStudentToUserByADminDTO } from './dto/mapstudenttouserbyadmin.dto';
 import { SignupUserDto } from './dto/signup-user.dto';
@@ -20,17 +22,39 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  getAll(@Request() req: any) {
+    const userId = req.user.id;
+    return this.usersService.getAll(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/ban-user')
+  banUser(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    return this.usersService.banUser(userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/unban-user')
+  unbanUser(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    return this.usersService.unbanUser(userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  removeUser(@Request() req: any, @Param('id') id: string) {
+    console.log('HEREEEE');
+    const userId = req.user.id;
+    return this.usersService.remove(userId, id);
+  }
+
   @Get('/view-user-list-by-admin')
   viewUserList() {
     return this.usersService.viewUserList();
   }
-
-  //@UseGuards(JwtAuthGuard)
-  //@Get('/show-notifications')
-  //showNotification(@Request() req: any){
-  //const userId: string = req.user.id;
-  //return this.usersService.showNotification(userId);
-  //}
 
   @Get('/view-class-list-by-admin')
   viewClassListByAdmin() {
@@ -79,10 +103,11 @@ export class UsersController {
     return this.usersService.newpassword(token, password);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/create-account-admin')
-  createAccountAdmin(@Body() body: SignupUserDto) {
-    const { email, fullName, password } = body;
-    return this.usersService.CreateAccountAdmin(email, fullName, password);
+  createAccountAdmin(@Request() req: any, @Body() body: CreateAdminDto) {
+    const userId = req.user.id;
+    return this.usersService.CreateAccountAdmin(userId, body);
   }
 
   @Get('/view-detail-admin/:adminId')
