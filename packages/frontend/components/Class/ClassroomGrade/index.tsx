@@ -14,6 +14,11 @@ import { ClassroomDto } from 'types/classroom.dto';
 import Modal from 'components/Modal';
 import { FileWithPath, useDropzone } from 'react-dropzone';
 import { StudentDto } from 'types/student.dto';
+import { Menu } from 'antd';
+import * as Antd from 'antd';
+import { CaretDownFilled } from '@ant-design/icons';
+
+const DropdownAntd = Antd.Dropdown;
 
 const baseStyle = {
   flex: 1,
@@ -291,6 +296,67 @@ const ClassroomGrade = ({ classroom }: Props) => {
     removeAll();
   };
 
+  const menu = (
+    <Menu>
+      <Menu.Item key="0">
+        <span className="text-muted me-4">
+          <Link
+            href={`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/download-student-list-template`}
+          >
+            <a target="_blank" className="fw-normal">
+              <i
+                style={{ fontSize: '0.8rem' }}
+                className="fas fa-arrow-circle-down me-2"
+              ></i>
+              Download template
+            </a>
+          </Link>
+        </span>
+      </Menu.Item>
+      <Menu.Item key="1">
+        <span className="text-muted me-4">
+          <a onClick={openUploadFileModal} className="fw-normal">
+            <i
+              style={{ fontSize: '0.8rem' }}
+              className="fas fa-arrow-circle-up me-2"
+            ></i>
+            Upload template
+          </a>
+        </span>
+      </Menu.Item>
+      <Menu.Item key="3">
+        <span className="text-muted">
+          <Link
+            href={`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${classroom.id}/export-grade-board`}
+          >
+            <a target="_blank" className="fw-normal">
+              <i
+                style={{ fontSize: '0.8rem' }}
+                className="fas fa-arrow-circle-down me-2"
+              ></i>
+              Export grade board
+            </a>
+          </Link>
+        </span>
+      </Menu.Item>
+      <Menu.Divider />
+      <Menu.Item key="3">
+        <span className="text-muted me-4">
+          <Link href={`/class/${classroom.id}/grade-structure`}>
+            <a className="fw-normal">Grade Structure</a>
+          </Link>
+        </span>
+      </Menu.Item>
+      <Menu.Item key="3">
+        <span className="text-muted me-4">
+          <Link href={`/class/${classroom.id}/grade-reviews`}>
+            <a className="fw-normal">Grade Review</a>
+          </Link>
+        </span>
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
     <div>
       <Modal
@@ -349,54 +415,12 @@ const ClassroomGrade = ({ classroom }: Props) => {
           </button>
         </div>
       </Modal>
-      <div className="d-flex justify-content-between">
+      <div className="d-flex align-items-center">
         <h2 className="text-primary">Grade</h2>
-        <div>
-          <span className="text-muted me-4">
-            <Link href={`/class/${classroom.id}/grade-reviews`}>
-              <a className="fw-normal">Grade Review</a>
-            </Link>
-          </span>
-          <span className="text-muted me-4">
-            <Link href={`/class/${classroom.id}/grade-structure`}>
-              <a className="fw-normal">Grade Structure</a>
-            </Link>
-          </span>
-          <span className="text-muted me-4">
-            <Link
-              href={`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/download-student-list-template`}
-            >
-              <a target="_blank" className="fw-normal">
-                <i
-                  style={{ fontSize: '0.8rem' }}
-                  className="fas fa-arrow-circle-down me-2"
-                ></i>
-                Download template
-              </a>
-            </Link>
-          </span>
-          <span className="text-muted me-4">
-            <a onClick={openUploadFileModal} className="fw-normal">
-              <i
-                style={{ fontSize: '0.8rem' }}
-                className="fas fa-arrow-circle-up me-2"
-              ></i>
-              Upload template
-            </a>
-          </span>
-          <span className="text-muted">
-            <Link
-              href={`${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${classroom.id}/export-grade-board`}
-            >
-              <a target="_blank" className="fw-normal">
-                <i
-                  style={{ fontSize: '0.8rem' }}
-                  className="fas fa-arrow-circle-down me-2"
-                ></i>
-                Export grade board
-              </a>
-            </Link>
-          </span>
+        <div className="ms-3 mb-3 text-muted">
+          <DropdownAntd overlay={menu} trigger={['click']}>
+            <CaretDownFilled />
+          </DropdownAntd>
         </div>
       </div>
 
