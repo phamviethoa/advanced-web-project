@@ -152,7 +152,9 @@ const AdminLayout = ({ children, options }: Props) => {
                 <Menu.Item key="2">
                   <Link href={`/admin/admins`}>Admins Management</Link>
                 </Menu.Item>
-                <Menu.Item key="3">Students Mapping</Menu.Item>
+                <Menu.Item key="3">
+                  <Link href={`/admin/students`}>Students Mapping</Link>
+                </Menu.Item>
               </SubMenu>
               <SubMenu
                 key="classroom"

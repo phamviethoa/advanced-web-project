@@ -328,4 +328,29 @@ export class UsersService {
 
     return await this.studentsRepo.save(student);
   }
+
+  async getMappableUsers(userId: string, classroomId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const users = await this.usersRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.students', 'student')
+      .leftJoinAndSelect('student.classroom', 'joinedClassroom')
+      .leftJoinAndSelect('user.classrooms', 'classroom')
+      .getMany();
+
+    const mappableUsers = users.filter(
+      (user) =>
+        !user.classrooms.find((classroom) => classroom.id === classroomId) &&
+        !user.students.find((student) => student.classroom.id === classroomId),
+    );
+
+    console.log('users: ', mappableUsers);
+
+    return mappableUsers;
+  }
 }

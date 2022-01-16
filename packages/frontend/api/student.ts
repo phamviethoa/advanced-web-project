@@ -22,6 +22,22 @@ const studentService = {
     const url = `students/request-grade-review/${gradeId}`;
     return axiosClient.post(url, { expectation, explanation });
   },
+
+  getStudents: async () => {
+    const url = `students`;
+    return await axiosClient.get(url);
+  },
+
+  unMapStudent: async (id: string) => {
+    const url = `students/${id}/unmap`;
+    return await axiosClient.get(url);
+  },
+
+  mapStudent: async (params: { id: string; accountId: string }) => {
+    const { id, accountId } = params;
+    const url = `students/${id}/map`;
+    return await axiosClient.post(url, { accountId });
+  },
 };
 
 export default studentService;

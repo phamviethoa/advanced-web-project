@@ -145,4 +145,14 @@ export class UsersController {
       body.userId,
     );
   }
+
+  @Get('mappable/:classroomId')
+  @UseGuards(JwtAuthGuard)
+  getMappableUsers(
+    @Request() req: any,
+    @Param('classroomId') classroomId: string,
+  ) {
+    const userId = req.user.id;
+    return this.usersService.getMappableUsers(userId, classroomId);
+  }
 }

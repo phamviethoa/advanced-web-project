@@ -55,6 +55,11 @@ const userService = {
     const url = `users/${id}/unban-user`;
     return await axiosClient.get(url);
   },
+
+  getMappableUser: async (classroomId: string) => {
+    const url = `users/mappable/${classroomId}`;
+    return await axiosClient.get(url);
+  },
 };
 
 export default userService;
