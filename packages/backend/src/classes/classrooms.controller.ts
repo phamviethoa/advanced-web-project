@@ -39,6 +39,13 @@ export class ClassroomsController {
     private studentsService: StudentsService,
   ) {}
 
+  @Get('/managed')
+  @UseGuards(JwtAuthGuard)
+  getManagedClassrooms(@Request() req: any) {
+    const userId = req.user.id;
+    return this.classroomsService.getManagedClassrooms(userId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get(':classroomId/export-grade-board')
   exprotgradeboard(

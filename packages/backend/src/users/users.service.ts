@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -8,6 +13,7 @@ import { Notification } from 'src/entities/notification.entity';
 import { Classroom } from 'src/entities/classroom.entity';
 import { Student } from 'src/entities/student.entity';
 import { MailerService } from '@nestjs-modules/mailer';
+import { CreateAdminDto } from './dto/add-admin.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +26,27 @@ export class UsersService {
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
+
+  async getAll(userId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const users = await this.usersRepo
+      .createQueryBuilder('user')
+      .select([
+        'user.id',
+        'user.email',
+        'user.fullName',
+        'user.isAdmin',
+        'user.isBanned',
+      ])
+      .getMany();
+
+    return users;
+  }
 
   async findOne(email: string): Promise<User | undefined> {
     return await this.usersRepo.findOne({ where: { email } });
@@ -41,6 +68,58 @@ export class UsersService {
     }
 
     return user.socialId !== null;
+  }
+
+  async remove(userId: string, removedUserId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    if (userId === removedUserId) {
+      throw new BadRequestException();
+    }
+
+    return this.usersRepo.delete(removedUserId);
+  }
+
+  async banUser(userId: string, bannedUserId: string) {
+    const user = await this.usersRepo.findOne(userId);
+    const bannedUser = await this.usersRepo.findOne(bannedUserId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    if (userId === bannedUserId) {
+      throw new BadRequestException();
+    }
+
+    if (!bannedUserId) {
+      throw new NotFoundException();
+    }
+
+    return this.usersRepo.save({ ...bannedUser, isBanned: true });
+  }
+
+  async unbanUser(userId: string, unbannedUserId: string) {
+    const user = await this.usersRepo.findOne(userId);
+    const unbannedUser = await this.usersRepo.findOne(unbannedUserId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    if (userId === unbannedUserId) {
+      throw new BadRequestException();
+    }
+
+    if (!unbannedUserId) {
+      throw new NotFoundException();
+    }
+
+    return this.usersRepo.save({ ...unbannedUser, isBanned: false });
   }
 
   async loginByFacebook(email: string, id: string, name: string) {
@@ -141,15 +220,34 @@ export class UsersService {
     return this.usersRepo.save(user);
   }
 
-  async CreateAccountAdmin(email: string, fullName: string, password: string) {
+  async CreateAccountAdmin(userId: string, dto: CreateAdminDto) {
+    const { email, fullName, password, isInitial } = dto;
+    const user = await this.usersRepo.findOne(userId);
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     const isValid = await this.checkUsernameIsExist(email);
 
     if (!isValid) {
       throw new BadRequestException(`Email Admin is existed!`);
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    if (isInitial) {
+      const newAdmin = this.usersRepo.create({
+        email,
+        fullName,
+        password: hashedPassword,
+        isAdmin: true,
+      });
+
+      console.log('INITIAL!!!!');
+
+      return this.usersRepo.save(newAdmin);
+    }
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
 
     const newAdmin = this.usersRepo.create({
       email,
@@ -229,5 +327,30 @@ export class UsersService {
     student.identity = undefined;
 
     return await this.studentsRepo.save(student);
+  }
+
+  async getMappableUsers(userId: string, classroomId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const users = await this.usersRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.students', 'student')
+      .leftJoinAndSelect('student.classroom', 'joinedClassroom')
+      .leftJoinAndSelect('user.classrooms', 'classroom')
+      .getMany();
+
+    const mappableUsers = users.filter(
+      (user) =>
+        !user.classrooms.find((classroom) => classroom.id === classroomId) &&
+        !user.students.find((student) => student.classroom.id === classroomId),
+    );
+
+    console.log('users: ', mappableUsers);
+
+    return mappableUsers;
   }
 }

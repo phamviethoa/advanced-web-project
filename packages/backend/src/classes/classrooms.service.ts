@@ -126,6 +126,22 @@ export class ClassroomsService {
     return `${process.env.FRONT_END_URL}/class/add-student-by-link?token=${token}`;
   }
 
+  async getManagedClassrooms(userId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const classes = await this.classesRepo
+      .createQueryBuilder('class')
+      .leftJoinAndSelect('class.teachers', 'teacher')
+      .leftJoinAndSelect('class.students', 'student')
+      .getMany();
+
+    return classes;
+  }
+
   async getInviteTeacherLink(userId: string, id: string) {
     await this.checkIsTeacher(userId, id);
 

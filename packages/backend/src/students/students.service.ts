@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -40,6 +42,24 @@ export class StudentsService {
     return await this.studentsRepo.findOne(id, {
       relations: ['student', 'class'],
     });
+  }
+
+  async getAll(userId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const students = await this.studentsRepo
+      .createQueryBuilder('student')
+      .innerJoin('student.classroom', 'classroom')
+      .addSelect(['classroom.id', 'classroom.subject'])
+      .leftJoin('student.user', 'user')
+      .addSelect(['user.id', 'user.email'])
+      .getMany();
+
+    return students;
   }
 
   async findByClassId(classId: string): Promise<Student> {
@@ -136,5 +156,51 @@ export class StudentsService {
         `${process.env.FRONT_END_URL}/class/${student.classroom.id}/review/${result.id}`,
       );
     });
+  }
+
+  async unmap(userId: string, studentId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const student = await this.studentsRepo.findOne(studentId);
+
+    if (!student) {
+      throw new NotFoundException();
+    }
+
+    return this.studentsRepo.save({ ...student, user: null });
+  }
+
+  async map(userId: string, studentId: string, mappedAccountId: string) {
+    const user = await this.usersRepo.findOne(userId);
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException();
+    }
+
+    const student = await this.studentsRepo
+      .createQueryBuilder('student')
+      .leftJoinAndSelect('student.classroom', 'classroom')
+      .getOne();
+
+    const mappedAccount = await this.usersRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.students', 'student')
+      .leftJoinAndSelect('student.classroom', 'classroom')
+      .where('user.id = :mappedAccountId', { mappedAccountId })
+      .getOne();
+
+    if (
+      mappedAccount.students.find(
+        (student) => student.classroom.id === student.classroom.id,
+      )
+    ) {
+      throw new BadRequestException();
+    }
+
+    return this.studentsRepo.save({ ...student, user: mappedAccount });
   }
 }

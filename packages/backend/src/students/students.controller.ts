@@ -9,12 +9,20 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { JoinClassByCodeDto } from './dto/join-class-by-code.dto';
+import { MappingStudentDto } from './dto/mapping-student.dto';
 import { RequestGradeReviewDto } from './dto/request-grade-review.dto';
 import { StudentsService } from './students.service';
 
 @Controller('students')
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  getStudents(@Request() req: any) {
+    const userId = req.user.id;
+    return this.studentsService.getAll(userId);
+  }
 
   @Get(':id')
   findById(@Param('id') id: string) {
@@ -44,5 +52,28 @@ export class StudentsController {
       gradeId,
       requestGradeReviewDto,
     );
+  }
+
+  @Get(':id/unmap')
+  @UseGuards(JwtAuthGuard)
+  unmapStudent(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    return this.studentsService.unmap(userId, id);
+  }
+
+  @Post(':id/map')
+  @UseGuards(JwtAuthGuard)
+  mapStudent(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() dto: MappingStudentDto,
+  ) {
+    const accountId = dto.accountId;
+    const userId = req.user.id;
+
+    console.log('accountId: ', accountId);
+    console.log('studentId: ', id);
+
+    return this.studentsService.map(userId, id, accountId);
   }
 }
