@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { StudentsModule } from './students/students.module';
 
@@ -24,6 +24,32 @@ import { AuthorizationModule } from './authorization/authorization.module';
 
 require('dotenv').config();
 
+const databaseConfig: TypeOrmModuleOptions =
+  process.env.NODE_ENV === 'dev'
+    ? {
+        type: 'postgres',
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT),
+        username: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
+        synchronize: true,
+        autoLoadEntities: true,
+      }
+    : {
+        type: 'postgres',
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT),
+        username: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+        synchronize: true,
+        autoLoadEntities: true,
+      };
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -32,19 +58,7 @@ require('dotenv').config();
     SendGridModule.forRoot({
       apiKey: process.env.SEND_GRID_ACCESS_KEY,
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      //ssl: {
-      //rejectUnauthorized: false,
-      //},
-      synchronize: true,
-      autoLoadEntities: true,
-    }),
+    TypeOrmModule.forRoot(databaseConfig),
     MailerModule.forRoot({
       transport: {
         service: 'gmail',
