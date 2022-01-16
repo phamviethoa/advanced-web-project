@@ -186,10 +186,6 @@ export class StudentsService {
       .leftJoinAndSelect('student.classroom', 'classroom')
       .getOne();
 
-    //const mappedAccount = await this.usersRepo.findOne(mappedAccountId, {
-    //relations: ['user.students', 'user.students.classroom'],
-    //});
-
     const mappedAccount = await this.usersRepo
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.students', 'student')

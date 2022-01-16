@@ -39,7 +39,6 @@ const classApi = {
     return data;
   },
 
-  // This is logic for invite teacher link
   getInviteTeacherLink: async (classroomId?: string) => {
     const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-teacher-link/${classroomId}`;
     const { data } = await axios.get(url);
@@ -130,6 +129,11 @@ const classApi = {
     );
 
     return data;
+  },
+
+  getManagedClassrooms: async () => {
+    const url = `/classes/managed`;
+    return await axiosClient.get(url);
   },
 };
 

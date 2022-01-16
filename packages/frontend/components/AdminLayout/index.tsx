@@ -161,7 +161,9 @@ const AdminLayout = ({ children, options }: Props) => {
                 icon={<HomeOutlined />}
                 title="Classroooms Management"
               >
-                <Menu.Item key="4">Classrooms Management</Menu.Item>
+                <Menu.Item key="4">
+                  <Link href={`/admin/class`}>Classrooms Management</Link>
+                </Menu.Item>
               </SubMenu>
             </Menu>
           </Col>
