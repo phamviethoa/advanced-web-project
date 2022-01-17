@@ -50,7 +50,7 @@ export default NextAuth({
     }),
   ],
 
-  secret: 'secret',
+  secret: process.env.SECRET,
   session: {
     jwt: true,
     maxAge: 1 * 24 * 60 * 60, // 1 day in seconds
