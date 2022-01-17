@@ -1,11 +1,12 @@
 import Layout from 'components/Layout';
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import jwt from 'jsonwebtoken';
-import axios from 'axios';
 import { GetServerSideProps } from 'next';
 import { useMutation } from 'react-query';
 import classApi from 'api/class';

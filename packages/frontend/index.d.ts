@@ -3,3 +3,4 @@ declare module 'next-auth/providers/google';
 declare module 'next-auth/providers/credentials';
 declare module 'bootstrap/dist/js/bootstrap';
 declare module 'images-generator';
+declare module '@hookform/resolvers/yup/dist/yup.umd';

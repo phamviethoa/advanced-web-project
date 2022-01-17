@@ -1,9 +1,10 @@
 import { GetServerSideProps } from 'next';
-import InlineEdit from '@atlaskit/inline-edit';
 import * as React from 'react';
 import Layout from '../../components/Layout/index';
 import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import { useForm, FormProvider } from 'react-hook-form';
