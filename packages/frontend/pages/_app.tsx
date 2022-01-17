@@ -12,7 +12,7 @@ import axios from 'axios';
 import { Hydrate, QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 
-axios.defaults.withCredentials = true;
+//axios.defaults.withCredentials = true;
 
 function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {

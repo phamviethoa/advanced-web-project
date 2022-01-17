@@ -1,16 +1,10 @@
 import axiosClient from 'api/axiosClient';
-import axios from 'axios';
 import FileDownload from 'js-file-download';
 import { ClassroomDto, CreateClassroomDto } from 'types/classroom.dto';
 import { UpdateGradeDto } from 'types/grade.dto';
 import queryString from 'query-string';
 
 const classApi = {
-  //getAll: () => {
-  //const url = '/classes';
-  //return axiosClient.get<Array<ClassroomDto>>(url);
-  //},
-
   getOwnedClassroom: () => {
     const url = '/classes/owned';
     return axiosClient.get<ClassroomDto[]>(url);
@@ -27,21 +21,18 @@ const classApi = {
   },
 
   createClass: async (body: CreateClassroomDto) => {
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes`;
-    const { data } = await axios.post(url, body);
-    return data;
+    const url = `/classes`;
+    return await axiosClient.post(url, body);
   },
 
   getInviteStudentLink: async (classroomId?: string) => {
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-student-link/${classroomId}`;
-    const { data } = await axios.get(url);
-    return data;
+    const url = `/classes/invite-student-link/${classroomId}`;
+    return await axiosClient.get(url);
   },
 
   getInviteTeacherLink: async (classroomId?: string) => {
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-teacher-link/${classroomId}`;
-    const { data } = await axios.get(url);
-    return data;
+    const url = `/classes/invite-teacher-link/${classroomId}`;
+    return await axiosClient.get(url);
   },
 
   inviteStudentByEmail: async (params: {
@@ -49,9 +40,8 @@ const classApi = {
     email: string;
   }) => {
     const { classroomId, email } = params;
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-student-by-email/${classroomId}`;
-    const { data } = await axios.post(url, { email });
-    return data;
+    const url = `/classes/invite-student-by-email/${classroomId}`;
+    return await axiosClient.post(url, { email });
   },
 
   inviteTeacherByEmail: async (params: {
@@ -59,24 +49,21 @@ const classApi = {
     email: string;
   }) => {
     const { classroomId, email } = params;
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/invite-teacher-by-email/${classroomId}`;
-    const { data } = await axios.post(url, { email });
-    return data;
+    const url = `/classes/invite-teacher-by-email/${classroomId}`;
+    return await axiosClient.post(url, { email });
   },
 
   addStudent: async (params: { identity: string; token: string }) => {
     const { identity, token } = params;
     const query = queryString.stringify({ token });
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/add-student?${query}`;
-    const { data } = await axios.post(url, { identity });
-    return data;
+    const url = `/classes/add-student?${query}`;
+    return await axiosClient.post(url, { identity });
   },
 
   addTeacher: async (token: string) => {
     const query = queryString.stringify({ token });
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/add-teacher?${query}`;
-    const { data } = await axios.post(url);
-    return data;
+    const url = `/classes/add-teacher?${query}`;
+    return await axiosClient.post(url);
   },
 
   downloadStudentlistTemplate: async () => {
@@ -89,18 +76,13 @@ const classApi = {
   },
 
   updateGrade: async (params: UpdateGradeDto) => {
-    const { data } = await axios.post<any>(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/input-grade-student-assignment`,
-      params
-    );
-
-    return data;
+    const url = `/classes/input-grade-student-assignment`;
+    return await axiosClient.post(url, params);
   },
 
   markAssignmentFinalized: async (assignmentId: string) => {
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/assignments/${assignmentId}/mark-finalized`;
-    const { data } = await axios.post(url);
-    return data;
+    const url = `/classes/assignments/${assignmentId}/mark-finalized`;
+    return await axiosClient.post(url);
   },
 
   uploadStudentList: async (params: {
@@ -108,13 +90,8 @@ const classApi = {
     studentListFile: FormData;
   }) => {
     const { classroomId, studentListFile } = params;
-
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${classroomId}/upload-list-student`,
-      studentListFile
-    );
-
-    return data;
+    const url = `/classes/${classroomId}/upload-list-student`;
+    return await axiosClient.post(url, studentListFile);
   },
 
   uploadAssignmentGrade: async (params: {
@@ -122,12 +99,8 @@ const classApi = {
     gradeListFile: FormData;
   }) => {
     const { assignmentId, gradeListFile } = params;
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/upload-assignment-grades/${assignmentId}`,
-      gradeListFile
-    );
-
-    return data;
+    const url = `/classes/upload-assignment-grades/${assignmentId}`;
+    return await axiosClient.post(url, gradeListFile);
   },
 
   getManagedClassrooms: async () => {
