@@ -1,12 +1,11 @@
 import axiosClient from 'api/axiosClient';
 import queryString from 'query-string';
-import axios from 'axios';
 
 const userService = {
-  getUser: (id: string) =>
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`)
-      .then((res) => res.data),
+  getUser: async (id: string) => {
+    const url = `/users/${id}`;
+    return await axiosClient.get(url);
+  },
 
   activate: (token: string) => {
     const query = queryString.stringify({ token });
@@ -16,8 +15,8 @@ const userService = {
 
   updateUser: async (params: { id?: string; fullName: string }) => {
     const { id } = params;
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/users/${id}`;
-    return axios.patch(url, params).then((res) => res.data);
+    const url = `/users/${id}`;
+    return await axiosClient.patch(url, params);
   },
 
   getUsers: async () => {
