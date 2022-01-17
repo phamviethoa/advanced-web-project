@@ -3,7 +3,6 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  Response,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -18,26 +17,16 @@ import { Assignment } from 'src/entities/assignment.entity';
 import { Student } from 'src/entities/student.entity';
 import { Grade } from 'src/entities/grade.entity';
 import { UpdateGradeDTO } from './dto/update-grade-dto';
-import { stream, utils, write, writeFile } from 'xlsx';
-import { unlink } from 'fs';
+import { utils, writeFile } from 'xlsx';
 import { InviteByEmailDTO } from './dto/invite-by-email-dto';
-import { InjectSendGrid, SendGridService } from '@ntegral/nestjs-sendgrid';
-import { async, NotFoundError, throwError } from 'rxjs';
-import { Max } from 'class-validator';
-import { createTransport } from 'nodemailer';
-import passport, { use } from 'passport';
-import { ReviewGradelDTO } from './dto/review-grade.dto';
 import { Notification } from 'src/entities/notification.entity';
-import { CommentReviewDTO } from './dto/comment-review.dto';
-import { ViewOfStudentCommentsDTO } from './dto/viewofstudentcomments.dto';
-import { ViewListOfRequestByStudent } from './dto/viewlistofrequest.dto';
-import { FinalizedReviewDTO } from './dto/finalizedreview.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { GradeReview, ReviewStatus } from 'src/entities/grade-review.entity';
 import { CloseReviewDto } from './dto/close-review.dto';
-import { error } from 'console';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import notificationTemplate from 'src/notifications/notification-template';
+import { AuthorizationService } from 'src/authorization/authorization.service';
+const shortid = require('shortid');
 
 @Injectable()
 export class ClassroomsService {
@@ -55,13 +44,22 @@ export class ClassroomsService {
     private reviewsRepo: Repository<GradeReview>,
     private readonly mailerService: MailerService,
     private readonly notificationsService: NotificationsService,
+    private readonly authorizationService: AuthorizationService,
   ) {}
   async findAll(): Promise<Classroom[]> {
     return this.classesRepo.find();
   }
 
-  findOne(id: string) {
-    return this.classesRepo.findOneOrFail(id, {
+  // OK
+  async findOne(userId: string, id: string) {
+    const isTeacher = await this.authorizationService.isTeacher(userId, id);
+    const isStudent = await this.authorizationService.isStudent(userId, id);
+
+    if (!isTeacher && !isStudent) {
+      throw new ForbiddenException();
+    }
+
+    const classroom = await this.classesRepo.findOne(id, {
       relations: [
         'teachers',
         'students',
@@ -72,6 +70,12 @@ export class ClassroomsService {
         'assignments.grades.student',
       ],
     });
+
+    if (!classroom) {
+      throw new NotFoundException();
+    }
+
+    return classroom;
   }
 
   async findAllClassIsTeacher(userid: string) {
@@ -96,11 +100,18 @@ export class ClassroomsService {
   }
 
   async create(createClassDto: CreateClassDto, teacherId: any) {
+    const teacher = await this.usersRepo.findOne(teacherId);
+
+    if (!teacher) {
+      throw new ForbiddenException();
+    }
+
+    const code = shortid.generate();
+
     const newClasses = this.classesRepo.create(createClassDto);
-    const teacher = await this.usersRepo.findOneOrFail(teacherId);
     newClasses.teachers = [teacher];
 
-    return this.classesRepo.save(newClasses);
+    return this.classesRepo.save({ ...newClasses, code });
   }
 
   async update(id: string, body: any) {
@@ -115,7 +126,13 @@ export class ClassroomsService {
   }
 
   async getInviteStudentLink(userId: string, id: string) {
-    await this.checkIsTeacher(userId, id);
+    //await this.checkIsTeacher(userId, id);
+
+    const isTeacher = await this.authorizationService.isTeacher(userId, id);
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
 
     const payload = {
       classId: id,
@@ -127,9 +144,9 @@ export class ClassroomsService {
   }
 
   async getManagedClassrooms(userId: string) {
-    const user = await this.usersRepo.findOne(userId);
+    const isAdmin = await this.authorizationService.isAdmin(userId);
 
-    if (!user || !user.isAdmin) {
+    if (!isAdmin) {
       throw new ForbiddenException();
     }
 
@@ -143,7 +160,13 @@ export class ClassroomsService {
   }
 
   async getInviteTeacherLink(userId: string, id: string) {
-    await this.checkIsTeacher(userId, id);
+    //await this.checkIsTeacher(userId, id);
+
+    const isTeacher = await this.authorizationService.isTeacher(userId, id);
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
 
     const payload = {
       classId: id,
@@ -286,6 +309,15 @@ export class ClassroomsService {
     });
     const classroom = assignment.classroom;
 
+    const isTeacher = await this.authorizationService.isTeacher(
+      teacherId,
+      classroom.id,
+    );
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
+
     const students = await this.studentsRepo
       .createQueryBuilder('student')
       .innerJoin('student.classroom', 'classroom')
@@ -295,7 +327,7 @@ export class ClassroomsService {
       .getMany();
 
     if (!teacher || !assignment) {
-      throw new BadRequestException();
+      throw new NotFoundException();
     }
 
     if (!classroom.teachers.find((teacher) => teacher.id === teacherId)) {
@@ -326,7 +358,14 @@ export class ClassroomsService {
   }
 
   async savestudentlist(userId: string, workSheet: any, classroomId: string) {
-    await this.checkIsTeacher(userId, classroomId);
+    const isTeacher = await this.authorizationService.isTeacher(
+      userId,
+      classroomId,
+    );
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
 
     const ref = workSheet['!ref'];
     const array = ref.split(':');
@@ -345,7 +384,6 @@ export class ClassroomsService {
 
       // ktra studentId trong classId co ton tai hay chua neu chua thi tao moi neu da ton tai thi bo qua
       var index = students.findIndex((x) => x.identity == studentId);
-      console.log(index);
       if (index === -1) {
         let newstudent = new Student();
         newstudent.classroom = classroom;
@@ -353,7 +391,6 @@ export class ClassroomsService {
         newstudent.identity = studentId;
         await this.studentsRepo.save(newstudent);
       } else {
-        console.log('object already exists');
       }
     }
 
@@ -378,14 +415,22 @@ export class ClassroomsService {
       where: { id: assignmentid },
     });
 
-    await this.checkIsTeacher(userId, assignment.classroom.id);
+    //await this.checkIsTeacher(userId, assignment.classroom.id);
+
+    const isTeacher = await this.authorizationService.isTeacher(
+      userId,
+      assignment.classroom.id,
+    );
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
 
     const students = assignment.classroom.students; // danh sach hoc sinh
     const grades = await this.gradesRepo.find({
       where: { assignment: assignment },
       relations: ['student'],
     }); // danh sach diem
-    console.log(grades);
     for (
       let i = parseInt(array[0]) + 1;
       i <= parseInt(array[1]);
@@ -395,13 +440,10 @@ export class ClassroomsService {
       const grade = workSheet[`B${i}`].v;
 
       var index = students.findIndex((x) => x.identity == studentId); // vi tri neu co identity
-      console.log('index: ', index);
       var index_grade = grades.findIndex(
         (x) => x.student.identity == studentId,
       ); // vi tri neu co identity
-      console.log('index_grade: ', index_grade);
       if (index === -1) {
-        console.log('khong ton tai sinh vien'); // khong ton tai sinh vien thi bo qua
       } else {
         if (index_grade === -1) {
           //khong ton tai diem thi tao moi
@@ -439,10 +481,17 @@ export class ClassroomsService {
     });
     const student = await this.studentsRepo.findOne(body.studentId);
 
-    await this.checkIsTeacher(userId, assignment.classroom.id);
+    const isTeacher = await this.authorizationService.isTeacher(
+      userId,
+      assignment.classroom.id,
+    );
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
 
     if (!assignment || !student) {
-      return new BadRequestException();
+      return new NotFoundException();
     }
 
     const grade = await this.gradesRepo.findOne({
@@ -521,6 +570,15 @@ export class ClassroomsService {
     body: InviteByEmailDTO,
     userId: string,
   ) {
+    const isTeacher = await this.authorizationService.isTeacher(
+      userId,
+      classroomId,
+    );
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
+
     const { email } = body;
 
     const linkInviteByEmail = await this.getInviteStudentLink(
@@ -542,6 +600,15 @@ export class ClassroomsService {
     body: InviteByEmailDTO,
     userId: string,
   ) {
+    const isTeacher = await this.authorizationService.isTeacher(
+      userId,
+      classroomId,
+    );
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
+
     const { email } = body;
 
     const linkInviteByEmail = await this.getInviteTeacherLink(
@@ -653,8 +720,6 @@ export class ClassroomsService {
       ])
       .where('review.id = :reviewId', { reviewId })
       .getOne();
-
-    console.log('review: ', test);
 
     if (!classroom || !review) {
       throw new NotFoundException();

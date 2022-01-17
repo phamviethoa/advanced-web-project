@@ -22,6 +22,7 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // OK
   @Get()
   @UseGuards(JwtAuthGuard)
   getAll(@Request() req: any) {
@@ -29,6 +30,7 @@ export class UsersController {
     return this.usersService.getAll(userId);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get(':id/ban-user')
   banUser(@Request() req: any, @Param('id') id: string) {
@@ -36,6 +38,7 @@ export class UsersController {
     return this.usersService.banUser(userId, id);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Get(':id/unban-user')
   unbanUser(@Request() req: any, @Param('id') id: string) {
@@ -43,10 +46,10 @@ export class UsersController {
     return this.usersService.unbanUser(userId, id);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   removeUser(@Request() req: any, @Param('id') id: string) {
-    console.log('HEREEEE');
     const userId = req.user.id;
     return this.usersService.remove(userId, id);
   }
@@ -72,6 +75,7 @@ export class UsersController {
     return this.usersService.sendActiveEmail(email, fullName, password);
   }
 
+  // OK
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOneid(id);
@@ -82,27 +86,32 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // OK
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {
     return this.usersService.update(id, body);
   }
 
+  // OK
   @Post('/activate')
   active(@Query('token') token: string) {
     return this.usersService.addUser(token);
   }
 
+  // OK
   @Post('forgot-password')
   fogotpassword(@Body() body: any) {
     return this.usersService.fogotpassword(body);
   }
 
+  // OK
   @Post('reset-password')
   restpassword(@Query('token') token: string, @Body() body: any) {
     const password = body.password;
     return this.usersService.newpassword(token, password);
   }
 
+  // OK
   @UseGuards(JwtAuthGuard)
   @Post('/create-account-admin')
   createAccountAdmin(@Request() req: any, @Body() body: CreateAdminDto) {
@@ -146,6 +155,7 @@ export class UsersController {
     );
   }
 
+  // OK
   @Get('mappable/:classroomId')
   @UseGuards(JwtAuthGuard)
   getMappableUsers(

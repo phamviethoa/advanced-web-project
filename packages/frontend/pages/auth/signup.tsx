@@ -1,6 +1,8 @@
 import * as yup from 'yup';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import axios from 'axios';
 import { toast } from 'react-toastify';

@@ -6,7 +6,9 @@ import { StudentDto } from 'types/student.dto';
 import { Table, Popover, Space } from 'antd';
 import 'antd/dist/antd.css';
 import { Row, Col, Button, Modal } from 'antd';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useState } from 'react';
@@ -99,8 +101,6 @@ const ClassroomStudentGrade = ({ classroom, student }: Props) => {
     };
   });
 
-  console.log('data: ', data);
-
   const [gradeId, setGradeId] = useState<string | undefined>();
 
   const overall = {
@@ -124,8 +124,8 @@ const ClassroomStudentGrade = ({ classroom, student }: Props) => {
 
   const gradeCompositions = (
     <div>
-      {assignments.map((assignment) => (
-        <Row>
+      {assignments.map((assignment, index) => (
+        <Row key={index}>
           <Col span={12}>{assignment.name}</Col>
           <Col span={12}>{assignment.maxPoint}</Col>
         </Row>

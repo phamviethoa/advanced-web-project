@@ -6,10 +6,10 @@ import { UpdateGradeDto } from 'types/grade.dto';
 import queryString from 'query-string';
 
 const classApi = {
-  getAll: () => {
-    const url = '/classes';
-    return axiosClient.get<Array<ClassroomDto>>(url);
-  },
+  //getAll: () => {
+  //const url = '/classes';
+  //return axiosClient.get<Array<ClassroomDto>>(url);
+  //},
 
   getOwnedClassroom: () => {
     const url = '/classes/owned';
@@ -22,9 +22,8 @@ const classApi = {
   },
 
   getClass: async (id: string) => {
-    const url = `${process.env.NEXT_PUBLIC_API_GATEWAY}/classes/${id}`;
-    const { data } = await axios.get<ClassroomDto>(url);
-    return data;
+    const url = `/classes/${id}`;
+    return await axiosClient.get(url);
   },
 
   createClass: async (body: CreateClassroomDto) => {

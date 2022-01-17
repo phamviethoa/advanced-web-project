@@ -1,11 +1,11 @@
 import axiosClient from 'api/axiosClient';
 
 const studentService = {
-  getGrades: async (params: { classroomId: string; studentId: string }) => {
-    const { classroomId, studentId } = params;
-    const url = `students/grades/${classroomId}/${studentId}`;
-    return axiosClient.get(url);
-  },
+  //getGrades: async (params: { classroomId: string; studentId: string }) => {
+  //const { classroomId, studentId } = params;
+  //const url = `students/grades/${classroomId}/${studentId}`;
+  //return axiosClient.get(url);
+  //},
 
   joinClassByCode: async (params: { code: string; identity: string }) => {
     const { code, identity } = params;

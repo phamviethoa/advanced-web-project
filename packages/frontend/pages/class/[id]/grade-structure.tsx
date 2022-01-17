@@ -2,7 +2,9 @@ import Layout from 'components/Layout';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import classApi from 'api/class';
 import {
   dehydrate,
@@ -82,8 +84,6 @@ const GradeStructure = () => {
 
     reset({ assignments: defaultValues });
   }, [assignments]);
-
-  console.log(assignments);
 
   const { fields, append, remove } = useFieldArray<FormFields>({
     control,

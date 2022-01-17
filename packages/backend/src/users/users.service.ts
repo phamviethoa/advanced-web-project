@@ -179,6 +179,8 @@ export class UsersService {
     const token = this.jwtService.sign(payload);
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/user/activate?token=${token}`;
 
+    console.log('LINK: ', process.env.FRONT_END_URL);
+
     return this.mailerService.sendMail({
       to: email,
       from: process.env.USER,
@@ -239,8 +241,6 @@ export class UsersService {
         password: hashedPassword,
         isAdmin: true,
       });
-
-      console.log('INITIAL!!!!');
 
       return this.usersRepo.save(newAdmin);
     }
@@ -348,8 +348,6 @@ export class UsersService {
         !user.classrooms.find((classroom) => classroom.id === classroomId) &&
         !user.students.find((student) => student.classroom.id === classroomId),
     );
-
-    console.log('users: ', mappableUsers);
 
     return mappableUsers;
   }

@@ -34,8 +34,6 @@ const Layout = ({ children, options }: Props) => {
   const router = useRouter();
   const [session, loading] = useSession();
 
-  console.log(session);
-
   const id = (session as Session)?.user?.id;
 
   const { data } = useQuery('notifications', () =>
@@ -72,7 +70,7 @@ const Layout = ({ children, options }: Props) => {
           }
         })
         .map((notification, index) => (
-          <Menu.Item>
+          <Menu.Item key={index}>
             <div
               onClick={checkNotification(notification.link, notification.id)}
               style={{ width: '250px' }}
@@ -138,7 +136,9 @@ const Layout = ({ children, options }: Props) => {
               <div>
                 <Dropdown trigger={['click']} overlay={NotificationList}>
                   <Badge count={notifications?.length}>
-                    <BellFilled />
+                    <div className="mb-1">
+                      <BellFilled style={{ fontSize: '20px' }} />
+                    </div>
                   </Badge>
                 </Dropdown>
               </div>
@@ -157,7 +157,10 @@ const Layout = ({ children, options }: Props) => {
                       data-bs-toggle="dropdown"
                       aria-expanded="false"
                     >
-                      <i className="fas fa-user"></i>
+                      <i
+                        style={{ fontSize: '20px' }}
+                        className="fas fa-user me-3"
+                      ></i>
                     </a>
                     <ul
                       className="dropdown-menu"

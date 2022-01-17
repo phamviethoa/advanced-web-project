@@ -3,7 +3,9 @@ import ClassList from 'pages/class/ClassList';
 import { GetServerSideProps } from 'next';
 import Layout from 'components/Layout';
 import { useState } from 'react';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useForm, FormProvider } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -145,15 +147,25 @@ function Classes() {
       </div>
       <div className="mt-5">
         <h2 className="h4">Your Classrooms</h2>
-        <ClassList
-          classes={ownedClasses as unknown as ClassroomDto[]}
-        ></ClassList>
+        {!ownedClasses ||
+        (ownedClasses as unknown as ClassroomDto[]).length === 0 ? (
+          <p className="text-muted">You do not have any owned classes.</p>
+        ) : (
+          <ClassList
+            classes={ownedClasses as unknown as ClassroomDto[]}
+          ></ClassList>
+        )}
       </div>
       <div className="mt-5">
         <h2 className="h4">Joined Classrooms</h2>
-        <ClassList
-          classes={joinedClasses as unknown as ClassroomDto[]}
-        ></ClassList>
+        {!joinedClasses ||
+        (joinedClasses as unknown as ClassroomDto[]).length === 0 ? (
+          <p className="text-muted">You do not have any joined classes.</p>
+        ) : (
+          <ClassList
+            classes={joinedClasses as unknown as ClassroomDto[]}
+          ></ClassList>
+        )}
       </div>
       <Modal
         title="Create classroom"

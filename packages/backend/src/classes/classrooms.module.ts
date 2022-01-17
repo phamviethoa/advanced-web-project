@@ -15,6 +15,7 @@ import { Grade } from 'src/entities/grade.entity';
 import { Notification } from 'src/entities/notification.entity';
 import { GradeReview } from 'src/entities/grade-review.entity';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { AuthorizationModule } from 'src/authorization/authorization.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -33,6 +34,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     UsersModule,
     AuthModule,
     NotificationsModule,
+    AuthorizationModule,
   ],
   controllers: [ClassroomsController],
   providers: [ClassroomsService, StudentsService],

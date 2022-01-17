@@ -7,9 +7,13 @@ import { useMutation } from 'react-query';
 import classApi from 'api/class';
 import Input, { InputCategory, InputType } from 'components/Form/Input';
 import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+//import { yupResolver } from '@hookform/resolvers/yup/dist/yup.umd';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm, FormProvider } from 'react-hook-form';
 import { UserRole } from 'types/user.dto';
+import { Typography } from 'antd';
+const { Paragraph } = Typography;
 
 type Props = {
   classroom: ClassroomDto;
@@ -113,11 +117,6 @@ const ClassroomPeople = ({ classroom, students, role }: Props) => {
     }
   }, []);
 
-  const copyToClipboard = (link: string) => () => {
-    navigator.clipboard.writeText(link);
-    toast.success('Copy to clipboard successfully.');
-  };
-
   const inviteByEmail = (role: UserRole) =>
     handleSubmit(({ email }: FormFields) => {
       if (role === UserRole.STUDENT) {
@@ -186,17 +185,11 @@ const ClassroomPeople = ({ classroom, students, role }: Props) => {
               Invite Link
             </label>
             <div className="d-flex align-items-center">
-              <input
-                type="text"
-                className="form-control"
-                id="exampleFormControlInput1"
-                placeholder={inviteStudentLinkRef.current}
-                readOnly
-              />
-              <i
-                onClick={copyToClipboard(inviteStudentLinkRef.current)}
-                className="fas fa-copy text-primary ms-3"
-              ></i>
+              <div style={{ width: '400px' }}>
+                <Paragraph ellipsis={true} copyable>
+                  {inviteStudentLinkRef.current}
+                </Paragraph>
+              </div>
             </div>
           </div>
           <FormProvider {...methods}>
@@ -225,17 +218,11 @@ const ClassroomPeople = ({ classroom, students, role }: Props) => {
               Invite Link
             </label>
             <div className="d-flex align-items-center">
-              <input
-                type="text"
-                className="form-control"
-                id="exampleFormControlInput1"
-                placeholder={inviteTeacherLinkRef.current}
-                readOnly
-              />
-              <i
-                onClick={copyToClipboard(inviteTeacherLinkRef.current)}
-                className="fas fa-copy text-primary ms-3"
-              ></i>
+              <div style={{ width: '400px' }}>
+                <Paragraph ellipsis={true} copyable>
+                  {inviteTeacherLinkRef.current}
+                </Paragraph>
+              </div>
             </div>
           </div>
           <FormProvider {...methods}>
