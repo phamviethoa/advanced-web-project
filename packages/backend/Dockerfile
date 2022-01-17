@@ -24,6 +24,9 @@ ENV DB_PASSWORD=84cc0b2e87e12f33272b0df62614cac987a7fac887544d7f80a5e282d5300783
 ENV DB_DATABASE=dc9njiiie2chih
 ENV DB_SYNC=true
 
+ENV FRONT_END_URL=https://advanced-web-final-frontend.herokuapp.com
+ENV BACK_END_URL=https://advanced-web-final-backend.herokuapp.com
+
 USER node
 WORKDIR /home/node
 

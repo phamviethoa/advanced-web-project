@@ -122,8 +122,8 @@ const ClassroomStudentGrade = ({ classroom, student }: Props) => {
 
   const gradeCompositions = (
     <div>
-      {assignments.map((assignment) => (
-        <Row>
+      {assignments.map((assignment, index) => (
+        <Row key={index}>
           <Col span={12}>{assignment.name}</Col>
           <Col span={12}>{assignment.maxPoint}</Col>
         </Row>

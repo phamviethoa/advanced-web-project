@@ -1,33 +1,46 @@
-FROM node:12
+FROM node:14-alpine AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json package-lock.json .
 
-ENV PORT 3000
-
-# Create app directory
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
-# Installing dependencies
-COPY package*.json /usr/src/app/
 RUN npm install
 
-# Copying source files
-COPY . /usr/src/app
+ARG api_gateway=https://advanced-web-final-backend.herokuapp.com
+ENV NEXT_PUBLIC_API_GATEWAY $api_gateway
 
-# Building app
+COPY . .
+RUN npm install -g typescript
 RUN npm run build
-EXPOSE 3000
+
+FROM node:alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
 
 ENV PORT 3000
-ENV SECRET=fjsdfkjasdhfkjasfdfdfwrwejhgbb2322ref
-ENV NEXTAUTH_URL=http://localhost:3000
 
-ENV NEXT_PUBLIC_API_GATEWAY=https://advanced-web-api.herokuapp.com
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_PUBLIC_API_GATEWAY $api_gateway
+
+ENV SECRET=fjsdfkjasdhfkjasfdfdfwrwejhgbb2322ref
+ENV NEXTAUTH_URL=https://advanced-web-final-frontend.herokuapp.com
 
 ENV FACEBOOK_ID=7055805884436981
 ENV FACEBOOK_SECRET=575bc3e5520f202b8b8263ace6365b53
-ENV GOOGLE_ID=589914439391-shubv5lgav86a18rd8nc8b0ephqm1n15.apps.googleusercontent.com
-ENV GOOGLE_SECRET=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
 
-# Running the app
-CMD "npm" "run" "dev"
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+
 

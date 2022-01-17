@@ -70,7 +70,7 @@ const Layout = ({ children, options }: Props) => {
           }
         })
         .map((notification, index) => (
-          <Menu.Item>
+          <Menu.Item key={index}>
             <div
               onClick={checkNotification(notification.link, notification.id)}
               style={{ width: '250px' }}

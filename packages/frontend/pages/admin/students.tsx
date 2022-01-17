@@ -220,8 +220,10 @@ const StudentsManagement = () => {
           >
             <Form.Item name="accountId" label="Account">
               <Select>
-                {mappableUsers.map((user) => (
-                  <Select.Option value={user.id}>{user.fullName}</Select.Option>
+                {mappableUsers.map((user, index) => (
+                  <Select.Option key={index} value={user.id}>
+                    {user.fullName}
+                  </Select.Option>
                 ))}
               </Select>
             </Form.Item>
