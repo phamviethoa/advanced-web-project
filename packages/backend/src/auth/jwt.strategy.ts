@@ -7,8 +7,6 @@ require('dotenv').config();
 const cookieExtractor = function (req: any) {
   let token = null;
 
-  console.log('NHÌN TÔI: ', req.cookies);
-
   if (req && req.cookies) {
     token =
       req.cookies['next-auth.session-token'] ||

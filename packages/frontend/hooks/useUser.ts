@@ -7,10 +7,11 @@ import { UserDto, UserRole } from 'types/user.dto';
 const useUser = (classroomId: string) => {
   const [session] = useSession();
 
-  const { data: classroom } = useQuery<ClassroomDto>(
-    ['class', classroomId],
-    () => classApi.getClass(classroomId)
+  const { data } = useQuery(['class', classroomId], () =>
+    classApi.getClass(classroomId)
   );
+
+  const classroom = data as unknown as ClassroomDto;
 
   const user = session?.user as UserDto;
 

@@ -233,7 +233,7 @@ export class ClassroomsController {
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
     const userId = req.user.id;
-    return this.classroomsService.updateAssignments(id, updateAssignmentDto);
+    return this.classroomsService.updateAssignments(userId, id, updateAssignmentDto);
   }
 
   // OK

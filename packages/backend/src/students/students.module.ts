@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthorizationModule } from 'src/authorization/authorization.module';
 import { Classroom } from 'src/entities/classroom.entity';
 import { GradeComment } from 'src/entities/grade-comment.entity';
 import { GradeReview } from 'src/entities/grade-review.entity';
@@ -23,6 +24,7 @@ import { StudentsService } from './students.service';
       Notification,
     ]),
     NotificationsModule,
+    AuthorizationModule,
   ],
   controllers: [StudentsController],
   providers: [StudentsService],

@@ -26,6 +26,7 @@ import { CloseReviewDto } from './dto/close-review.dto';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import notificationTemplate from 'src/notifications/notification-template';
 import { AuthorizationService } from 'src/authorization/authorization.service';
+import { async } from 'rxjs';
 const shortid = require('shortid');
 
 @Injectable()
@@ -54,8 +55,9 @@ export class ClassroomsService {
   async findOne(userId: string, id: string) {
     const isTeacher = await this.authorizationService.isTeacher(userId, id);
     const isStudent = await this.authorizationService.isStudent(userId, id);
+    const isAdmin = await this.authorizationService.isAdmin(userId);
 
-    if (!isTeacher && !isStudent) {
+    if (!isTeacher && !isStudent && !isAdmin) {
       throw new ForbiddenException();
     }
 
@@ -221,77 +223,70 @@ export class ClassroomsService {
     return await this.classesRepo.save(classroom);
   }
 
-  async updateAssignments(id: string, AssignmentDtoFE: UpdateAssignmentDto) {
-    const classes = await this.classesRepo.findOneOrFail({
-      where: { id: id },
-      relations: ['teachers'],
-    });
-    const Assignments = await this.assignmentsRepo.findAndCount({
-      classroom: classes,
+  async updateAssignments(
+    userId: string,
+    id: string,
+    dto: UpdateAssignmentDto,
+  ) {
+    const { assignments } = dto;
+    const isTeacher = await this.authorizationService.isTeacher(userId, id);
+
+    if (!isTeacher) {
+      throw new ForbiddenException();
+    }
+
+    const classroom = await this.classesRepo.findOne(id);
+
+    const savedAssignments = await this.assignmentsRepo
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.classroom', 'classroom')
+      .where('classroom.id = :id', { id })
+      .getMany();
+
+    if (!classroom || !savedAssignments) {
+      throw new NotFoundException();
+    }
+
+    // Delete
+    savedAssignments.forEach((savedAssignment) => {
+      if (
+        !assignments.find((assignment) => assignment.id === savedAssignment.id)
+      ) {
+        this.assignmentsRepo.delete(savedAssignment.id);
+      }
     });
 
-    const DBAssignments = Assignments[0];
-    const countAssigments = Assignments[1];
-    let maxIndex = 0;
+    // Add
+    for (const [index, assignment] of assignments.entries()) {
+      if (assignment.id === '') {
+        const newAssignment = this.assignmentsRepo.create({
+          name: assignment.name,
+          maxPoint: assignment.maxPoint,
+          order: index + 1,
+          classroom,
+        });
 
-    if (countAssigments === 0) {
-      maxIndex = 0;
-    } else {
-      let arrorderDBAssignments: number[] = [];
-      DBAssignments.map((DBAssignment) =>
-        arrorderDBAssignments.push(DBAssignment.order),
+        this.assignmentsRepo.save(newAssignment);
+      }
+    }
+
+    // Update
+    const updatedAssignments = assignments.filter(
+      (assignment) => assignment.id !== '',
+    );
+    for (const [index, updatedAssignment] of updatedAssignments.entries()) {
+      const assignment = await this.assignmentsRepo.findOne(
+        updatedAssignment.id,
       );
-      maxIndex = Math.max(...arrorderDBAssignments);
+      await this.assignmentsRepo.save({
+        ...assignment,
+        order: index + 1,
+        name: updatedAssignment.name,
+        maxPoint: updatedAssignment.maxPoint,
+      });
     }
 
-    let isCreate: boolean = true;
-
-    let indexfe = 0;
-    for (const assignmentFE of AssignmentDtoFE.assignments) {
-      for (const dbassignment of DBAssignments) {
-        if (assignmentFE.id === dbassignment.id) {
-          // TH FEName == DBName update order
-          dbassignment.maxPoint = assignmentFE.maxPoint;
-          dbassignment.name = assignmentFE.name;
-          dbassignment.order = indexfe + 1;
-          isCreate = false;
-          await this.assignmentsRepo.save(dbassignment);
-        }
-      }
-      if (isCreate === true) {
-        const newAssignment = new Assignment(); // duyet xong toan bo DBAssignment nhung k co thi tao moi
-        newAssignment.name = assignmentFE.name;
-        newAssignment.maxPoint = assignmentFE.maxPoint;
-        maxIndex++;
-        newAssignment.order = maxIndex;
-
-        newAssignment.classroom = classes;
-
-        const newassignment = this.assignmentsRepo.create(newAssignment);
-        await this.assignmentsRepo.save(newassignment);
-      }
-      isCreate = true;
-      indexfe++;
-    }
-
-    let isRemove: boolean = true;
-
-    for (const dbassignment of DBAssignments) {
-      for (const assignmentFE of AssignmentDtoFE.assignments) {
-        if (assignmentFE.id === dbassignment.id) {
-          isRemove = false;
-        }
-      }
-      if (isRemove === true) {
-        await this.assignmentsRepo.delete(dbassignment);
-      }
-      isRemove = true;
-    }
-
-    await this.classesRepo.save(classes);
-    return await this.assignmentsRepo.find({
-      classroom: classes,
-    });
+    return true;
   }
 
   async findAllwithteacher(teacherid: string): Promise<Classroom[]> {
@@ -700,8 +695,6 @@ export class ClassroomsService {
       relations: ['teachers', 'students', 'students.user'],
     });
 
-    const test = await this.reviewsRepo.findOne(reviewId);
-
     const review = await this.reviewsRepo
       .createQueryBuilder('review')
       .innerJoin('review.grade', 'grade')
@@ -725,15 +718,16 @@ export class ClassroomsService {
       throw new NotFoundException();
     }
 
-    const userIsATeacher = classroom.teachers.find(
-      (teacher) => teacher.id === userId,
+    const isTeacher = await this.authorizationService.isTeacher(
+      userId,
+      classroomId,
+    );
+    const isStudent = await this.authorizationService.isStudent(
+      userId,
+      classroomId,
     );
 
-    const userIsAStudent = classroom.students.find(
-      (student) => student.user.id === userId,
-    );
-
-    if (!userIsAStudent && !userIsATeacher) {
+    if (!isTeacher && !isStudent) {
       throw new ForbiddenException();
     }
 

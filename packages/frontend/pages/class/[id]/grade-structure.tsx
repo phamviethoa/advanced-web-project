@@ -55,9 +55,9 @@ const GradeStructure = () => {
   const toggleViewMode = () => setIsViewMode(true);
   const toggleEditMode = () => setIsViewMode(false);
 
-  const { data: classroom } = useQuery<ClassroomDto>(['class', id], () =>
-    classApi.getClass(id)
-  );
+  const { data } = useQuery(['class', id], () => classApi.getClass(id));
+
+  const classroom = data as unknown as ClassroomDto;
 
   const {
     register,

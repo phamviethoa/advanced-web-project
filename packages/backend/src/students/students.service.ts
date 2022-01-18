@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AuthorizationService } from 'src/authorization/authorization.service';
 import { Classroom } from 'src/entities/classroom.entity';
 import { GradeReview, ReviewStatus } from 'src/entities/grade-review.entity';
 import { Grade } from 'src/entities/grade.entity';
@@ -36,6 +37,7 @@ export class StudentsService {
     private usersRepo: Repository<User>,
 
     private readonly notificationsService: NotificationsService,
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   async findOne(id: string) {
@@ -126,8 +128,20 @@ export class StudentsService {
       throw new BadRequestException();
     }
 
-    if (grade.student.id !== student.id) {
-      throw new UnauthorizedException();
+    const classroom = await this.classesRepo
+      .createQueryBuilder('class')
+      .innerJoin('class.assignments', 'assignment')
+      .innerJoin('assignment.grades', 'grade')
+      .where('grade.id = :gradeId', { gradeId })
+      .getOne();
+
+    const isStudent = await this.authorizationService.isStudent(
+      userId,
+      classroom.id,
+    );
+
+    if (!isStudent) {
+      throw new ForbiddenException();
     }
 
     const newGradeReview = this.gradeReviewsRepo.create({

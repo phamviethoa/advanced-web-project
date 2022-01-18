@@ -179,8 +179,6 @@ export class UsersService {
     const token = this.jwtService.sign(payload);
     const linkActiveByEmail = `${process.env.FRONT_END_URL}/user/activate?token=${token}`;
 
-    console.log('LINK: ', process.env.FRONT_END_URL);
-
     return this.mailerService.sendMail({
       to: email,
       from: process.env.USER,
